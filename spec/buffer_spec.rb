@@ -10,7 +10,7 @@ describe IO::Buffer do
     @buffer.append "foo"
     @buffer.size.should == 3
 
-    @buffer.<< "bar"
+    @buffer << "bar"
     @buffer.size.should == 6
 
     @buffer.write "baz"
