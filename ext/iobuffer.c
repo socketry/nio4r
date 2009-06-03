@@ -83,6 +83,7 @@ void Init_iobuffer()
   rb_define_method(cIO_Buffer, "empty?", IO_Buffer_empty, 0);
   rb_define_method(cIO_Buffer, "<<", IO_Buffer_append, 1);
   rb_define_method(cIO_Buffer, "append", IO_Buffer_append, 1);
+  rb_define_method(cIO_Buffer, "write", IO_Buffer_append, 1);
   rb_define_method(cIO_Buffer, "prepend", IO_Buffer_prepend, 1);
   rb_define_method(cIO_Buffer, "read", IO_Buffer_read, -1);
 	rb_define_method(cIO_Buffer, "to_str", IO_Buffer_to_str, 0);
