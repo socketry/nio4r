@@ -15,7 +15,7 @@
 #include <errno.h>
 
 /* Macro for retrieving the file descriptor from an FPTR */
-#if !HAVE_RB_IO_T || (RUBY_VERSION_MAJOR == 1 && RUBY_VERSION_MINOR == 8)
+#if !HAVE_RB_IO_T_FD
 #define FPTR_TO_FD(fptr) fileno(fptr->f)
 #else
 #define FPTR_TO_FD(fptr) fptr->fd
