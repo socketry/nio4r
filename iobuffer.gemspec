@@ -2,10 +2,10 @@ require 'rubygems'
 
 GEMSPEC = Gem::Specification.new do |s|
   s.name = "iobuffer"
-  s.version = "0.1.0"
+  s.version = "0.1.1"
   s.authors = "Tony Arcieri"
   s.email = "tony@medioh.com"
-  s.date = "2008-10-30"
+  s.date = "2009-08-28"
   s.summary = "Fast C-based buffer for non-blocking I/O"
   s.platform = Gem::Platform::RUBY
   s.required_ruby_version = '>= 1.8.6'
