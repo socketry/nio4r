@@ -98,6 +98,31 @@ describe IO::Buffer do
     @buffer.should_not be_empty
   end
 
+  it "can set default node size" do
+    IO::Buffer.default_node_size = 1
+    IO::Buffer.default_node_size.should == 1
+    (IO::Buffer.default_node_size = 4096).should == 4096
+  end
+
+  it "can be created with a different node size" do
+    IO::Buffer.new(16384)
+  end
+
+  it "cannot set invalid node sizes" do
+    proc {
+      IO::Buffer.default_node_size = 0xffffffffffffffff
+    }.should raise_error(RangeError)
+    proc {
+      IO::Buffer.default_node_size = 0
+    }.should raise_error(ArgumentError)
+    proc {
+      IO::Buffer.new(0xffffffffffffffff)
+    }.should raise_error(RangeError)
+    proc {
+      IO::Buffer.new(0)
+    }.should raise_error(ArgumentError)
+  end
+
   #######
   private
   #######

@@ -23,6 +23,7 @@
 
 /* Default number of bytes in each node's buffer.  Should be >= MTU */
 #define DEFAULT_NODE_SIZE 4096
+static unsigned default_node_size = DEFAULT_NODE_SIZE;
 
 struct buffer {
   unsigned size, node_size;
@@ -43,6 +44,8 @@ static VALUE IO_Buffer_allocate(VALUE klass);
 static void IO_Buffer_mark(struct buffer *);
 static void IO_Buffer_free(struct buffer *);
 
+static VALUE IO_Buffer_default_node_size(VALUE klass);
+static VALUE IO_Buffer_set_default_node_size(VALUE klass, VALUE size);
 static VALUE IO_Buffer_initialize(int argc, VALUE *argv, VALUE self);
 static VALUE IO_Buffer_clear(VALUE self);
 static VALUE IO_Buffer_size(VALUE self);
@@ -77,6 +80,11 @@ void Init_iobuffer()
   cIO_Buffer = rb_define_class_under(rb_cIO, "Buffer", rb_cObject);
   rb_define_alloc_func(cIO_Buffer, IO_Buffer_allocate);
 
+  rb_define_singleton_method(cIO_Buffer, "default_node_size",
+                             IO_Buffer_default_node_size, 0);
+  rb_define_singleton_method(cIO_Buffer, "default_node_size=",
+                             IO_Buffer_set_default_node_size, 1);
+
   rb_define_method(cIO_Buffer, "initialize", IO_Buffer_initialize, -1);
   rb_define_method(cIO_Buffer, "clear", IO_Buffer_clear, 0);
   rb_define_method(cIO_Buffer, "size", IO_Buffer_size, 0);
@@ -108,29 +116,61 @@ static void IO_Buffer_free(struct buffer *buf)
 }
 
 /**
+ * call-seq:
+ *   IO_Buffer.default_node_size -> 4096
+ *
+ * Retrieves the current value of the default node size.
+ */
+static VALUE IO_Buffer_default_node_size(VALUE klass)
+{
+  return UINT2NUM(default_node_size);
+}
+
+/*
+ * safely converts node sizes from Ruby numerics to C and raising
+ * ArgumentError or RangeError on invalid sizes
+ */
+static unsigned convert_node_size(VALUE size)
+{
+  int node_size = NUM2INT(size);
+
+  if(node_size < 1) rb_raise(rb_eArgError, "invalid buffer size");
+
+  return (unsigned)node_size;
+}
+
+/**
+ * call-seq:
+ *   IO_Buffer.default_node_size = 16384
+ *
+ * Sets the default node size for calling IO::Buffer.new with no arguments.
+ */
+static VALUE IO_Buffer_set_default_node_size(VALUE klass, VALUE size)
+{
+  default_node_size = convert_node_size(size);
+
+  return size;
+}
+
+/**
  *  call-seq:
- *    IO_Buffer.new(size = DEFAULT_NODE_SIZE) -> IO_Buffer
+ *    IO_Buffer.new(size = IO::Buffer.default_node_size) -> IO_Buffer
  * 
  * Create a new IO_Buffer with linked segments of the given size
  */
 static VALUE IO_Buffer_initialize(int argc, VALUE *argv, VALUE self)
 {
   VALUE node_size_obj;
-  int node_size;
   struct buffer *buf;
 
   if(rb_scan_args(argc, argv, "01", &node_size_obj) == 1) {
-    node_size = NUM2INT(node_size_obj);
-
-    if(node_size < 1) rb_raise(rb_eArgError, "invalid buffer size");
-
     Data_Get_Struct(self, struct buffer, buf);
 
     /* Make sure we're not changing the buffer size after data has been allocated */
     assert(!buf->head);
     assert(!buf->pool_head);
 
-    buf->node_size = node_size;
+    buf->node_size = convert_node_size(node_size_obj);
   }
 
   return Qnil;
@@ -329,7 +369,7 @@ static struct buffer *buffer_new(void)
   buf = (struct buffer *)xmalloc(sizeof(struct buffer));
   buf->head = buf->tail = buf->pool_head = buf->pool_tail = 0;
   buf->size = 0;
-  buf->node_size = DEFAULT_NODE_SIZE;
+  buf->node_size = default_node_size;
 	
   return buf;
 }
