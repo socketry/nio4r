@@ -5,7 +5,7 @@ GEMSPEC = Gem::Specification.new do |s|
   s.version = "0.1.2"
   s.authors = "Tony Arcieri"
   s.email = "tony@medioh.com"
-  s.date = "2009-08-28"
+  s.date = "2009-11-28"
   s.summary = "Fast C-based buffer for non-blocking I/O"
   s.platform = Gem::Platform::RUBY
   s.required_ruby_version = '>= 1.8.6'
