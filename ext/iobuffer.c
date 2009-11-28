@@ -22,7 +22,7 @@
 #endif
 
 /* Default number of bytes in each node's buffer.  Should be >= MTU */
-#define DEFAULT_NODE_SIZE 4096
+#define DEFAULT_NODE_SIZE 16384
 static unsigned default_node_size = DEFAULT_NODE_SIZE;
 
 struct buffer {
