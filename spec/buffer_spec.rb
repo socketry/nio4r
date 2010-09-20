@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../lib/iobuffer'
+require File.expand_path(File.dirname(__FILE__) + '/../lib/iobuffer')
 
 describe IO::Buffer do
   before :each do

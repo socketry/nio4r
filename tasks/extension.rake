@@ -1,4 +1,4 @@
-ext_so = "ext/iobuffer.#{Config::CONFIG['DLEXT']}"
+ext_so = "ext/iobuffer.#{Config::MAKEFILE_CONFIG['DLEXT']}"
 ext_files = FileList[
   "ext/*.c",
   "ext/*.h",
