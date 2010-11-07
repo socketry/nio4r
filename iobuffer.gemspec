@@ -19,8 +19,8 @@ GEMSPEC = Gem::Specification.new do |s|
 
   # RDoc settings
   s.has_rdoc = true
-  s.rdoc_options = %w(--title IO::Buffer --main README --line-numbers)
-  s.extra_rdoc_files = ["LICENSE", "README", "CHANGES"]
+  s.rdoc_options = %w(--title IO::Buffer --main README.rdoc --line-numbers)
+  s.extra_rdoc_files = ["LICENSE", "README.rdoc", "CHANGES"]
 
   # Extensions
   s.extensions = Dir["ext/**/extconf.rb"]
