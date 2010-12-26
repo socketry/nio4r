@@ -27,6 +27,7 @@ Jeweler::Tasks.new do |gem|
   #  gem.add_runtime_dependency 'jabber4r', '> 0.1'
   
   gem.add_development_dependency 'rspec', '>= 2.1.0'
+  gem.add_development_dependency 'rake-compiler', '~> 0.7.5'
 end
 Jeweler::RubygemsDotOrgTasks.new
 
@@ -49,26 +50,7 @@ Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
 
-ext_so = "ext/iobuffer.#{Config::MAKEFILE_CONFIG['DLEXT']}"
-ext_files = FileList[
-  "ext/*.c",
-  "ext/*.h",
-  "ext/extconf.rb",
-  "ext/Makefile",
-  "lib"
-]
-
-desc "Compile the IO::Buffer extension"
-task :compile => ["ext/Makefile", ext_so ]
-
-file "ext/Makefile" => %w[ext/extconf.rb] do
-  Dir.chdir('ext') { ruby "extconf.rb" }
+require 'rake/extensiontask'
+Rake::ExtensionTask.new('iobuffer') do |ext|
+  ext.ext_dir = 'ext'
 end
-
-file ext_so => ext_files do
-  Dir.chdir('ext') { sh 'make' }
-  cp ext_so, "lib"
-end
-
-CLEAN.include ["**/*.o", "**/*.log", "pkg"]
-CLEAN.include ["ext/Makefile", "**/iobuffer.#{Config::MAKEFILE_CONFIG['DLEXT']}"]
