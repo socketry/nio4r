@@ -14,6 +14,9 @@
 #include <unistd.h>
 #include <errno.h>
 
+/* 1 GiB maximum buffer size */
+#define MAX_BUFFER_SIZE 0x40000000
+
 /* Macro for retrieving the file descriptor from an FPTR */
 #if !HAVE_RB_IO_T_FD
 #define FPTR_TO_FD(fptr) fileno(fptr->f)
@@ -97,6 +100,8 @@ void Init_iobuffer()
 	rb_define_method(cIO_Buffer, "to_str", IO_Buffer_to_str, 0);
 	rb_define_method(cIO_Buffer, "read_from", IO_Buffer_read_from, 1);
   rb_define_method(cIO_Buffer, "write_to", IO_Buffer_write_to, 1);
+  
+  rb_define_const(cIO_Buffer, "MAX_SIZE", INT2NUM(MAX_BUFFER_SIZE));
 }
 
 static VALUE IO_Buffer_allocate(VALUE klass)
@@ -132,11 +137,13 @@ static VALUE IO_Buffer_default_node_size(VALUE klass)
  */
 static unsigned convert_node_size(VALUE size)
 {
-  int node_size = NUM2INT(size);
+  if(
+    rb_funcall(size, rb_intern("<"), 1, INT2NUM(1)) == Qtrue || 
+    rb_funcall(size, rb_intern(">"), 1, INT2NUM(MAX_BUFFER_SIZE)) == Qtrue
+  )
+    rb_raise(rb_eArgError, "invalid buffer size");
 
-  if(node_size < 1) rb_raise(rb_eArgError, "invalid buffer size");
-
-  return (unsigned)node_size;
+  return (unsigned)NUM2INT(size);
 }
 
 /**
