@@ -36,7 +36,7 @@ module NIO
       end
       
       # Set channel to non-blocking mode if it isn't already
-      channel.blocking = false
+      java_channel.configureBlocking(false)
       interest_ops = self.class.interest_ops(interest)
       
       selector_key = java_channel.register @java_selector, interest_ops      

@@ -2,11 +2,9 @@ require 'spec_helper'
 
 describe NIO::Selector do
   it "monitors IO objects" do
-    reader, writer = IO.pipe
-    channel = reader.channel
-    channel.blocking = false
+    pipe, _ = IO.pipe
     
-    monitor = subject.register(channel, :r)
+    monitor = subject.register(pipe, :r)
     monitor.should be_a NIO::Monitor
   end
 end
