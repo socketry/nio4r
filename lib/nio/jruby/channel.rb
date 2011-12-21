@@ -13,5 +13,11 @@ module NIO
     def blocking?
       @java_channel.isBlocking
     end
+    alias_method :blocking, :blocking?
+    
+    # Configure blocking mode for this channel
+    def blocking=(mode)
+      @java_channel.configureBlocking mode
+    end
   end
 end
