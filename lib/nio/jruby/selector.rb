@@ -42,5 +42,12 @@ module NIO
       selector_key = java_channel.register @java_selector, interest_ops      
       NIO::Monitor.new(selector_key)
     end
+    
+    # Select which monitors are ready
+    def select
+      ready = @java_selector.select
+      return [] unless ready > 0      
+      @java_selector.selectedKeys.map { |key| key.attachment }
+    end
   end
 end
