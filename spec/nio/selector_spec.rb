@@ -1,5 +1,8 @@
 require 'spec_helper'
 
+# Timeouts should be at least this close to pass the tests
+TIMEOUT_PRECISION = 0.02
+
 describe NIO::Selector do
   context "register" do
     it "monitors IO objects" do
@@ -21,12 +24,12 @@ describe NIO::Selector do
       timeout = 0.1
       started_at = Time.now
       subject.select(timeout).should include monitor
-      (Time.now - started_at).should be_within(0.01).of(0)
+      (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(0)
       reader.read_nonblock(payload.size)
 
       started_at = Time.now
       subject.select(timeout).should == []
-      (Time.now - started_at).should be_within(0.01).of(timeout)
+      (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(timeout)
     end
 
     it "wakes up if signaled to from another thread" do
