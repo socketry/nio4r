@@ -8,11 +8,6 @@ describe NIO::Selector do
       monitor = subject.register(pipe, :r)
       monitor.should be_a NIO::Monitor
     end
-
-    it "raises ArgumentError if asked to monitor a readable for writing" do
-      readable, _ = IO.pipe
-      expect { subject.register(readable, :w) }.to raise_exception(ArgumentError)
-    end
   end
 
   context "select" do

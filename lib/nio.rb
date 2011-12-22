@@ -5,7 +5,7 @@ if defined?(JRUBY_VERSION)
   require 'nio/jruby'
 else
   # Temporary!
-  raise 'zomg this only works on jruby!!!'
+  require 'nio/pure'
 end
 
 # New I/O for Ruby
