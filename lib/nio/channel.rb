@@ -1,8 +1,6 @@
 module NIO
   # Channels provide the glue between IO objects and the NIO subsystem
   class Channel
-    attr_reader :io
-
     # Create a new NIO::Channel from a Ruby IO object
     def initialize(io)
       @io = io
@@ -28,8 +26,6 @@ module NIO
     end
 
     # Obtain an IO object for this channel
-    def to_io
-      @io
-    end
+    def to_io; @io; end
   end
 end
