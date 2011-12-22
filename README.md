@@ -40,3 +40,6 @@ License
 
 Copyright (c) 2011 Tony Arcieri. Distributed under the MIT License. See
 LICENSE.txt for further details.
+
+Includes libev. Copyright (C)2007-09 Marc Alexander Lehmann. Distributed under
+the BSD license. See ext/libev/LICENSE for details.
