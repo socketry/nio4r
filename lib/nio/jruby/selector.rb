@@ -5,7 +5,7 @@ module NIO
     java_import "java.nio.channels.spi.SelectorProvider"
 
     # Convert nio4r interest symbols to Java NIO interest ops
-    def self.interest_ops(interest)
+    def self.sym2iops(interest)
       case interest
       when :r
         interest = SelectionKey::OP_READ
@@ -14,6 +14,19 @@ module NIO
       when :rw
         interest = SelectionKey::OP_READ | SelectionKey::OP_WRITE
       else raise ArgumentError, "invalid interest type: #{interest}"
+      end
+    end
+
+    # Convert Java NIO interest ops to the corresponding Ruby symbols
+    def self.iops2sym(interest_ops)
+      case interest_ops
+      when SelectionKey::OP_READ
+        :r
+      when SelectionKey::OP_WRITE
+        :w
+      when SelectionKey::OP_READ | SelectionKey::OP_WRITE
+        :rw
+      else raise ArgumentError, "unknown interest op combination: 0x#{interest_ops.to_s(16)}"
       end
     end
 
@@ -38,7 +51,7 @@ module NIO
 
       # Set channel to non-blocking mode if it isn't already
       java_channel.configureBlocking(false)
-      interest_ops = self.class.interest_ops(interest)
+      interest_ops = self.class.sym2iops(interest)
 
       begin
         selector_key = java_channel.register @java_selector, interest_ops

@@ -6,5 +6,10 @@ module NIO
       @key = selection_key
       selection_key.attach self
     end
+
+    # Obtain the interests for this monitor
+    def interests
+      Selector.iops2sym @key.interestOps
+    end
   end
 end
