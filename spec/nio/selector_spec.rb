@@ -95,26 +95,16 @@ describe NIO::Selector do
       end
 
       let :unwritable_subject do
-        attempts = 0
+        reader, pipe = IO.pipe
 
         begin
-          _, pipe = IO.pipe
-
-          begin
-            pipe.write_nonblock "JUNK IN THE TUBES"
-            _, writers = select [], [pipe], [], 0
-          end while writers and writers.include? pipe
-
-          pipe
+          pipe.write_nonblock "JUNK IN THE TUBES"
+          _, writers = select [], [pipe], [], 0
         rescue Errno::EPIPE
-          pipe.close rescue nil
-          attempts += 1
-          raise if attempts >= 5
+          break
+        end while writers and writers.include? pipe
 
-          # This really sucks, but I don't know how to deal with these
-          # spurious EPIPEs
-          retry
-        end
+        pipe
       end
 
       it_behaves_like "an NIO selectable"
