@@ -16,6 +16,7 @@ struct NIO_Selector
 {
     struct ev_loop *ev_loop;
 
+    int closed;
     int selecting;
     int total_selected;
     int buffer_size;
