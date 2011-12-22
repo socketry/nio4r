@@ -36,7 +36,7 @@ describe NIO::Selector do
     end
   end
 
-  context "IO object support" do
+  context "selectables" do
     shared_context "an NIO selectable" do
       it "selects for read readiness" do
         waiting_monitor = subject.register(unreadable_subject, :r)
@@ -48,8 +48,8 @@ describe NIO::Selector do
       end
 
       it "selects for write readiness" do
-        waiting_monitor = subject.register(unwriteable_subject, :w)
-        ready_monitor   = subject.register(writeable_subject, :w)
+        waiting_monitor = subject.register(unwritable_subject, :w)
+        ready_monitor   = subject.register(writable_subject, :w)
 
         ready_monitors = subject.select(0.1)
 
@@ -60,8 +60,8 @@ describe NIO::Selector do
 
     context "IO.pipe" do
       let :readable_subject do
-        pipe, sibling = IO.pipe
-        sibling << "data"
+        pipe, peer = IO.pipe
+        peer << "data"
         pipe
       end
 
@@ -70,12 +70,12 @@ describe NIO::Selector do
         pipe
       end
 
-      let :writeable_subject do
+      let :writable_subject do
         _, pipe = IO.pipe
         pipe
       end
 
-      let :unwriteable_subject do
+      let :unwritable_subject do
         _, pipe = IO.pipe
 
         begin
@@ -95,8 +95,8 @@ describe NIO::Selector do
       let :readable_subject do
         server = TCPServer.new("localhost", tcp_port)
         sock = TCPSocket.open("localhost", tcp_port)
-        sibling = server.accept
-        sibling << "data"
+        peer = server.accept
+        peer << "data"
         sock
       end
 
@@ -105,19 +105,19 @@ describe NIO::Selector do
         TCPSocket.open("localhost", tcp_port + 1)
       end
 
-      let :writeable_subject do
+      let :writable_subject do
         TCPServer.new("localhost", tcp_port + 2)
         TCPSocket.open("localhost", tcp_port + 2)
       end
 
-      let :unwriteable_subject do
+      let :unwritable_subject do
         server = TCPServer.new("localhost", tcp_port + 3)
         sock = TCPSocket.open("localhost", tcp_port + 3)
-        sibling = server.accept
+        peer = server.accept
 
-        # For some reason EPIPE is raised if the sibling is never read
+        # For some reason EPIPE is raised if the peer is never read
         sock << "OHAI"
-        sibling.read(4).should == "OHAI"
+        peer.read(4).should == "OHAI"
 
         begin
           sock.write "JUNK IN THE TUBES"
@@ -131,25 +131,33 @@ describe NIO::Selector do
     end
 
     context UDPSocket do
-      it "selects for read readiness" do
-        port = 23456
+      let(:udp_port) { 23456 }
 
-        ready_socket = UDPSocket.new
-        ready_socket.bind('localhost', port)
+      let :readable_subject do
+        sock = UDPSocket.new
+        sock.bind('localhost', udp_port)
 
-        ready_writer = UDPSocket.new
-        ready_writer.send("hi there", 0, 'localhost', port)
+        peer = UDPSocket.new
+        peer.send("hi there", 0, 'localhost', udp_port)
 
-        unready_socket = UDPSocket.new
-        unready_socket.bind('localhost', port + 1)
-
-        unready_monitor = subject.register(unready_socket, :r)
-        ready_monitor   = subject.register(ready_socket, :r)
-
-        ready_monitors = subject.select
-        ready_monitors.should include ready_monitor
-        ready_monitors.should_not include unready_monitor
+        sock
       end
+
+      let :unreadable_subject do
+        sock = UDPSocket.new
+        sock.bind('localhost', udp_port + 1)
+        sock
+      end
+
+      let :writable_subject do
+        pending "come up with a writable UDPSocket example"
+      end
+
+      let :unwritable_subject do
+        pending "come up with a UDPSocket that's blocked on writing"
+      end
+
+      it_behaves_like "an NIO selectable"
     end
   end
 end
