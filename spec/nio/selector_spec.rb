@@ -52,6 +52,24 @@ describe NIO::Selector do
         ready_monitors.should include ready_monitor
         ready_monitors.should_not include unready_monitor
       end
+
+      it "selects for write readiness" do
+        _, ready_pipe = IO.pipe
+        _, unready_pipe = IO.pipe
+
+        begin
+          unready_pipe.write_nonblock "JUNK IN THE TUBES"
+          _, writers = select [], [unready_pipe], [], 0
+        end while writers and writers.include? unready_pipe
+
+        unready_monitor = subject.register(unready_pipe, :w)
+        ready_monitor   = subject.register(ready_pipe, :w)
+
+        ready_monitors = subject.select(0.1)
+
+        ready_monitors.should include ready_monitor
+        ready_monitors.should_not include unready_monitor
+      end
     end
 
     context TCPSocket do
