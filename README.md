@@ -19,3 +19,18 @@ This library aims to incorporate the ideas of Java NIO in Ruby. These are:
 * Expose high level interfaces for doing high performance IO
 * Be as portable as possible, in this case across several Ruby VMs
 * Provide inherently thread-safe facilities for working with IO objects
+
+Supported Platforms
+-------------------
+
+nio4r is known to work on the following Ruby implementations:
+
+* MRI/YARV 1.8.7, 1.9.2, 1.9.3
+* JRuby 1.6.x (and likely earlier versions too)
+* Rubinius 1.x/2.0
+
+License
+-------
+
+Copyright (c) 2011 Tony Arcieri. Distributed under the MIT License. See
+LICENSE.txt for further details.
