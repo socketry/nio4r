@@ -1,8 +1,8 @@
 module NIO
   # Selectors monitor channels for events of interest
   class Selector
+    java_import "java.nio.channels.Selector"
     java_import "java.nio.channels.SelectionKey"
-    java_import "java.nio.channels.spi.SelectorProvider"
 
     # Convert nio4r interest symbols to Java NIO interest ops
     def self.sym2iops(interest)
@@ -32,7 +32,7 @@ module NIO
 
     # Create a new NIO::Selector
     def initialize
-      @java_selector = SelectorProvider.provider.openSelector
+      @java_selector = Selector.open
       @select_lock = Mutex.new
     end
 
