@@ -92,16 +92,20 @@ describe NIO::Selector do
       end
 
       let :unwritable_subject do
-        _, pipe = IO.pipe
-
         begin
-          pipe.write_nonblock "JUNK IN THE TUBES"
-          _, writers = select [], [pipe], [], 0
-        rescue Errno::EPIPE
-          break
-        end while writers and writers.include? pipe
+          _, pipe = IO.pipe
 
-        pipe
+          begin
+            pipe.write_nonblock "JUNK IN THE TUBES"
+            _, writers = select [], [pipe], [], 0
+          end while writers and writers.include? pipe
+
+          pipe
+        rescue Errno::EPIPE
+          # This really sucks, but I don't know how to deal with these
+          # spurious EPIPEs
+          retry
+        end
       end
 
       it_behaves_like "an NIO selectable"
@@ -134,9 +138,8 @@ describe NIO::Selector do
         peer = server.accept
 
         begin
-          sock.write "JUNK IN THE TUBES"
+          sock.write_nonblock "JUNK IN THE TUBES"
           _, writers = select [], [sock], [], 0
-        rescue Errno::EPIPE
         end while writers and writers.include? sock
 
         sock
