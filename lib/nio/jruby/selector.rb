@@ -79,5 +79,14 @@ module NIO
         @java_selector.selectedKeys.map { |key| key.attachment }
       end
     end
+    # Close this selector
+    def close
+      @java_selector.close
+    end
+    
+    # Is this selector closed?
+    def closed?
+      !@java_selector.isOpen
+    end
   end
 end

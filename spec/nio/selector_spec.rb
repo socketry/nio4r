@@ -29,6 +29,9 @@ describe NIO::Selector do
       subject.select(timeout).should == []
       (Time.now - started_at).should be_within(0.01).of(timeout)
     end
+  it "closes" do
+    subject.close
+    subject.should be_closed
   end
 
   context "selectables" do

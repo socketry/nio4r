@@ -45,7 +45,18 @@ module NIO
         results.concat ready_writers if ready_writers
 
         results.map! { |io| @selectables[io.channel] }
+    # Close this selector and free its resources
+    def close
+      @lock.synchronize do
+        return if @closed
+      
+        @wakeup.close rescue nil
+        @waker.close rescue nil
+        @closed = true
       end
     end
+    
+    # Is this selector closed?
+    def closed?; @closed end
   end
 end
