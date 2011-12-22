@@ -15,6 +15,27 @@ describe NIO::Selector do
     end
   end
 
+  context "select" do
+    it "waits for a timeout when selecting" do
+      reader, writer = IO.pipe
+
+      monitor = subject.register(reader, :r)
+
+      payload = "hi there"
+      writer << payload
+
+      timeout = 0.1
+      started_at = Time.now
+      subject.select(timeout).should include monitor
+      (Time.now - started_at).should be_within(0.01).of(0)
+      reader.read_nonblock(payload.size)
+
+      started_at = Time.now
+      subject.select(timeout).should == []
+      (Time.now - started_at).should be_within(0.01).of(timeout)
+    end
+  end
+
   context "IO object support" do
     context "IO.pipe" do
       it "selects for read readiness" do

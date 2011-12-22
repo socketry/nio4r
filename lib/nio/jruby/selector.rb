@@ -54,9 +54,14 @@ module NIO
     end
 
     # Select which monitors are ready
-    def select
+    def select(timeout = nil)
       @select_lock.synchronize do
-        ready = @java_selector.select
+        if timeout
+          ready = @java_selector.select(timeout * 1000)
+        else
+          ready = @java_selector.select
+        end
+
         return [] unless ready > 0
         @java_selector.selectedKeys.map { |key| key.attachment }
       end
