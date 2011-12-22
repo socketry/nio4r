@@ -12,11 +12,11 @@ module NIO
     end
 
     # Register interest in an NIO::Channel with the selector for the given types
-    # of events. Valid event types for interest are:
+    # of events. Valid interests are:
     # * :r - is the channel readable?
     # * :w - is the channel writeable?
     # * :rw - is the channel either readable or writeable?
-    def register(selectable, interest)
+    def register(selectable, interests)
       if selectable.is_a? NIO::Channel
         channel = selectable
       else
@@ -24,10 +24,17 @@ module NIO
       end
 
       channel.blocking = false
-      monitor = Monitor.new(channel, interest)
 
+      monitor = nil
       @lock.synchronize do
-        @selectables[channel] = monitor
+        monitor = @selectables[channel]
+
+        if monitor
+          raise "already registered"
+        else
+          monitor = Monitor.new(channel, interests)
+          @selectables[channel] = monitor
+        end
       end
 
       monitor
