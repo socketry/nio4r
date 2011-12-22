@@ -25,7 +25,6 @@ module NIO
 
       channel.blocking = false
 
-      monitor = nil
       @lock.synchronize do
         monitor = @selectables[channel]
 
@@ -35,9 +34,9 @@ module NIO
           monitor = Monitor.new(channel, interests)
           @selectables[channel] = monitor
         end
-      end
 
-      monitor
+        monitor
+      end
     end
 
     # Select which monitors are ready
