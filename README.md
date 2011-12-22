@@ -1,5 +1,6 @@
 New IO for Ruby
 ===============
+[![Build Status](http://travis-ci.org/tarcieri/nio4r.png)](http://travis-ci.org/tarcieri/nio4r)
 
 When it comes to doing advanced IO on Ruby, there aren't a whole lot of
 options. The most powerful UI construct Ruby itself gives you is
