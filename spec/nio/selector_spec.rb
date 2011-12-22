@@ -46,7 +46,7 @@ describe NIO::Selector do
       sleep timeout
       subject.wakeup
 
-      thread.value.should be_within(0.01).of(timeout)
+      thread.value.should be_within(TIMEOUT_PRECISION).of(timeout)
     end
   end
 
