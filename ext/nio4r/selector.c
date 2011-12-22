@@ -132,7 +132,7 @@ static VALUE NIO_Selector_add_channel(VALUE array)
 
     self = rb_ary_entry(array, 0);
     channel = rb_ary_entry(array, 1);
-    interests = rb_ary_entry(array, 3);
+    interests = rb_ary_entry(array, 2);
 
     selectables = rb_ivar_get(self, rb_intern("selectables"));
     monitor = rb_hash_lookup(selectables, channel);

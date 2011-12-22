@@ -17,6 +17,7 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor);
 
 /* Methods */
 static VALUE NIO_Monitor_initialize(VALUE self, VALUE channel, VALUE interests);
+static VALUE NIO_Monitor_interests(VALUE self);
 
 /* Monitor control how a channel is being waited for by a monitor */
 void Init_NIO_Monitor()
@@ -26,6 +27,7 @@ void Init_NIO_Monitor()
     rb_define_alloc_func(cNIO_Monitor, NIO_Monitor_allocate);
 
     rb_define_method(cNIO_Monitor, "initialize", NIO_Monitor_initialize, 2);
+    rb_define_method(cNIO_Monitor, "interests", NIO_Monitor_interests, 0);
 }
 
 static VALUE NIO_Monitor_allocate(VALUE klass)
@@ -47,7 +49,12 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor)
 static VALUE NIO_Monitor_initialize(VALUE self, VALUE channel, VALUE interests)
 {
     rb_ivar_set(self, rb_intern("channel"), channel);
-    rb_ivar_set(self, rb_intern("interests"), channel);
+    rb_ivar_set(self, rb_intern("interests"), interests);
 
     return Qnil;
+}
+
+static VALUE NIO_Monitor_interests(VALUE self)
+{
+    return rb_ivar_get(self, rb_intern("interests"));
 }
