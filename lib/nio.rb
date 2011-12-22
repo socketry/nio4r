@@ -7,6 +7,7 @@ else
   if defined?(JRUBY_VERSION)
     require 'nio/jruby'
   else
+    require 'nio/channel'
     require 'nio4r_ext'
   end
 end
