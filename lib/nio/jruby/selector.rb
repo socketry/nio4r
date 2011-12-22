@@ -48,7 +48,7 @@ module NIO
         else raise
         end
       end
-      
+
       NIO::Monitor.new(selector_key)
     end
 

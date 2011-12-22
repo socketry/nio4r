@@ -8,7 +8,7 @@ describe NIO::Selector do
       monitor = subject.register(pipe, :r)
       monitor.should be_a NIO::Monitor
     end
-  
+
     it "raises ArgumentError if asked to monitor a readable for writing" do
       readable, _ = IO.pipe
       expect { subject.register(readable, :w) }.to raise_exception(ArgumentError)
@@ -16,7 +16,7 @@ describe NIO::Selector do
   end
 
   context "IO object support" do
-    context "pipes" do
+    context "IO.pipe" do
       it "selects for read readiness" do
         unready_pipe, _ = IO.pipe
         ready_pipe, ready_writer = IO.pipe
@@ -33,7 +33,7 @@ describe NIO::Selector do
       end
     end
 
-    context "TCPSockets" do
+    context TCPSocket do
       it "selects for read readiness" do
         port = 12345
         server = TCPServer.new("localhost", port)
@@ -55,7 +55,7 @@ describe NIO::Selector do
       end
     end
 
-    context "UDPSockets" do
+    context UDPSocket do
       it "selects for read readiness" do
         port = 23456
 
