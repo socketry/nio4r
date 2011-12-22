@@ -47,5 +47,27 @@ describe NIO::Selector do
         ready_monitors.should_not include unready_monitor
       end
     end
+
+    context "UDPSockets" do
+      it "selects for read readiness" do
+        port = 23456
+
+        ready_socket = UDPSocket.new
+        ready_socket.bind('localhost', port)
+
+        ready_writer = UDPSocket.new
+        ready_writer.send("hi there", 0, 'localhost', port)
+
+        unready_socket = UDPSocket.new
+        unready_socket.bind('localhost', port + 1)
+
+        unready_monitor = subject.register(unready_socket, :r)
+        ready_monitor   = subject.register(ready_socket, :r)
+
+        ready_monitors = subject.select
+        ready_monitors.should include ready_monitor
+        ready_monitors.should_not include unready_monitor
+      end
+    end
   end
 end
