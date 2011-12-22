@@ -37,61 +37,97 @@ describe NIO::Selector do
   end
 
   context "IO object support" do
-    context "IO.pipe" do
+    shared_context "an NIO selectable" do
       it "selects for read readiness" do
-        unready_pipe, _ = IO.pipe
-        ready_pipe, ready_writer = IO.pipe
-
-        # Give ready_pipe some data so it's ready
-        ready_writer << "hi there"
-
-        unready_monitor = subject.register(unready_pipe, :r)
-        ready_monitor   = subject.register(ready_pipe, :r)
+        waiting_monitor = subject.register(unreadable_subject, :r)
+        ready_monitor   = subject.register(readable_subject, :r)
 
         ready_monitors = subject.select
         ready_monitors.should include ready_monitor
-        ready_monitors.should_not include unready_monitor
+        ready_monitors.should_not include waiting_monitor
       end
 
       it "selects for write readiness" do
-        _, ready_pipe = IO.pipe
-        _, unready_pipe = IO.pipe
-
-        begin
-          unready_pipe.write_nonblock "JUNK IN THE TUBES"
-          _, writers = select [], [unready_pipe], [], 0
-        end while writers and writers.include? unready_pipe
-
-        unready_monitor = subject.register(unready_pipe, :w)
-        ready_monitor   = subject.register(ready_pipe, :w)
+        waiting_monitor = subject.register(unwriteable_subject, :w)
+        ready_monitor   = subject.register(writeable_subject, :w)
 
         ready_monitors = subject.select(0.1)
 
         ready_monitors.should include ready_monitor
-        ready_monitors.should_not include unready_monitor
+        ready_monitors.should_not include waiting_monitor
       end
     end
 
-    context TCPSocket do
-      it "selects for read readiness" do
-        port = 12345
-        server = TCPServer.new("localhost", port)
-
-        ready_socket = TCPSocket.open("localhost", port)
-        ready_writer = server.accept
-
-        # Give ready_socket some data so it's ready
-        ready_writer << "hi there"
-
-        unready_socket = TCPSocket.open("localhost", port)
-
-        unready_monitor = subject.register(unready_socket, :r)
-        ready_monitor   = subject.register(ready_socket, :r)
-
-        ready_monitors = subject.select
-        ready_monitors.should include ready_monitor
-        ready_monitors.should_not include unready_monitor
+    context "IO.pipe" do
+      let :readable_subject do
+        pipe, sibling = IO.pipe
+        sibling << "data"
+        pipe
       end
+
+      let :unreadable_subject do
+        pipe, _ = IO.pipe
+        pipe
+      end
+
+      let :writeable_subject do
+        _, pipe = IO.pipe
+        pipe
+      end
+
+      let :unwriteable_subject do
+        _, pipe = IO.pipe
+
+        begin
+          pipe.write_nonblock "JUNK IN THE TUBES"
+          _, writers = select [], [pipe], [], 0
+        end while writers and writers.include? pipe
+
+        pipe
+      end
+
+      it_behaves_like "an NIO selectable"
+    end
+
+    context TCPSocket do
+      let(:tcp_port) { 12345 }
+
+      let :readable_subject do
+        server = TCPServer.new("localhost", tcp_port)
+        sock = TCPSocket.open("localhost", tcp_port)
+        sibling = server.accept
+        sibling << "data"
+        sock
+      end
+
+      let :unreadable_subject do
+        TCPServer.new("localhost", tcp_port + 1)
+        TCPSocket.open("localhost", tcp_port + 1)
+      end
+
+      let :writeable_subject do
+        TCPServer.new("localhost", tcp_port + 2)
+        TCPSocket.open("localhost", tcp_port + 2)
+      end
+
+      let :unwriteable_subject do
+        server = TCPServer.new("localhost", tcp_port + 3)
+        sock = TCPSocket.open("localhost", tcp_port + 3)
+        sibling = server.accept
+
+        # For some reason EPIPE is raised if the sibling is never read
+        sock << "OHAI"
+        sibling.read(4).should == "OHAI"
+
+        begin
+          sock.write "JUNK IN THE TUBES"
+          _, writers = select [], [sock], [], 0
+        end while writers and writers.include? sock
+
+        sock
+      end
+
+      it_behaves_like "an NIO selectable"
     end
 
     context UDPSocket do
