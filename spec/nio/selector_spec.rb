@@ -1,11 +1,18 @@
 require 'spec_helper'
 
 describe NIO::Selector do
-  it "monitors IO objects" do
-    pipe, _ = IO.pipe
+  context "register" do
+    it "monitors IO objects" do
+      pipe, _ = IO.pipe
 
-    monitor = subject.register(pipe, :r)
-    monitor.should be_a NIO::Monitor
+      monitor = subject.register(pipe, :r)
+      monitor.should be_a NIO::Monitor
+    end
+  
+    it "raises ArgumentError if asked to monitor a readable for writing" do
+      readable, _ = IO.pipe
+      expect { subject.register(readable, :w) }.to raise_exception(ArgumentError)
+    end
   end
 
   context "IO object support" do

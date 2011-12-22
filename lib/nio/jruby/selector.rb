@@ -39,7 +39,16 @@ module NIO
       java_channel.configureBlocking(false)
       interest_ops = self.class.interest_ops(interest)
 
-      selector_key = java_channel.register @java_selector, interest_ops
+      begin
+        selector_key = java_channel.register @java_selector, interest_ops
+      rescue NativeException => ex
+        case ex.cause
+        when java.lang.IllegalArgumentException
+          raise ArgumentError, "invalid interest type for #{channel}: #{interest}"
+        else raise
+        end
+      end
+      
       NIO::Monitor.new(selector_key)
     end
 
