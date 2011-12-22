@@ -95,6 +95,8 @@ describe NIO::Selector do
       end
 
       let :unwritable_subject do
+        attempts = 0
+
         begin
           _, pipe = IO.pipe
 
@@ -105,6 +107,10 @@ describe NIO::Selector do
 
           pipe
         rescue Errno::EPIPE
+          pipe.close rescue nil
+          attempts += 1
+          raise if attempts >= 5
+
           # This really sucks, but I don't know how to deal with these
           # spurious EPIPEs
           retry
