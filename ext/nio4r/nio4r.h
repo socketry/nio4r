@@ -23,4 +23,8 @@ struct NIO_Selector
     struct NIO_Selected *selected_buffer;
 };
 
+struct NIO_Monitor
+{
+};
+
 #endif
