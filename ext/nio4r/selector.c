@@ -12,17 +12,22 @@ static VALUE cNIO_Channel  = Qnil;
 static VALUE cNIO_Monitor  = Qnil;
 static VALUE cNIO_Selector = Qnil;
 
+/* Allocator/deallocator */
 static VALUE NIO_Selector_allocate(VALUE klass);
 static void NIO_Selector_mark(struct NIO_Selector *loop);
 static void NIO_Selector_shutdown(struct NIO_Selector *selector);
 static void NIO_Selector_free(struct NIO_Selector *loop);
 
+/* Methods */
 static VALUE NIO_Selector_initialize(VALUE self);
 static VALUE NIO_Selector_register(VALUE self, VALUE selectable, VALUE interest);
-static VALUE NIO_Selector_unlock(VALUE lock);
-static VALUE NIO_Selector_add_channel(VALUE array);
 static VALUE NIO_Selector_close(VALUE self);
 static VALUE NIO_Selector_closed(VALUE self);
+
+/* Internal functions */
+static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE arg), VALUE arg);
+static VALUE NIO_Selector_unlock(VALUE lock);
+static VALUE NIO_Selector_add_channel(VALUE array);
 
 /* Default number of slots in the buffer for selected monitors */
 #define SELECTED_BUFFER_SIZE 32
@@ -102,11 +107,17 @@ static VALUE NIO_Selector_register(VALUE self, VALUE selectable, VALUE interests
 
     rb_funcall(channel, rb_intern("blocking="), 1, Qfalse);
 
-    lock = rb_ivar_get(self, rb_intern("lock"));
     array = rb_ary_new3(3, self, channel, interests);
+    return NIO_Selector_synchronize(self, NIO_Selector_add_channel, array);
+}
 
+static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE arg), VALUE arg)
+{
+    VALUE lock;
+
+    lock = rb_ivar_get(self, rb_intern("lock"));
     rb_funcall(lock, rb_intern("lock"), 0, 0);
-    return rb_ensure(NIO_Selector_add_channel, array, NIO_Selector_unlock, lock);
+    return rb_ensure(func, arg, NIO_Selector_unlock, lock);
 }
 
 static VALUE NIO_Selector_unlock(VALUE lock)
