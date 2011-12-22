@@ -20,6 +20,7 @@ module NIO
     # Create a new NIO::Selector
     def initialize
       @java_selector = SelectorProvider.provider.openSelector
+      @select_lock = Mutex.new
     end
 
     # Register interest in an NIO::Channel with the selector for the given types
@@ -54,9 +55,11 @@ module NIO
 
     # Select which monitors are ready
     def select
-      ready = @java_selector.select
-      return [] unless ready > 0
-      @java_selector.selectedKeys.map { |key| key.attachment }
+      @select_lock.synchronize do
+        ready = @java_selector.select
+        return [] unless ready > 0
+        @java_selector.selectedKeys.map { |key| key.attachment }
+      end
     end
   end
 end
