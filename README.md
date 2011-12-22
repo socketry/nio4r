@@ -29,6 +29,12 @@ nio4r is known to work on the following Ruby implementations:
 * JRuby 1.6.x (and likely earlier versions too)
 * Rubinius 1.x/2.0
 
+JRuby uses a special backend based on Java NIO which should have fairly good
+performance for monitoring large numbers of IO objects.
+
+All other Rubies use a pure Ruby implementation based on Kernel.select. The
+scalability of this implementation is comparatively poor.
+
 License
 -------
 
