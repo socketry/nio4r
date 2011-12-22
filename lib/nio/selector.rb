@@ -57,7 +57,7 @@ module NIO
 
               # Loop until we've drained all incoming events
               redo
-            rescue IO::WaitReadable
+            rescue Errno::EWOULDBLOCK
             end
           else
             @selectables[io.channel]
