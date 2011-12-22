@@ -13,7 +13,6 @@ describe NIO::Selector do
   context "select" do
     it "waits for a timeout when selecting" do
       reader, writer = IO.pipe
-
       monitor = subject.register(reader, :r)
 
       payload = "hi there"
@@ -29,6 +28,25 @@ describe NIO::Selector do
       subject.select(timeout).should == []
       (Time.now - started_at).should be_within(0.01).of(timeout)
     end
+
+    it "wakes up if signaled to from another thread" do
+      pipe, _ = IO.pipe
+      subject.register(pipe, :r)
+
+      thread = Thread.new do
+        started_at = Time.now
+        subject.select
+        Time.now - started_at
+      end
+
+      timeout = 0.1
+      sleep timeout
+      subject.wakeup
+
+      thread.value.should be_within(0.01).of(timeout)
+    end
+  end
+
   it "closes" do
     subject.close
     subject.should be_closed

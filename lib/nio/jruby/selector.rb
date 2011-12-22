@@ -79,11 +79,18 @@ module NIO
         @java_selector.selectedKeys.map { |key| key.attachment }
       end
     end
+
+    # Wake up the other thread that's currently blocking on this selector
+    def wakeup
+      @java_selector.wakeup
+      nil
+    end
+
     # Close this selector
     def close
       @java_selector.close
     end
-    
+
     # Is this selector closed?
     def closed?
       !@java_selector.isOpen

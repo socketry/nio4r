@@ -4,7 +4,11 @@ module NIO
     # Create a new NIO::Selector
     def initialize
       @selectables = {}
-      @select_lock = Mutex.new
+      @lock = Mutex.new
+
+      # Other threads can wake up a selector
+      @wakeup, @waker = IO.pipe
+      @closed = false
     end
 
     # Register interest in an NIO::Channel with the selector for the given types
@@ -22,7 +26,7 @@ module NIO
       channel.blocking = false
       monitor = Monitor.new(channel, interest)
 
-      @select_lock.synchronize do
+      @lock.synchronize do
         @selectables[channel] = monitor
       end
 
@@ -31,8 +35,8 @@ module NIO
 
     # Select which monitors are ready
     def select(timeout = nil)
-      @select_lock.synchronize do
-        readers, writers = [], []
+      @lock.synchronize do
+        readers, writers = [@wakeup], []
 
         @selectables.each do |channel, monitor|
           readers << channel.to_io if monitor.interests == :r || monitor.interests == :rw
@@ -44,18 +48,42 @@ module NIO
         results = ready_readers || []
         results.concat ready_writers if ready_writers
 
-        results.map! { |io| @selectables[io.channel] }
+        results.map! do |io|
+          if io == @wakeup
+            # Clear all wakeup signals we've received by reading them
+            # Wakeups should have level triggered behavior
+            begin
+              @wakeup.read_nonblock(1024)
+
+              # Loop until we've drained all incoming events
+              redo
+            rescue IO::WaitReadable
+            end
+          else
+            @selectables[io.channel]
+          end
+        end
+      end
+    end
+
+    # Wake up other threads waiting on this selector
+    def wakeup
+      # Send the selector a signal in the form of writing data to a pipe
+      @waker << "\0"
+      nil
+    end
+
     # Close this selector and free its resources
     def close
       @lock.synchronize do
         return if @closed
-      
+
         @wakeup.close rescue nil
         @waker.close rescue nil
         @closed = true
       end
     end
-    
+
     # Is this selector closed?
     def closed?; @closed end
   end
