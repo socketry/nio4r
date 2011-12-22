@@ -97,6 +97,8 @@ describe NIO::Selector do
         begin
           pipe.write_nonblock "JUNK IN THE TUBES"
           _, writers = select [], [pipe], [], 0
+        rescue Errno::EPIPE
+          break
         end while writers and writers.include? pipe
 
         pipe
@@ -131,13 +133,10 @@ describe NIO::Selector do
         sock = TCPSocket.open("localhost", tcp_port + 3)
         peer = server.accept
 
-        # For some reason EPIPE is raised if the peer is never read
-        sock << "OHAI"
-        peer.read(4).should == "OHAI"
-
         begin
           sock.write "JUNK IN THE TUBES"
           _, writers = select [], [sock], [], 0
+        rescue Errno::EPIPE
         end while writers and writers.include? sock
 
         sock
