@@ -19,6 +19,7 @@ static void NIO_Selector_free(struct NIO_Selector *loop);
 
 static VALUE NIO_Selector_initialize(VALUE self);
 static VALUE NIO_Selector_register(VALUE self, VALUE selectable, VALUE interest);
+static VALUE NIO_Selector_unlock(VALUE lock);
 static VALUE NIO_Selector_add_channel(VALUE array);
 static VALUE NIO_Selector_close(VALUE self);
 static VALUE NIO_Selector_closed(VALUE self);
@@ -104,8 +105,13 @@ static VALUE NIO_Selector_register(VALUE self, VALUE selectable, VALUE interests
     lock = rb_ivar_get(self, rb_intern("lock"));
     array = rb_ary_new3(3, self, channel, interests);
 
-    /* FIXME: Blah! This is from intern.h and doesn't work on rbx :( */
-    return rb_mutex_synchronize(lock, NIO_Selector_add_channel, array);
+    rb_funcall(lock, rb_intern("lock"), 0, 0);
+    return rb_ensure(NIO_Selector_add_channel, array, NIO_Selector_unlock, lock);
+}
+
+static VALUE NIO_Selector_unlock(VALUE lock)
+{
+    rb_funcall(lock, rb_intern("unlock"), 0, 0);
 }
 
 static VALUE NIO_Selector_add_channel(VALUE array)
