@@ -16,7 +16,8 @@ waiting on large numbers of file descriptors.
 
 This library aims to incorporate the ideas of Java NIO in Ruby. These are:
 
-* Expose high level interfaces for doing high performance IO
+* Expose high level interfaces for doing high performance IO, but keep the
+  codebase small to encourage multiple implementations on different platforms
 * Be as portable as possible, in this case across several Ruby VMs
 * Provide inherently thread-safe facilities for working with IO objects
 
@@ -29,11 +30,14 @@ nio4r is known to work on the following Ruby implementations:
 * JRuby 1.6.x (and likely earlier versions too)
 * Rubinius 1.x/2.0
 
+MRI/YARV and Rubinius implement NIO with a C extension based on libev, which
+provides a high performance binding to native IO APIs.
+
 JRuby uses a special backend based on Java NIO which should have fairly good
 performance for monitoring large numbers of IO objects.
 
-All other Rubies use a pure Ruby implementation based on Kernel.select. The
-scalability of this implementation is comparatively poor.
+A pure Ruby implementation is also provided for Ruby implementations which
+don't implement the MRI C extension API.
 
 License
 -------
