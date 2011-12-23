@@ -29,15 +29,16 @@ nio4r is known to work on the following Ruby implementations:
 * MRI/YARV 1.8.7, 1.9.2, 1.9.3
 * JRuby 1.6.x (and likely earlier versions too)
 * Rubinius 1.x/2.0
+* A pure Ruby implementation based on Kernel.select is also provided
 
-MRI/YARV and Rubinius implement NIO with a C extension based on libev, which
-provides a high performance binding to native IO APIs.
+Platform notes:
 
-JRuby uses a special backend based on Java NIO which should have fairly good
-performance for monitoring large numbers of IO objects.
-
-A pure Ruby implementation is also provided for Ruby implementations which
-don't implement the MRI C extension API.
+* MRI/YARV and Rubinius implement nio4j with a C extension based on libev,
+  which provides a high performance binding to native IO APIs.
+* JRuby uses a special backend based on Java NIO which should have fairly good
+  performance for monitoring large numbers of IO objects.
+* A pure Ruby implementation is also provided for Ruby implementations which
+  don't implement the MRI C extension API.
 
 License
 -------
