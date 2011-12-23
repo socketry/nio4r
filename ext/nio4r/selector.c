@@ -70,8 +70,9 @@ static void NIO_Selector_shutdown(struct NIO_Selector *selector)
         selector->ev_loop = 0;
     }
 
-    if(selector->closed)
+    if(selector->closed) {
         return;
+    }
 
     selector->closed = 1;
 }
@@ -100,10 +101,11 @@ static VALUE NIO_Selector_register(VALUE self, VALUE selectable, VALUE interests
 {
     VALUE channel, lock, array;
 
-    if(rb_obj_is_kind_of(selectable, cNIO_Channel))
+    if(rb_obj_is_kind_of(selectable, cNIO_Channel)) {
         channel = selectable;
-    else
+    } else {
         channel = rb_funcall(selectable, rb_intern("channel"), 0, 0);
+    }
 
     rb_funcall(channel, rb_intern("blocking="), 1, Qfalse);
 
