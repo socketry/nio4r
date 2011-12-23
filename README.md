@@ -34,11 +34,11 @@ nio4r is known to work on the following Ruby implementations:
 Platform notes:
 
 * MRI/YARV and Rubinius implement nio4j with a C extension based on libev,
-  which provides a high performance binding to native IO APIs.
+  which provides a high performance binding to native IO APIs
 * JRuby uses a special backend based on Java NIO which should have fairly good
-  performance for monitoring large numbers of IO objects.
+  performance for monitoring large numbers of IO objects
 * A pure Ruby implementation is also provided for Ruby implementations which
-  don't implement the MRI C extension API.
+  don't implement the MRI C extension API
 
 License
 -------
