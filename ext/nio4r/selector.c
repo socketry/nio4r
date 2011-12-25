@@ -3,8 +3,6 @@
  * LICENSE.txt for further details.
  */
 
-#include "ruby.h"
-#include "libev.h"
 #include "nio4r.h"
 
 static VALUE mNIO = Qnil;
@@ -31,9 +29,10 @@ static VALUE NIO_Selector_unlock(VALUE lock);
 static VALUE NIO_Selector_register_synchronized(VALUE array);
 static VALUE NIO_Selector_select_synchronized(VALUE array);
 static VALUE NIO_Selector_run_evloop(void *ptr);
+static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
 
 /* Default number of slots in the buffer for selected monitors */
-#define SELECTED_BUFFER_SIZE 32
+#define INITIAL_READY_BUFFER 32
 
 /* Selectors wait for events */
 void Init_NIO_Selector()
@@ -57,9 +56,11 @@ static VALUE NIO_Selector_allocate(VALUE klass)
     struct NIO_Selector *selector = (struct NIO_Selector *)xmalloc(sizeof(struct NIO_Selector));
 
     selector->ev_loop = ev_loop_new(0);
-    selector->closed = selector->total_selected = 0;
-    selector->buffer_size = SELECTED_BUFFER_SIZE;
-    selector->selected_buffer = (struct NIO_Selected *)xmalloc(sizeof(struct NIO_Selected) * SELECTED_BUFFER_SIZE);
+    ev_init(&selector->timer, NIO_Selector_timeout_callback);
+
+    selector->closed = selector->ready_count = 0;
+    selector->ready_buffer_size = INITIAL_READY_BUFFER;
+    selector->ready_buffer = (VALUE *)xmalloc(sizeof(VALUE) * INITIAL_READY_BUFFER);
 
     return Data_Wrap_Struct(klass, NIO_Selector_mark, NIO_Selector_free, selector);
 }
@@ -90,7 +91,7 @@ static void NIO_Selector_free(struct NIO_Selector *selector)
 {
     NIO_Selector_shutdown(selector);
 
-    xfree(selector->selected_buffer);
+    xfree(selector->ready_buffer);
     xfree(selector);
 }
 
@@ -180,9 +181,16 @@ static VALUE NIO_Selector_select_synchronized(VALUE array)
 
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
+    if(timeout != Qnil) {
+        selector->timer.repeat = NUM2DBL(timeout);
+        ev_timer_again(selector->ev_loop, &selector->timer);
+    } else {
+        ev_timer_stop(selector->ev_loop, &selector->timer);
+    }
+
 #if defined(HAVE_RB_THREAD_BLOCKING_REGION)
     /* Ruby 1.9 lets us release the GIL and make a blocking I/O call */
-    result = rb_thread_blocking_region(NIO_Selector_run_evloop, selector, RUBY_UBF_IO, 0);
+    rb_thread_blocking_region(NIO_Selector_run_evloop, selector, RUBY_UBF_IO, 0);
 #else
     /* FIXME:
     This makes a blocking call in 1.8 which will hang the entire
@@ -191,9 +199,12 @@ static VALUE NIO_Selector_select_synchronized(VALUE array)
     doing similar green thread workarounds as EM and cool.io */
 
     TRAP_BEG;
-    result = NIO_Selector_run_evloop(selector);
+    NIO_Selector_run_evloop(selector);
     TRAP_END;
 #endif
+
+    result = rb_ary_new4(selector->ready_count, selector->ready_buffer);
+    selector->ready_count = 0;
 
     return result;
 }
@@ -224,4 +235,26 @@ static VALUE NIO_Selector_closed(VALUE self)
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
     return selector->closed ? Qtrue : Qfalse;
+}
+
+/* Called whenever a timeout fires on the event loop */
+static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents)
+{
+    /* We don't actually need to do anything here, the mere firing of the
+       timer is sufficient to interrupt the selector. However, libev still wants a callback */
+}
+
+/* This gets called from individual monitors. We must be careful here because
+   the GIL isn't held, so we must rely only on standard C and can't touch
+   anything Ruby-related */
+void NIO_Selector_handle_event(struct NIO_Selector *selector, VALUE monitor, int revents)
+{
+    /* Grow the ready buffer if it's too small */
+    if(selector->ready_count >= selector->ready_buffer_size) {
+      selector->ready_buffer_size *= 2;
+      selector->ready_buffer = (VALUE *)xrealloc(selector->ready_buffer, sizeof(VALUE) * selector->ready_buffer_size);
+    }
+
+    selector->ready_buffer[selector->ready_count] = monitor;
+    selector->ready_count++;
 }

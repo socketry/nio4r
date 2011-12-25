@@ -6,25 +6,31 @@
 #ifndef NIO4R_H
 #define NIO4R_H
 
-struct NIO_Selected
-{
-    VALUE monitor;
-    int revents;
-};
+#include "ruby.h"
+#include "libev.h"
 
 struct NIO_Selector
 {
     struct ev_loop *ev_loop;
+    struct ev_timer timer; /* for timeouts */
 
     int closed;
-    int total_selected;
-    int buffer_size;
-    struct NIO_Selected *selected_buffer;
+    int ready_count;
+    int ready_buffer_size;
+    VALUE *ready_buffer;
+};
+
+struct NIO_callback_data
+{
+    VALUE *monitor;
+    struct NIO_Selector *selector;
 };
 
 struct NIO_Monitor
 {
+    VALUE self;
     struct ev_io ev_io;
+    struct NIO_Selector *selector;
 };
 
 #ifdef GetReadFile
@@ -38,5 +44,8 @@ struct NIO_Monitor
 #endif /* !HAVE_RB_IO_T */
 
 #endif /* GetReadFile */
+
+/* Thunk between libev callbacks in NIO::Monitors and NIO::Selectors */
+void NIO_Selector_handle_event(struct NIO_Selector *selector, VALUE monitor, int revents);
 
 #endif /* NIO4R_H */

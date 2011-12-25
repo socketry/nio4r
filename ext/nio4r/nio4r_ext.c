@@ -3,8 +3,7 @@
  * LICENSE.txt for further details.
  */
 
-#include "ruby.h"
-#include "libev.h"
+#include "nio4r.h"
 #include "../libev/ev.c"
 
 void Init_nio4r_ext()

@@ -3,8 +3,6 @@
  * LICENSE.txt for further details.
  */
 
-#include "ruby.h"
-#include "libev.h"
 #include "nio4r.h"
 
 static VALUE mNIO = Qnil;
@@ -81,16 +79,24 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE 
         rb_raise(rb_eArgError, "invalid event type: '%s' (must be :r, :w, or :rw)", RSTRING_PTR(rb_String(interests)));
     }
 
-    rb_ivar_set(self, rb_intern("io"), io);
-    rb_ivar_set(self, rb_intern("interests"), interests);
-
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
     ev_io_init(&monitor->ev_io, NIO_Monitor_callback, FPTR_TO_FD(fptr), events);
-    monitor->ev_io.data = (void *)self;
+
+    rb_ivar_set(self, rb_intern("selector"), selector);
+    rb_ivar_set(self, rb_intern("io"), io);
+    rb_ivar_set(self, rb_intern("interests"), interests);
 
     Data_Get_Struct(selector, struct NIO_Selector, selector_data);
+
+    monitor->self = self;
+    monitor->ev_io.data = (void *)monitor;
+
+    /* We can safely hang onto this as we also hang onto a reference to the
+       object where it originally came from */
+    monitor->selector = selector_data;
+
     ev_io_start(selector_data->ev_loop, &monitor->ev_io);
 
     return Qnil;
@@ -109,5 +115,7 @@ static VALUE NIO_Monitor_interests(VALUE self)
 /* libev callback fired whenever this monitor gets events */
 static void NIO_Monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents)
 {
-    puts("Callback fired!");
+    struct NIO_Monitor *monitor = (struct NIO_Monitor *)io->data;
+
+    NIO_Selector_handle_event(monitor->selector, monitor->self, revents);
 }
