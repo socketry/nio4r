@@ -4,6 +4,7 @@
  */
 
 #include "nio4r.h"
+#include "rubysig.h"
 
 static VALUE mNIO = Qnil;
 static VALUE cNIO_Channel  = Qnil;
