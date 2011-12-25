@@ -66,9 +66,11 @@ static VALUE NIO_Selector_allocate(VALUE klass)
     ev_init(&selector->timer, NIO_Selector_timeout_callback);
 
     ev_async_init(&selector->wakeup, NIO_Selector_wakeup_callback);
+    selector->wakeup.data = (void *)selector;
+
     ev_async_start(selector->ev_loop, &selector->wakeup);
 
-    selector->closed = selector->ready_count = 0;
+    selector->closed = selector->selecting = selector->ready_count = 0;
     selector->ready_buffer_size = INITIAL_READY_BUFFER;
     selector->ready_buffer = (VALUE *)xmalloc(sizeof(VALUE) * INITIAL_READY_BUFFER);
 
@@ -190,6 +192,7 @@ static VALUE NIO_Selector_select_synchronized(VALUE array)
     timeout = rb_ary_entry(array, 1);
 
     Data_Get_Struct(self, struct NIO_Selector, selector);
+    selector->selecting = 1;
 
 #if defined(HAVE_RB_THREAD_BLOCKING_REGION) || defined(HAVE_RB_THREAD_ALONE)
     /* Implement the optional timeout (if any) as a ev_timer */
@@ -226,7 +229,7 @@ static VALUE NIO_Selector_select_synchronized(VALUE array)
         ev_timer_start(selector->ev_loop, &selector->timer);
 
         /* Loop until we receive events */
-        while(!selector->ready_count) {
+        while(selector->selecting && !selector->ready_count) {
             TRAP_BEG;
             NIO_Selector_run_evloop(selector);
             TRAP_END;
@@ -244,7 +247,7 @@ static VALUE NIO_Selector_select_synchronized(VALUE array)
 #endif /* defined(HAVE_RB_THREAD_BLOCKING_REGION) */
 
     result = rb_ary_new4(selector->ready_count, selector->ready_buffer);
-    selector->ready_count = 0;
+    selector->selecting = selector->ready_count = 0;
 
     return result;
 }
@@ -297,7 +300,8 @@ static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_tim
 /* Called whenever a wakeup request is sent to a selector */
 static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_async *async, int revents)
 {
-    /* Same as above, this just unblocks the loop */
+    struct NIO_Selector *selector = (struct NIO_Selector *)async->data;
+    selector->selecting = 0;
 }
 
 /* This gets called from individual monitors. We must be careful here because
