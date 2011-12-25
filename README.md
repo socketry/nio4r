@@ -79,6 +79,11 @@ to maintain a large codebase. As of the time of writing, the current
 implementation is a little over 100 lines of code for both the pure Ruby and
 JRuby backends. The native extension uses approximately 500 lines of C code.
 
+nio4r is also not a replacement for Kindler Gentler IO (KGIO), a set of
+advanced Ruby IO APIs. At some point in the future nio4r might provide a
+cross-platform implementation that uses KGIO on CRubies, and Java NIO on JRuby,
+however this is not the case today.
+
 License
 -------
 
