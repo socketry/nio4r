@@ -68,6 +68,21 @@ callbacks:
 	Got some data: Hi there!
 	 => [#<NIO::Monitor:0xfbc>]
 
+The main method of importance is NIO::Selector#select, which monitors all
+registered IO objects and returns an array of monitors that are ready.
+By default, NIO::Selector#select will block indefinitely until one of the IO
+objects being monitored becomes ready. However, you can also pass a timeout to
+wait in seconds to NIO::Selector#select just like you can with Kernel.select:
+
+    ready = selector.select(15) # Wait 15 seconds
+
+If a timeout occurs, ready will be nil.
+
+When you're done monitoring a particular IO object, just deregister it from
+the selector:
+
+    selector.deregister(reader)
+
 What nio4r is not
 -----------------
 
