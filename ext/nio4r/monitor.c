@@ -20,6 +20,15 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests);
 static VALUE NIO_Monitor_io(VALUE self);
 static VALUE NIO_Monitor_interests(VALUE self);
 
+/* Internal functions */
+static void NIO_Monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
+
+#if HAVE_RB_IO_T
+  rb_io_t *fptr;
+#else
+  OpenFile *fptr;
+#endif
+
 /* Monitor control how a channel is being waited for by a monitor */
 void Init_NIO_Monitor()
 {
@@ -50,8 +59,33 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor)
 
 static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests)
 {
+    struct NIO_Monitor *monitor;
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+    int events;
+
+#if HAVE_RB_IO_T
+    rb_io_t *fptr;
+#else
+    OpenFile *fptr;
+#endif
+
+    interests = rb_funcall(interests, rb_intern("to_sym"), 0, 0);
+
+    if(interests == rb_intern("r")) {
+        events = EV_READ;
+    } else if(interests == rb_intern("w")) {
+        events = EV_WRITE;
+    } else if(interests == rb_intern("rw")) {
+        events = EV_READ | EV_WRITE;
+    } else {
+        rb_raise(rb_eArgError, "invalid event type: '%s' (must be :r, :w, or :rw)", RSTRING_PTR(rb_String(interests)));
+    }
+
     rb_ivar_set(self, rb_intern("io"), io);
     rb_ivar_set(self, rb_intern("interests"), interests);
+
+    GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
+    ev_io_init(&monitor->ev_io, NIO_Monitor_callback, FPTR_TO_FD(fptr), events);
 
     return Qnil;
 }
@@ -64,4 +98,10 @@ static VALUE NIO_Monitor_io(VALUE self)
 static VALUE NIO_Monitor_interests(VALUE self)
 {
     return rb_ivar_get(self, rb_intern("interests"));
+}
+
+/* libev callback fired whenever this monitor gets events */
+static void NIO_Monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents)
+{
+    puts("Callback fired!");
 }

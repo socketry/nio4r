@@ -57,7 +57,7 @@ static VALUE NIO_Selector_allocate(VALUE klass)
     struct NIO_Selector *selector = (struct NIO_Selector *)xmalloc(sizeof(struct NIO_Selector));
 
     selector->ev_loop = ev_loop_new(0);
-    selector->closed = selector->selecting = selector->total_selected = 0;
+    selector->closed = selector->total_selected = 0;
     selector->buffer_size = SELECTED_BUFFER_SIZE;
     selector->selected_buffer = (struct NIO_Selected *)xmalloc(sizeof(struct NIO_Selected) * SELECTED_BUFFER_SIZE);
 
