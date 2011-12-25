@@ -27,6 +27,11 @@ module NIO
       end
     end
 
+    # Deregister the given IO object from the selector
+    def deregister(io)
+      @lock.synchronize { @selectables.delete io }
+    end
+
     # Is the given IO object registered with the selector?
     def registered?(io)
       @lock.synchronize { @selectables.has_key? io }

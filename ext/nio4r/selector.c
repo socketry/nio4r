@@ -168,7 +168,7 @@ static VALUE NIO_Selector_register_synchronized(VALUE array)
     monitor = rb_hash_lookup(selectables, io);
 
     if(monitor != Qnil)
-        rb_raise(rb_eRuntimeError, "this IO is already registered with selector");
+        rb_raise(rb_eArgumentError, "this IO is already registered with selector");
 
     /* Create a new NIO::Monitor */
     args[0] = self;

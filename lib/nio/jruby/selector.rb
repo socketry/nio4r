@@ -60,9 +60,21 @@ module NIO
       NIO::Monitor.new(io, selector_key)
     end
 
+    # Deregister the given IO object from the selector
+    def deregister(io)
+      key = io.to_channel.keyFor(@java_selector)
+      return unless key
+
+      monitor = key.attachment
+      monitor.deactivate
+      monitor
+    end
+
     # Is the given IO object registered with the selector?
     def registered?(io)
-      !!io.to_channel.keyFor(@java_selector)
+      key = io.to_channel.keyFor(@java_selector)
+      return unless key
+      key.attachment.active?
     end
 
     # Select which monitors are ready
