@@ -27,6 +27,11 @@ module NIO
       end
     end
 
+    # Is the given IO object registered with the selector?
+    def registered?(io)
+      @lock.synchronize { @selectables.has_key? io }
+    end
+
     # Select which monitors are ready
     def select(timeout = nil)
       @lock.synchronize do

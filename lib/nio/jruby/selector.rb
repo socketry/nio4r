@@ -60,6 +60,11 @@ module NIO
       NIO::Monitor.new(io, selector_key)
     end
 
+    # Is the given IO object registered with the selector?
+    def registered?(io)
+      !!io.to_channel.keyFor(@java_selector)
+    end
+
     # Select which monitors are ready
     def select(timeout = nil)
       @select_lock.synchronize do

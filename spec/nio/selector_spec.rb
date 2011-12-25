@@ -4,13 +4,27 @@ require 'spec_helper'
 TIMEOUT_PRECISION = 0.05
 
 describe NIO::Selector do
-  context "register" do
-    it "monitors IO objects" do
-      pipe, _ = IO.pipe
+  it "monitors IO objects" do
+    pipe, _ = IO.pipe
 
-      monitor = subject.register(pipe, :r)
-      monitor.should be_a NIO::Monitor
-    end
+    monitor = subject.register(pipe, :r)
+    monitor.should be_a NIO::Monitor
+  end
+
+  it "knows which IO objects are registered" do
+    reader, writer = IO.pipe
+    subject.register(reader, :r)
+
+    subject.should be_registered(reader)
+    subject.should_not be_registered(writer)
+  end
+
+  it "deregisters IO objects" do
+    pipe, _ = IO.pipe
+
+    subject.register(pipe, :r)
+    subject.deregister(pipe)
+    subject.should_not be_registered(pipe)
   end
 
   context "select" do

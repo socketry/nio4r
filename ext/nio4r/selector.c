@@ -20,6 +20,7 @@ static void NIO_Selector_free(struct NIO_Selector *loop);
 /* Methods */
 static VALUE NIO_Selector_initialize(VALUE self);
 static VALUE NIO_Selector_register(VALUE self, VALUE selectable, VALUE interest);
+static VALUE NIO_Selector_is_registered(VALUE self, VALUE io);
 static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self);
 static VALUE NIO_Selector_wakeup(VALUE self);
 static VALUE NIO_Selector_close(VALUE self);
@@ -51,6 +52,7 @@ void Init_NIO_Selector()
 
     rb_define_method(cNIO_Selector, "initialize", NIO_Selector_initialize, 0);
     rb_define_method(cNIO_Selector, "register", NIO_Selector_register, 2);
+    rb_define_method(cNIO_Selector, "registered?", NIO_Selector_is_registered, 1);
     rb_define_method(cNIO_Selector, "select", NIO_Selector_select, -1);
     rb_define_method(cNIO_Selector, "wakeup", NIO_Selector_wakeup, 0);
     rb_define_method(cNIO_Selector, "close", NIO_Selector_close, 0);
@@ -121,6 +123,7 @@ static VALUE NIO_Selector_initialize(VALUE self)
     return Qnil;
 }
 
+/* Synchronize the given function with the selector mutex */
 static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE arg), VALUE arg)
 {
     VALUE lock;
@@ -130,6 +133,7 @@ static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE arg), VALU
     return rb_ensure(func, arg, NIO_Selector_unlock, lock);
 }
 
+/* Unlock the selector mutex */
 static VALUE NIO_Selector_unlock(VALUE lock)
 {
     rb_funcall(lock, rb_intern("unlock"), 0, 0);
@@ -140,6 +144,13 @@ static VALUE NIO_Selector_register(VALUE self, VALUE io, VALUE interests)
 {
     VALUE array = rb_ary_new3(3, self, io, interests);
     return NIO_Selector_synchronize(self, NIO_Selector_register_synchronized, array);
+}
+
+/* Is the given IO object registered with the selector */
+static VALUE NIO_Selector_is_registered(VALUE self, VALUE io)
+{
+    VALUE selectables = rb_ivar_get(self, rb_intern("selectables"));
+    return rb_funcall(selectables, rb_intern("has_key?"), 1, io);
 }
 
 /* Internal implementation of register after acquiring mutex */
