@@ -198,17 +198,17 @@ static VALUE NIO_Selector_select_synchronized(VALUE array)
 #if defined(HAVE_RB_THREAD_BLOCKING_REGION)
     /* Ruby 1.9 lets us release the GIL and make a blocking I/O call */
     rb_thread_blocking_region(NIO_Selector_run_evloop, selector, RUBY_UBF_IO, 0);
+#elif defined(HAVE_RB_THREAD_ALONE)
+    /* If we're the only thread we can make a blocking system call */
+    if(rb_thread_alone()) {
 #else
-    /* FIXME:
-    This makes a blocking call in 1.8 which will hang the entire
-    interpreter and prevent threads from being scheduled. I honestly don't
-    care about 1.8 that much. Let me know if you do and I can investigate
-    doing similar green thread workarounds as EM and cool.io */
-
-    TRAP_BEG;
-    NIO_Selector_run_evloop(selector);
-    TRAP_END;
-#endif
+    /* If we don't have rb_thread_alone() we can't block */
+    if(0) {
+#endif /* defined(HAVE_RB_THREAD_BLOCKING_REGION) */
+        TRAP_BEG;
+        NIO_Selector_run_evloop(selector);
+        TRAP_END;
+    }
 
     result = rb_ary_new4(selector->ready_count, selector->ready_buffer);
     selector->ready_count = 0;
