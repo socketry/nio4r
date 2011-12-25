@@ -18,6 +18,7 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE 
 static VALUE NIO_Monitor_io(VALUE self);
 static VALUE NIO_Monitor_interests(VALUE self);
 static VALUE NIO_Monitor_value(VALUE self);
+static VALUE NIO_Monitor_set_value(VALUE self, VALUE obj);
 
 /* Internal functions */
 static void NIO_Monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
