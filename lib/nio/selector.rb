@@ -17,13 +17,14 @@ module NIO
     # * :w - is the IO writeable?
     # * :rw - is the IO either readable or writeable?
     def register(io, interest)
-      monitor = Monitor.new(io, interest)
-
       @lock.synchronize do
-        @selectables[io] = monitor
-      end
+        raise ArgumentError, "this IO is already registered with the selector" if @selectables[io]
 
-      monitor
+        monitor = Monitor.new(io, interest)
+        @selectables[io] = monitor
+
+        monitor
+      end
     end
 
     # Select which monitors are ready

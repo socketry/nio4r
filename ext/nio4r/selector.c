@@ -27,7 +27,7 @@ static VALUE NIO_Selector_closed(VALUE self);
 /* Internal functions */
 static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE arg), VALUE arg);
 static VALUE NIO_Selector_unlock(VALUE lock);
-static VALUE NIO_Selector_add_channel(VALUE array);
+static VALUE NIO_Selector_register_synchronized(VALUE array);
 
 /* Default number of slots in the buffer for selected monitors */
 #define SELECTED_BUFFER_SIZE 32
@@ -47,6 +47,7 @@ void Init_NIO_Selector()
     rb_define_method(cNIO_Selector, "closed?", NIO_Selector_closed, 0);
 }
 
+/* Create the libev event loop and incoming event buffer */
 static VALUE NIO_Selector_allocate(VALUE klass)
 {
     struct NIO_Selector *selector = (struct NIO_Selector *)xmalloc(sizeof(struct NIO_Selector));
@@ -59,10 +60,13 @@ static VALUE NIO_Selector_allocate(VALUE klass)
     return Data_Wrap_Struct(klass, NIO_Selector_mark, NIO_Selector_free, selector);
 }
 
+/* NIO selectors store all Ruby objects in instance variables so mark is a stub */
 static void NIO_Selector_mark(struct NIO_Selector *selector)
 {
 }
 
+/* Free a Selector's system resources.
+   Called by both NIO::Selector#close and the finalizer below */
 static void NIO_Selector_shutdown(struct NIO_Selector *selector)
 {
     if(selector->ev_loop) {
@@ -77,6 +81,7 @@ static void NIO_Selector_shutdown(struct NIO_Selector *selector)
     selector->closed = 1;
 }
 
+/* Ruby finalizer for selector objects */
 static void NIO_Selector_free(struct NIO_Selector *selector)
 {
     NIO_Selector_shutdown(selector);
@@ -85,6 +90,8 @@ static void NIO_Selector_free(struct NIO_Selector *selector)
     xfree(selector);
 }
 
+/* Create a new selector. This is more or less the pure Ruby version
+   translated into an MRI cext */
 static VALUE NIO_Selector_initialize(VALUE self)
 {
     VALUE lock;
@@ -97,20 +104,11 @@ static VALUE NIO_Selector_initialize(VALUE self)
     return Qnil;
 }
 
-static VALUE NIO_Selector_register(VALUE self, VALUE selectable, VALUE interests)
+/* Register an IO object with the selector for the given interests */
+static VALUE NIO_Selector_register(VALUE self, VALUE io, VALUE interests)
 {
-    VALUE channel, lock, array;
-
-    if(rb_obj_is_kind_of(selectable, cNIO_Channel)) {
-        channel = selectable;
-    } else {
-        channel = rb_funcall(selectable, rb_intern("channel"), 0, 0);
-    }
-
-    rb_funcall(channel, rb_intern("blocking="), 1, Qfalse);
-
-    array = rb_ary_new3(3, self, channel, interests);
-    return NIO_Selector_synchronize(self, NIO_Selector_add_channel, array);
+    VALUE array = rb_ary_new3(3, self, io, interests);
+    return NIO_Selector_synchronize(self, NIO_Selector_register_synchronized, array);
 }
 
 static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE arg), VALUE arg)
@@ -127,27 +125,27 @@ static VALUE NIO_Selector_unlock(VALUE lock)
     rb_funcall(lock, rb_intern("unlock"), 0, 0);
 }
 
-static VALUE NIO_Selector_add_channel(VALUE array)
+static VALUE NIO_Selector_register_synchronized(VALUE array)
 {
-    VALUE self, channel, interests, selectables, monitor;
+    VALUE self, io, interests, selectables, monitor;
     VALUE args[2];
 
     self = rb_ary_entry(array, 0);
-    channel = rb_ary_entry(array, 1);
+    io = rb_ary_entry(array, 1);
     interests = rb_ary_entry(array, 2);
 
     selectables = rb_ivar_get(self, rb_intern("selectables"));
-    monitor = rb_hash_lookup(selectables, channel);
+    monitor = rb_hash_lookup(selectables, io);
 
     if(monitor != Qnil)
-        rb_raise(rb_eRuntimeError, "already registered");
+        rb_raise(rb_eRuntimeError, "this IO is already registered with selector");
 
     /* Create a new NIO::Monitor */
-    args[0] = channel;
+    args[0] = io;
     args[1] = interests;
 
     monitor = rb_class_new_instance(2, args, cNIO_Monitor);
-    rb_hash_aset(selectables, channel, monitor);
+    rb_hash_aset(selectables, io, monitor);
 
     return monitor;
 }
