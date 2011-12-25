@@ -22,4 +22,9 @@ describe NIO::Monitor do
   it "knows its interests" do
     subject.interests.should == :r
   end
+
+  it "stores arbitrary values" do
+    subject.value = 42
+    subject.value.should == 42
+  end
 end

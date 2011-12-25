@@ -1,6 +1,8 @@
 module NIO
   # Monitors watch Channels for specific events
   class Monitor
+    attr_accessor :value
+
     # :nodoc
     def initialize(io, selection_key)
       @io, @key = io, selection_key

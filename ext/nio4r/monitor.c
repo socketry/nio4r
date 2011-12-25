@@ -17,6 +17,7 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor);
 static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE interests);
 static VALUE NIO_Monitor_io(VALUE self);
 static VALUE NIO_Monitor_interests(VALUE self);
+static VALUE NIO_Monitor_value(VALUE self);
 
 /* Internal functions */
 static void NIO_Monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
@@ -37,6 +38,8 @@ void Init_NIO_Monitor()
     rb_define_method(cNIO_Monitor, "initialize", NIO_Monitor_initialize, 3);
     rb_define_method(cNIO_Monitor, "io", NIO_Monitor_io, 0);
     rb_define_method(cNIO_Monitor, "interests", NIO_Monitor_interests, 0);
+    rb_define_method(cNIO_Monitor, "value", NIO_Monitor_value, 0);
+    rb_define_method(cNIO_Monitor, "value=", NIO_Monitor_set_value, 1);
 }
 
 static VALUE NIO_Monitor_allocate(VALUE klass)
@@ -112,6 +115,16 @@ static VALUE NIO_Monitor_io(VALUE self)
 static VALUE NIO_Monitor_interests(VALUE self)
 {
     return rb_ivar_get(self, rb_intern("interests"));
+}
+
+static VALUE NIO_Monitor_value(VALUE self)
+{
+    return rb_ivar_get(self, rb_intern("value"));
+}
+
+static VALUE NIO_Monitor_set_value(VALUE self, VALUE obj)
+{
+    return rb_ivar_set(self, rb_intern("value"), obj);
 }
 
 /* libev callback fired whenever this monitor gets events */
