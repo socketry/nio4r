@@ -27,10 +27,10 @@ static VALUE NIO_Selector_close(VALUE self);
 static VALUE NIO_Selector_closed(VALUE self);
 
 /* Internal functions */
-static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE arg), VALUE arg);
+static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VALUE *args);
 static VALUE NIO_Selector_unlock(VALUE lock);
-static VALUE NIO_Selector_register_synchronized(VALUE array);
-static VALUE NIO_Selector_select_synchronized(VALUE array);
+static VALUE NIO_Selector_register_synchronized(VALUE *args);
+static VALUE NIO_Selector_select_synchronized(VALUE *args);
 static VALUE NIO_Selector_run_evloop(void *ptr);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
 static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_async *async, int revents);
@@ -124,13 +124,13 @@ static VALUE NIO_Selector_initialize(VALUE self)
 }
 
 /* Synchronize the given function with the selector mutex */
-static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE arg), VALUE arg)
+static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VALUE *args)
 {
     VALUE lock;
 
     lock = rb_ivar_get(self, rb_intern("lock"));
     rb_funcall(lock, rb_intern("lock"), 0, 0);
-    return rb_ensure(func, arg, NIO_Selector_unlock, lock);
+    return rb_ensure(func, (VALUE)args, NIO_Selector_unlock, lock);
 }
 
 /* Unlock the selector mutex */
@@ -142,8 +142,8 @@ static VALUE NIO_Selector_unlock(VALUE lock)
 /* Register an IO object with the selector for the given interests */
 static VALUE NIO_Selector_register(VALUE self, VALUE io, VALUE interests)
 {
-    VALUE array = rb_ary_new3(3, self, io, interests);
-    return NIO_Selector_synchronize(self, NIO_Selector_register_synchronized, array);
+    VALUE args[3] = {self, io, interests};
+    return NIO_Selector_synchronize(self, NIO_Selector_register_synchronized, args);
 }
 
 /* Is the given IO object registered with the selector */
@@ -154,28 +154,27 @@ static VALUE NIO_Selector_is_registered(VALUE self, VALUE io)
 }
 
 /* Internal implementation of register after acquiring mutex */
-static VALUE NIO_Selector_register_synchronized(VALUE array)
+static VALUE NIO_Selector_register_synchronized(VALUE *args)
 {
     VALUE self, io, interests, selectables, monitor;
-    VALUE args[3];
+    VALUE monitor_args[3];
 
-    /* FIXME: Meh, these should probably be varargs */
-    self = rb_ary_entry(array, 0);
-    io = rb_ary_entry(array, 1);
-    interests = rb_ary_entry(array, 2);
+    self = args[0];
+    io = args[1];
+    interests = args[2];
 
     selectables = rb_ivar_get(self, rb_intern("selectables"));
     monitor = rb_hash_lookup(selectables, io);
 
     if(monitor != Qnil)
-        rb_raise(rb_eArgumentError, "this IO is already registered with selector");
+        rb_raise(rb_eArgError, "this IO is already registered with selector");
 
     /* Create a new NIO::Monitor */
-    args[0] = self;
-    args[1] = io;
-    args[2] = interests;
+    monitor_args[0] = self;
+    monitor_args[1] = io;
+    monitor_args[2] = interests;
 
-    monitor = rb_class_new_instance(3, args, cNIO_Monitor);
+    monitor = rb_class_new_instance(3, monitor_args, cNIO_Monitor);
     rb_hash_aset(selectables, io, monitor);
 
     return monitor;
@@ -185,22 +184,24 @@ static VALUE NIO_Selector_register_synchronized(VALUE array)
 static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self)
 {
     VALUE timeout, array;
+    VALUE args[2];
 
     rb_scan_args(argc, argv, "01", &timeout);
-    array = rb_ary_new3(2, self, timeout);
 
-    return NIO_Selector_synchronize(self, NIO_Selector_select_synchronized, array);
+    args[0] = self;
+    args[1] = timeout;
+
+    return NIO_Selector_synchronize(self, NIO_Selector_select_synchronized, args);
 }
 
 /* Internal implementation of select with the selector lock held */
-static VALUE NIO_Selector_select_synchronized(VALUE array)
+static VALUE NIO_Selector_select_synchronized(VALUE *args)
 {
     VALUE self, timeout, result;
     struct NIO_Selector *selector;
 
-    /* FIXME: Meh, these should probably be varargs */
-    self = rb_ary_entry(array, 0);
-    timeout = rb_ary_entry(array, 1);
+    self = args[0];
+    timeout = args[1];
 
     Data_Get_Struct(self, struct NIO_Selector, selector);
     selector->selecting = 1;
