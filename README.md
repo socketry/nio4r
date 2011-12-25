@@ -83,6 +83,20 @@ the selector:
 
     selector.deregister(reader)
 
+Concurrency
+-----------
+
+nio4r provides internal locking to ensure that it's safe to use from multiple
+concurrent threads. Only one thread can select on a NIO::Selector at a given
+time, and while a thread is selecting other threads are blocked from
+registering or deregistering IO objects. Once a pending select has completed,
+requests to register/unregister IO objects will be processed.
+
+NIO::Selector#wakeup allows one thread to unblock another thread that's in the
+middle of an NIO::Selector#select operation. This lets other threads that need
+to communicate immediately with the selector unblock it so it can process
+other events that it's not presently selecting on.
+
 What nio4r is not
 -----------------
 
