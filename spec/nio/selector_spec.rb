@@ -1,7 +1,7 @@
 require 'spec_helper'
 
-# Timeouts should be at least this close to pass the tests
-TIMEOUT_PRECISION = 0.02
+# Timeouts should be at least this precise (in seconds) to pass the tests
+TIMEOUT_PRECISION = 0.05
 
 describe NIO::Selector do
   context "register" do

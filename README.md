@@ -3,8 +3,8 @@ New IO for Ruby
 [![Build Status](http://travis-ci.org/tarcieri/nio4r.png)](http://travis-ci.org/tarcieri/nio4r)
 
 When it comes to doing advanced IO on Ruby, there aren't a whole lot of
-options. The most powerful UI construct Ruby itself gives you is
-Kernel.select, and select is hurting a bit when it comes to both performance
+options. The most powerful API Ruby itself gives you is Kernel.select, and
+select is hurting a bit when it comes to both performance
 when selecting on large numbers of IO objects, and in terms of having a nice
 API. There are a handful of new IO methods appearing in Ruby but figuring
 out which one to use can be difficult.

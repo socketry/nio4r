@@ -1,5 +1,4 @@
 require 'nio/version'
-require 'nio/core_ext'
 
 # New I/O for Ruby
 module NIO
@@ -11,14 +10,16 @@ module NIO
 end
 
 if ENV["NIO4R_PURE"]
-  require 'nio/pure'
+  require 'nio/monitor'
+  require 'nio/selector'
   NIO::ENGINE = 'select'
 else
   if defined?(JRUBY_VERSION)
-    require 'nio/jruby'
+    require 'java'
+    require 'nio/jruby/monitor'
+    require 'nio/jruby/selector'
     NIO::ENGINE = 'java'
   else
-    require 'nio/channel'
     require 'nio4r_ext'
     NIO::ENGINE = 'libev'
   end

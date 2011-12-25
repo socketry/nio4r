@@ -1,5 +1,5 @@
 module NIO
-  # Selectors monitor channels for events of interest
+  # Selectors monitor IO objects for events of interest
   class Selector
     # Create a new NIO::Selector
     def initialize
@@ -11,32 +11,19 @@ module NIO
       @closed = false
     end
 
-    # Register interest in an NIO::Channel with the selector for the given types
-    # of events. Valid interests are:
-    # * :r - is the channel readable?
-    # * :w - is the channel writeable?
-    # * :rw - is the channel either readable or writeable?
-    def register(selectable, interests)
-      if selectable.is_a? NIO::Channel
-        channel = selectable
-      else
-        channel = selectable.channel
-      end
-
-      channel.blocking = false
+    # Register interest in an IO object with the selector for the given types
+    # of events. Valid event types for interest are:
+    # * :r - is the IO readable?
+    # * :w - is the IO writeable?
+    # * :rw - is the IO either readable or writeable?
+    def register(io, interest)
+      monitor = Monitor.new(io, interest)
 
       @lock.synchronize do
-        monitor = @selectables[channel]
-
-        if monitor
-          raise "already registered"
-        else
-          monitor = Monitor.new(channel, interests)
-          @selectables[channel] = monitor
-        end
-
-        monitor
+        @selectables[io] = monitor
       end
+
+      monitor
     end
 
     # Select which monitors are ready
@@ -44,9 +31,9 @@ module NIO
       @lock.synchronize do
         readers, writers = [@wakeup], []
 
-        @selectables.each do |channel, monitor|
-          readers << channel.to_io if monitor.interests == :r || monitor.interests == :rw
-          writers << channel.to_io if monitor.interests == :w || monitor.interests == :rw
+        @selectables.each do |io, monitor|
+          readers << io if monitor.interests == :r || monitor.interests == :rw
+          writers << io if monitor.interests == :w || monitor.interests == :rw
         end
 
         ready_readers, ready_writers = Kernel.select readers, writers, [], timeout
@@ -66,7 +53,7 @@ module NIO
             rescue Errno::EWOULDBLOCK
             end
           else
-            @selectables[io.channel]
+            @selectables[io]
           end
         end
       end
