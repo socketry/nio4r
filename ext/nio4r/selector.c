@@ -37,6 +37,9 @@ static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_asyn
 /* Default number of slots in the buffer for selected monitors */
 #define INITIAL_READY_BUFFER 32
 
+/* Ruby 1.8 needs us to busy wait and run the green threads scheduler every 10ms */
+#define BUSYWAIT_INTERVAL 0.01
+
 /* Selectors wait for events */
 void Init_NIO_Selector()
 {
@@ -188,12 +191,18 @@ static VALUE NIO_Selector_select_synchronized(VALUE array)
 
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
+#if defined(HAVE_RB_THREAD_BLOCKING_REGION) || defined(HAVE_RB_THREAD_ALONE)
+    /* Implement the optional timeout (if any) as a ev_timer */
     if(timeout != Qnil) {
         selector->timer.repeat = NUM2DBL(timeout);
         ev_timer_again(selector->ev_loop, &selector->timer);
     } else {
         ev_timer_stop(selector->ev_loop, &selector->timer);
     }
+#else
+    /* Store when we started the loop so we can calculate the timeout */
+    ev_tstamp started_at = ev_now(selector->ev_loop);
+#endif
 
 #if defined(HAVE_RB_THREAD_BLOCKING_REGION)
     /* Ruby 1.9 lets us release the GIL and make a blocking I/O call */
@@ -205,10 +214,34 @@ static VALUE NIO_Selector_select_synchronized(VALUE array)
     /* If we don't have rb_thread_alone() we can't block */
     if(0) {
 #endif /* defined(HAVE_RB_THREAD_BLOCKING_REGION) */
+
+#if !defined(HAVE_RB_THREAD_BLOCKING_REGION)
         TRAP_BEG;
         NIO_Selector_run_evloop(selector);
         TRAP_END;
+    } else {
+        /* We need to busy wait as not to stall the green thread scheduler
+           Ruby 1.8: just say no! :( */
+        ev_timer_init(&selector->timer, NIO_Selector_timeout_callback, BUSYWAIT_INTERVAL, BUSYWAIT_INTERVAL);
+        ev_timer_start(selector->ev_loop, &selector->timer);
+
+        /* Loop until we receive events */
+        while(!selector->ready_count) {
+            TRAP_BEG;
+            NIO_Selector_run_evloop(selector);
+            TRAP_END;
+
+            /* Run the next green thread */
+            rb_thread_schedule();
+
+            /* Break if the timeout has elapsed */
+            if(timeout != Qnil && ev_now(selector->ev_loop) - started_at >= NUM2DBL(timeout))
+                break;
+        }
+
+        ev_timer_stop(selector->ev_loop, &selector->timer);
     }
+#endif /* defined(HAVE_RB_THREAD_BLOCKING_REGION) */
 
     result = rb_ary_new4(selector->ready_count, selector->ready_buffer);
     selector->ready_count = 0;
