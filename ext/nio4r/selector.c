@@ -133,7 +133,7 @@ static VALUE NIO_Selector_register(VALUE self, VALUE io, VALUE interests)
 static VALUE NIO_Selector_register_synchronized(VALUE array)
 {
     VALUE self, io, interests, selectables, monitor;
-    VALUE args[2];
+    VALUE args[3];
 
     /* FIXME: Meh, these should probably be varargs */
     self = rb_ary_entry(array, 0);
@@ -147,10 +147,11 @@ static VALUE NIO_Selector_register_synchronized(VALUE array)
         rb_raise(rb_eRuntimeError, "this IO is already registered with selector");
 
     /* Create a new NIO::Monitor */
-    args[0] = io;
-    args[1] = interests;
+    args[0] = self;
+    args[1] = io;
+    args[2] = interests;
 
-    monitor = rb_class_new_instance(2, args, cNIO_Monitor);
+    monitor = rb_class_new_instance(3, args, cNIO_Monitor);
     rb_hash_aset(selectables, io, monitor);
 
     return monitor;

@@ -16,7 +16,7 @@ static void NIO_Monitor_mark(struct NIO_Monitor *monitor);
 static void NIO_Monitor_free(struct NIO_Monitor *monitor);
 
 /* Methods */
-static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests);
+static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE interests);
 static VALUE NIO_Monitor_io(VALUE self);
 static VALUE NIO_Monitor_interests(VALUE self);
 
@@ -36,7 +36,7 @@ void Init_NIO_Monitor()
     cNIO_Monitor = rb_define_class_under(mNIO, "Monitor", rb_cObject);
     rb_define_alloc_func(cNIO_Monitor, NIO_Monitor_allocate);
 
-    rb_define_method(cNIO_Monitor, "initialize", NIO_Monitor_initialize, 2);
+    rb_define_method(cNIO_Monitor, "initialize", NIO_Monitor_initialize, 3);
     rb_define_method(cNIO_Monitor, "io", NIO_Monitor_io, 0);
     rb_define_method(cNIO_Monitor, "interests", NIO_Monitor_interests, 0);
 }
@@ -57,17 +57,17 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor)
     xfree(monitor);
 }
 
-static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests)
+static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE interests)
 {
     struct NIO_Monitor *monitor;
-    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+    struct NIO_Selector *selector_data;
     int events;
 
-#if HAVE_RB_IO_T
-    rb_io_t *fptr;
-#else
-    OpenFile *fptr;
-#endif
+    #if HAVE_RB_IO_T
+        rb_io_t *fptr;
+    #else
+        OpenFile *fptr;
+    #endif
 
     interests = rb_funcall(interests, rb_intern("to_sym"), 0, 0);
 
@@ -84,8 +84,14 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests)
     rb_ivar_set(self, rb_intern("io"), io);
     rb_ivar_set(self, rb_intern("interests"), interests);
 
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
     ev_io_init(&monitor->ev_io, NIO_Monitor_callback, FPTR_TO_FD(fptr), events);
+    monitor->ev_io.data = (void *)self;
+
+    Data_Get_Struct(selector, struct NIO_Selector, selector_data);
+    ev_io_start(selector_data->ev_loop, &monitor->ev_io);
 
     return Qnil;
 }
