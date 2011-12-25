@@ -4,6 +4,7 @@
  */
 
 #include "nio4r.h"
+#include <assert.h>
 
 static VALUE mNIO = Qnil;
 static VALUE cNIO_Monitor = Qnil;
@@ -15,6 +16,7 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor);
 
 /* Methods */
 static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE interests);
+static VALUE NIO_Monitor_deactivate(VALUE self);
 static VALUE NIO_Monitor_io(VALUE self);
 static VALUE NIO_Monitor_interests(VALUE self);
 static VALUE NIO_Monitor_value(VALUE self);
@@ -37,6 +39,7 @@ void Init_NIO_Monitor()
     rb_define_alloc_func(cNIO_Monitor, NIO_Monitor_allocate);
 
     rb_define_method(cNIO_Monitor, "initialize", NIO_Monitor_initialize, 3);
+    rb_define_method(cNIO_Monitor, "deactivate", NIO_Monitor_io, 0);
     rb_define_method(cNIO_Monitor, "io", NIO_Monitor_io, 0);
     rb_define_method(cNIO_Monitor, "interests", NIO_Monitor_interests, 0);
     rb_define_method(cNIO_Monitor, "value", NIO_Monitor_value, 0);
@@ -59,10 +62,10 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor)
     xfree(monitor);
 }
 
-static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE interests)
+static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector_obj, VALUE io, VALUE interests)
 {
     struct NIO_Monitor *monitor;
-    struct NIO_Selector *selector_data;
+    struct NIO_Selector *selector;
     int events;
     ID interests_id;
 
@@ -90,20 +93,34 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE 
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
     ev_io_init(&monitor->ev_io, NIO_Monitor_callback, FPTR_TO_FD(fptr), events);
 
-    rb_ivar_set(self, rb_intern("selector"), selector);
+    rb_ivar_set(self, rb_intern("selector"), selector_obj);
     rb_ivar_set(self, rb_intern("io"), io);
     rb_ivar_set(self, rb_intern("interests"), interests);
 
-    Data_Get_Struct(selector, struct NIO_Selector, selector_data);
+    Data_Get_Struct(selector_obj, struct NIO_Selector, selector);
 
     monitor->self = self;
     monitor->ev_io.data = (void *)monitor;
 
     /* We can safely hang onto this as we also hang onto a reference to the
        object where it originally came from */
-    monitor->selector = selector_data;
+    monitor->selector = selector;
 
-    ev_io_start(selector_data->ev_loop, &monitor->ev_io);
+    ev_io_start(selector->ev_loop, &monitor->ev_io);
+
+    return Qnil;
+}
+
+static VALUE NIO_Monitor_deactivate(VALUE self)
+{
+    struct NIO_Monitor *monitor;
+
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+
+    if(monitor->selector) {
+        ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
+        monitor->selector = 0;
+    }
 
     return Qnil;
 }
@@ -133,5 +150,6 @@ static void NIO_Monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int 
 {
     struct NIO_Monitor *monitor = (struct NIO_Monitor *)io->data;
 
+    assert(monitor->selector != 0);
     NIO_Selector_handle_event(monitor->selector, monitor->self, revents);
 }
