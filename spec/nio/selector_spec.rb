@@ -42,7 +42,7 @@ describe NIO::Selector do
       reader.read_nonblock(payload.size)
 
       started_at = Time.now
-      subject.select(timeout).should == []
+      subject.select(timeout).should be_nil
       (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(timeout)
     end
 
@@ -52,7 +52,7 @@ describe NIO::Selector do
 
       thread = Thread.new do
         started_at = Time.now
-        subject.select
+        subject.select.should be_nil
         Time.now - started_at
       end
 

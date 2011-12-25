@@ -48,8 +48,9 @@ module NIO
         end
 
         ready_readers, ready_writers = Kernel.select readers, writers, [], timeout
+        return unless ready_readers # timeout or wakeup
 
-        results = ready_readers || []
+        results = ready_readers
         results.concat ready_writers if ready_writers
 
         results.map! do |io|
@@ -63,6 +64,8 @@ module NIO
               redo
             rescue Errno::EWOULDBLOCK
             end
+
+            return
           else
             @selectables[io]
           end

@@ -289,6 +289,10 @@ static VALUE NIO_Selector_select_synchronized(VALUE *args)
     }
 #endif /* defined(HAVE_RB_THREAD_BLOCKING_REGION) */
 
+    if(!selector->ready_count) {
+        return Qnil;
+    }
+
     result = rb_ary_new4(selector->ready_count, selector->ready_buffer);
     selector->selecting = selector->ready_count = 0;
 
@@ -305,6 +309,7 @@ static VALUE NIO_Selector_run_evloop(void *ptr)
     return Qnil;
 }
 
+/* Wake the selector up from another thread */
 static VALUE NIO_Selector_wakeup(VALUE self)
 {
     struct NIO_Selector *selector;
@@ -315,6 +320,7 @@ static VALUE NIO_Selector_wakeup(VALUE self)
     return Qnil;
 }
 
+/* Close the selector and free system resources */
 static VALUE NIO_Selector_close(VALUE self)
 {
     struct NIO_Selector *selector;
@@ -325,6 +331,7 @@ static VALUE NIO_Selector_close(VALUE self)
     return Qnil;
 }
 
+/* Is the selector closed? */
 static VALUE NIO_Selector_closed(VALUE self)
 {
     struct NIO_Selector *selector;

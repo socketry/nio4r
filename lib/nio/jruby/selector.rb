@@ -86,7 +86,7 @@ module NIO
           ready = @java_selector.select
         end
 
-        return [] unless ready > 0
+        return unless ready > 0 # timeout or wakeup
         @java_selector.selectedKeys.map { |key| key.attachment }
       end
     end
