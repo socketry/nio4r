@@ -60,6 +60,7 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE 
     struct NIO_Monitor *monitor;
     struct NIO_Selector *selector_data;
     int events;
+    ID interests_id;
 
     #if HAVE_RB_IO_T
         rb_io_t *fptr;
@@ -67,16 +68,17 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE 
         OpenFile *fptr;
     #endif
 
-    interests = rb_funcall(interests, rb_intern("to_sym"), 0, 0);
+    interests_id = SYM2ID(interests);
 
-    if(interests == rb_intern("r")) {
+    if(interests_id == rb_intern("r")) {
         events = EV_READ;
-    } else if(interests == rb_intern("w")) {
+    } else if(interests_id == rb_intern("w")) {
         events = EV_WRITE;
-    } else if(interests == rb_intern("rw")) {
+    } else if(interests_id == rb_intern("rw")) {
         events = EV_READ | EV_WRITE;
     } else {
-        rb_raise(rb_eArgError, "invalid event type: '%s' (must be :r, :w, or :rw)", RSTRING_PTR(rb_String(interests)));
+        rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)",
+            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0, 0)));
     }
 
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
