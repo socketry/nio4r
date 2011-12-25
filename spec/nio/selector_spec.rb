@@ -1,7 +1,9 @@
 require 'spec_helper'
 
 # Timeouts should be at least this precise (in seconds) to pass the tests
-TIMEOUT_PRECISION = 0.05
+# Typical precision should be better than this, but if it's worse it will fail
+# the tests
+TIMEOUT_PRECISION = 0.1
 
 describe NIO::Selector do
   it "monitors IO objects" do
@@ -35,7 +37,7 @@ describe NIO::Selector do
       payload = "hi there"
       writer << payload
 
-      timeout = 0.1
+      timeout = 0.5
       started_at = Time.now
       subject.select(timeout).should include monitor
       (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(0)
