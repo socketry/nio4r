@@ -20,6 +20,7 @@ static void NIO_Selector_free(struct NIO_Selector *loop);
 static VALUE NIO_Selector_initialize(VALUE self);
 static VALUE NIO_Selector_register(VALUE self, VALUE selectable, VALUE interest);
 static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self);
+static VALUE NIO_Selector_wakeup(VALUE self);
 static VALUE NIO_Selector_close(VALUE self);
 static VALUE NIO_Selector_closed(VALUE self);
 
@@ -30,6 +31,7 @@ static VALUE NIO_Selector_register_synchronized(VALUE array);
 static VALUE NIO_Selector_select_synchronized(VALUE array);
 static VALUE NIO_Selector_run_evloop(void *ptr);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
+static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_async *async, int revents);
 
 /* Default number of slots in the buffer for selected monitors */
 #define INITIAL_READY_BUFFER 32
@@ -46,6 +48,7 @@ void Init_NIO_Selector()
     rb_define_method(cNIO_Selector, "initialize", NIO_Selector_initialize, 0);
     rb_define_method(cNIO_Selector, "register", NIO_Selector_register, 2);
     rb_define_method(cNIO_Selector, "select", NIO_Selector_select, -1);
+    rb_define_method(cNIO_Selector, "wakeup", NIO_Selector_wakeup, 0);
     rb_define_method(cNIO_Selector, "close", NIO_Selector_close, 0);
     rb_define_method(cNIO_Selector, "closed?", NIO_Selector_closed, 0);
 }
@@ -57,6 +60,9 @@ static VALUE NIO_Selector_allocate(VALUE klass)
 
     selector->ev_loop = ev_loop_new(0);
     ev_init(&selector->timer, NIO_Selector_timeout_callback);
+
+    ev_async_init(&selector->wakeup, NIO_Selector_wakeup_callback);
+    ev_async_start(selector->ev_loop, &selector->wakeup);
 
     selector->closed = selector->ready_count = 0;
     selector->ready_buffer_size = INITIAL_READY_BUFFER;
@@ -219,6 +225,16 @@ static VALUE NIO_Selector_run_evloop(void *ptr)
     return Qnil;
 }
 
+static VALUE NIO_Selector_wakeup(VALUE self)
+{
+    struct NIO_Selector *selector;
+    Data_Get_Struct(self, struct NIO_Selector, selector);
+
+    ev_async_send(selector->ev_loop, &selector->wakeup);
+
+    return Qnil;
+}
+
 static VALUE NIO_Selector_close(VALUE self)
 {
     struct NIO_Selector *selector;
@@ -242,6 +258,12 @@ static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_tim
 {
     /* We don't actually need to do anything here, the mere firing of the
        timer is sufficient to interrupt the selector. However, libev still wants a callback */
+}
+
+/* Called whenever a wakeup request is sent to a selector */
+static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_async *async, int revents)
+{
+    /* Same as above, this just unblocks the loop */
 }
 
 /* This gets called from individual monitors. We must be careful here because

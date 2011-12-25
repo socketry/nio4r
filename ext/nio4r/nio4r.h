@@ -7,13 +7,14 @@
 #define NIO4R_H
 
 #include "ruby.h"
-#include "rubyio.h"
+#include "ruby/io.h"
 #include "libev.h"
 
 struct NIO_Selector
 {
     struct ev_loop *ev_loop;
     struct ev_timer timer; /* for timeouts */
+    struct ev_async wakeup;
 
     int closed;
     int ready_count;
