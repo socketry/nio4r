@@ -1,11 +1,11 @@
 module NIO
-  # Monitors watch Channels for specific events
+  # Monitors watch IO objects for specific events
   class Monitor
-    attr_reader :interests
+    attr_reader :io, :interests
 
     # :nodoc
-    def initialize(channel, interests)
-      @channel, @interests = channel, interests
+    def initialize(io, interests)
+      @io, @interests = io, interests
     end
   end
 end

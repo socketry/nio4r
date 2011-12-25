@@ -1,5 +1,5 @@
 module NIO
-  # Selectors monitor channels for events of interest
+  # Selectors monitor IO objects for events of interest
   class Selector
     java_import "java.nio.channels.Selector"
     java_import "java.nio.channels.SelectionKey"
@@ -36,21 +36,15 @@ module NIO
       @select_lock = Mutex.new
     end
 
-    # Register interest in an NIO::Channel with the selector for the given types
+    # Register interest in an IO object with the selector for the given types
     # of events. Valid event types for interest are:
-    # * :r - is the channel readable?
-    # * :w - is the channel writeable?
-    # * :rw - is the channel either readable or writeable?
-    def register(channel, interest)
-      if channel.respond_to? :java_channel
-        java_channel = channel.java_channel
-      else
-        # Attempt to obtain the NIO::Channel for things like IO objects
-        java_channel = channel.channel.java_channel
-      end
-
-      # Set channel to non-blocking mode if it isn't already
+    # * :r - is the IO readable?
+    # * :w - is the IO writeable?
+    # * :rw - is the IO either readable or writeable?
+    def register(io, interest)
+      java_channel = io.to_channel
       java_channel.configureBlocking(false)
+
       interest_ops = self.class.sym2iops(interest)
 
       begin
@@ -63,7 +57,7 @@ module NIO
         end
       end
 
-      NIO::Monitor.new(selector_key)
+      NIO::Monitor.new(io, selector_key)
     end
 
     # Select which monitors are ready

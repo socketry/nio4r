@@ -1,11 +1,13 @@
 require 'nio/version'
-require 'nio/core_ext'
 
 if defined?(JRUBY_VERSION)
-  require 'nio/jruby'
+  require 'java'
+  require 'nio/jruby/monitor'
+  require 'nio/jruby/selector'
 else
   # Temporary!
-  require 'nio/pure'
+  require 'nio/monitor'
+  require 'nio/selector'
 end
 
 # New I/O for Ruby
