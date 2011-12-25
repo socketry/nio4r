@@ -1,3 +1,4 @@
+require 'thread'
 require 'nio/version'
 
 # New I/O for Ruby
