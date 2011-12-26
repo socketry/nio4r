@@ -5,7 +5,7 @@ Gem::Specification.new do |gem|
   gem.authors       = ["Tony Arcieri"]
   gem.email         = ["tony.arcieri@gmail.com"]
   gem.description   = "New IO for Ruby"
-  gem.summary       = "NIO exposes a set of high performance IO operations on sockets, files, and other Ruby IO objects"
+  gem.summary       = "NIO provides a high performance selector API for monitoring IO objects"
   gem.homepage      = "https://github.com/tarcieri/nio4r"
 
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
@@ -14,6 +14,7 @@ Gem::Specification.new do |gem|
   gem.name          = "nio4r"
   gem.require_paths = ["lib"]
   gem.version       = NIO::VERSION
+  gem.extensions = ["ext/nio4r/extconf.rb"] unless defined?(JRUBY_VERSION)
 
   gem.add_development_dependency "rake-compiler", "~> 0.7.9"
   gem.add_development_dependency "rake"
