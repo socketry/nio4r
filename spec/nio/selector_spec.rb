@@ -139,8 +139,12 @@ describe NIO::Selector do
       end
 
       let :unreadable_subject do
-        TCPServer.new("localhost", tcp_port + 1)
-        TCPSocket.open("localhost", tcp_port + 1)
+        if defined?(JRUBY_VERSION) and ENV['CI']
+          pending "This is sporadically showing up readable on JRuby in CI"
+        else
+          TCPServer.new("localhost", tcp_port + 1)
+          TCPSocket.open("localhost", tcp_port + 1)
+        end
       end
 
       let :writable_subject do
