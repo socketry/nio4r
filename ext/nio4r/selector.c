@@ -196,10 +196,10 @@ static VALUE NIO_Selector_deregister_synchronized(VALUE *args)
     monitor = rb_hash_delete(selectables, io);
 
     if(monitor != Qnil) {
-        rb_funcall(monitor, rb_intern("deactivate"), 0, 0);
+        rb_funcall(monitor, rb_intern("close"), 0, 0);
     }
 
-    return Qnil;
+    return monitor;
 }
 
 /* Is the given IO object registered with the selector */

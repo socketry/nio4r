@@ -66,7 +66,7 @@ module NIO
       return unless key
 
       monitor = key.attachment
-      monitor.deactivate
+      monitor.close
       monitor
     end
 
@@ -74,7 +74,7 @@ module NIO
     def registered?(io)
       key = io.to_channel.keyFor(@java_selector)
       return unless key
-      key.attachment.active?
+      !key.attachment.closed?
     end
 
     # Select which monitors are ready

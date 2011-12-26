@@ -27,4 +27,10 @@ describe NIO::Monitor do
     subject.value = 42
     subject.value.should == 42
   end
+
+  it "closes" do
+    subject.should_not be_closed
+    subject.close
+    subject.should be_closed
+  end
 end

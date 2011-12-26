@@ -7,6 +7,15 @@ module NIO
     # :nodoc
     def initialize(io, interests)
       @io, @interests = io, interests
+      @closed = false
+    end
+
+    # Is this monitor closed?
+    def closed?; @closed; end
+
+    # Deactivate this monitor
+    def close
+      @closed = true
     end
   end
 end

@@ -16,7 +16,8 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor);
 
 /* Methods */
 static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE interests);
-static VALUE NIO_Monitor_deactivate(VALUE self);
+static VALUE NIO_Monitor_close(VALUE self);
+static VALUE NIO_Monitor_is_closed(VALUE self);
 static VALUE NIO_Monitor_io(VALUE self);
 static VALUE NIO_Monitor_interests(VALUE self);
 static VALUE NIO_Monitor_value(VALUE self);
@@ -39,7 +40,8 @@ void Init_NIO_Monitor()
     rb_define_alloc_func(cNIO_Monitor, NIO_Monitor_allocate);
 
     rb_define_method(cNIO_Monitor, "initialize", NIO_Monitor_initialize, 3);
-    rb_define_method(cNIO_Monitor, "deactivate", NIO_Monitor_io, 0);
+    rb_define_method(cNIO_Monitor, "close", NIO_Monitor_close, 0);
+    rb_define_method(cNIO_Monitor, "closed?", NIO_Monitor_is_closed, 0);
     rb_define_method(cNIO_Monitor, "io", NIO_Monitor_io, 0);
     rb_define_method(cNIO_Monitor, "interests", NIO_Monitor_interests, 0);
     rb_define_method(cNIO_Monitor, "value", NIO_Monitor_value, 0);
@@ -111,10 +113,9 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector_obj, VALUE io, VA
     return Qnil;
 }
 
-static VALUE NIO_Monitor_deactivate(VALUE self)
+static VALUE NIO_Monitor_close(VALUE self)
 {
     struct NIO_Monitor *monitor;
-
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
     if(monitor->selector) {
@@ -123,6 +124,14 @@ static VALUE NIO_Monitor_deactivate(VALUE self)
     }
 
     return Qnil;
+}
+
+static VALUE NIO_Monitor_is_closed(VALUE self)
+{
+    struct NIO_Monitor *monitor;
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+
+    return !monitor->selector;
 }
 
 static VALUE NIO_Monitor_io(VALUE self)

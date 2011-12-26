@@ -10,7 +10,7 @@ describe NIO::Selector do
     pipe, _ = IO.pipe
 
     monitor = subject.register(pipe, :r)
-    monitor.should be_a NIO::Monitor
+    monitor.should_not be_closed
   end
 
   it "knows which IO objects are registered" do
@@ -25,8 +25,9 @@ describe NIO::Selector do
     pipe, _ = IO.pipe
 
     subject.register(pipe, :r)
-    subject.deregister(pipe)
+    monitor = subject.deregister(pipe)
     subject.should_not be_registered(pipe)
+    monitor.should be_closed
   end
 
   context "select" do
