@@ -6,4 +6,4 @@ Dir["tasks/**/*.rake"].each { |task| load task }
 
 task :default => %w(compile spec)
 
-CLEAN.include "**/*.o", "**/*.so", "**/*.bundle"
+CLEAN.include "**/*.o", "**/*.so", "**/*.bundle", "pkg"
