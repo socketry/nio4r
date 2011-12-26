@@ -45,6 +45,8 @@ might otherwise use Kernel.select, but want to monitor the same set of IO
 objects across multiple select calls rather than having to reregister them
 every single time:
 
+    require 'nio'
+
 	selector = NIO::Selector.new
 	reader, writer = IO.pipe
 	monitor = selector.register(reader, :r)
