@@ -139,7 +139,7 @@ describe NIO::Selector do
       end
 
       let :unreadable_subject do
-        if defined?(JRUBY_VERSION) and ENV['CI']
+        if defined?(JRUBY_VERSION) and ENV['TRAVIS']
           pending "This is sporadically showing up readable on JRuby in CI"
         else
           TCPServer.new("localhost", tcp_port + 1)
