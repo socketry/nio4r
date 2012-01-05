@@ -99,7 +99,13 @@ If a timeout occurs, ready will be nil.
 
 You can avoid allocating an array each time you call NIO::Selector#select by
 using NIO::Selector#select_each instead. This method successively yields ready
-NIO::Monitor objects.
+NIO::Monitor objects:
+
+```ruby
+>> selector.select_each { |m| m.value.call }
+Got some data: Hi there!
+ => 1
+```
 
 When you're done monitoring a particular IO object, just deregister it from
 the selector:
