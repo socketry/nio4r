@@ -23,6 +23,7 @@ static VALUE NIO_Selector_register(VALUE self, VALUE selectable, VALUE interest)
 static VALUE NIO_Selector_deregister(VALUE self, VALUE io);
 static VALUE NIO_Selector_is_registered(VALUE self, VALUE io);
 static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self);
+static VALUE NIO_Selector_select_each(int argc, VALUE *argv, VALUE self);
 static VALUE NIO_Selector_wakeup(VALUE self);
 static VALUE NIO_Selector_close(VALUE self);
 static VALUE NIO_Selector_closed(VALUE self);
@@ -33,6 +34,8 @@ static VALUE NIO_Selector_unlock(VALUE lock);
 static VALUE NIO_Selector_register_synchronized(VALUE *args);
 static VALUE NIO_Selector_deregister_synchronized(VALUE *args);
 static VALUE NIO_Selector_select_synchronized(VALUE *args);
+static VALUE NIO_Selector_select_each_synchronized(VALUE *args);
+static int NIO_Selector_fill_ready_buffer(VALUE *args);
 static VALUE NIO_Selector_run_evloop(void *ptr);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
 static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_async *async, int revents);
@@ -57,6 +60,7 @@ void Init_NIO_Selector()
     rb_define_method(cNIO_Selector, "deregister", NIO_Selector_deregister, 1);
     rb_define_method(cNIO_Selector, "registered?", NIO_Selector_is_registered, 1);
     rb_define_method(cNIO_Selector, "select", NIO_Selector_select, -1);
+    rb_define_method(cNIO_Selector, "select_each", NIO_Selector_select_each, -1);
     rb_define_method(cNIO_Selector, "wakeup", NIO_Selector_wakeup, 0);
     rb_define_method(cNIO_Selector, "close", NIO_Selector_close, 0);
     rb_define_method(cNIO_Selector, "closed?", NIO_Selector_closed, 0);
@@ -225,11 +229,63 @@ static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self)
     return NIO_Selector_synchronize(self, NIO_Selector_select_synchronized, args);
 }
 
+/* Select from all registered IO objects */
+static VALUE NIO_Selector_select_each(int argc, VALUE *argv, VALUE self)
+{
+    VALUE timeout, array;
+    VALUE args[2];
+
+    if(!rb_block_given_p()) {
+        rb_raise(rb_eArgError, "no block given");
+    }
+
+    rb_scan_args(argc, argv, "01", &timeout);
+
+    args[0] = self;
+    args[1] = timeout;
+
+    return NIO_Selector_synchronize(self, NIO_Selector_select_each_synchronized, args);
+}
+
 /* Internal implementation of select with the selector lock held */
 static VALUE NIO_Selector_select_synchronized(VALUE *args)
 {
-    VALUE self, timeout, result;
     struct NIO_Selector *selector;
+    int ready = NIO_Selector_fill_ready_buffer(args);
+
+    Data_Get_Struct(args[0], struct NIO_Selector, selector);
+
+    if(ready > 0) {
+        return rb_ary_new4(ready, selector->ready_buffer);
+    } else {
+        return Qnil;
+    }
+}
+
+/* Internal implementation of select with the selector lock held */
+static VALUE NIO_Selector_select_each_synchronized(VALUE *args)
+{
+    struct NIO_Selector *selector;
+    int i, ready = NIO_Selector_fill_ready_buffer(args);
+
+    Data_Get_Struct(args[0], struct NIO_Selector, selector);
+
+    if(ready > 0) {
+        for(i = 0; i < ready; i++) {
+            rb_yield(selector->ready_buffer[i]);
+        }
+
+        return INT2NUM(ready);
+    } else {
+        return Qnil;
+    }
+}
+
+static int NIO_Selector_fill_ready_buffer(VALUE *args)
+{
+    VALUE self, timeout;
+    struct NIO_Selector *selector;
+    int result;
 
     self = args[0];
     timeout = args[1];
@@ -289,11 +345,7 @@ static VALUE NIO_Selector_select_synchronized(VALUE *args)
     }
 #endif /* defined(HAVE_RB_THREAD_BLOCKING_REGION) */
 
-    if(!selector->ready_count) {
-        return Qnil;
-    }
-
-    result = rb_ary_new4(selector->ready_count, selector->ready_buffer);
+    result = selector->ready_count;
     selector->selecting = selector->ready_count = 0;
 
     return result;
