@@ -66,6 +66,29 @@ describe NIO::Selector do
       thread.value.should be_within(TIMEOUT_PRECISION).of(timeout)
     end
   end
+  
+  context "select_each" do
+    it "iterates across ready selectables" do
+      readable1, writer = IO.pipe
+      writer << "ohai"
+    
+      readable2, writer = IO.pipe
+      writer << "ohai"
+    
+      unreadable, _ = IO.pipe
+    
+      monitor1 = subject.register(readable1, :r)
+      monitor2 = subject.register(readable2, :r)
+      monitor3 = subject.register(unreadable, :r)
+    
+      readables = []
+      subject.select_each { |monitor| readables << monitor }
+      
+      readables.should include(monitor1)
+      readables.should include(monitor2)
+      readables.should_not include(monitor3)
+    end
+  end
 
   it "closes" do
     subject.close

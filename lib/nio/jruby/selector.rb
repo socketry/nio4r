@@ -90,6 +90,21 @@ module NIO
         @java_selector.selectedKeys.map { |key| key.attachment }
       end
     end
+    
+    # Iterate across all selectable monitors
+    def select_each(timeout = nil)
+      @select_lock.synchronize do
+        if timeout
+          ready = @java_selector.select(timeout * 1000)
+        else
+          ready = @java_selector.select
+        end
+        
+        return unless ready > 0
+        @java_selector.selectedKeys.each { |key| yield key.attachment }
+        ready
+      end
+    end
 
     # Wake up the other thread that's currently blocking on this selector
     def wakeup
