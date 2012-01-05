@@ -45,45 +45,68 @@ might otherwise use Kernel.select, but want to monitor the same set of IO
 objects across multiple select calls rather than having to reregister them
 every single time:
 
-    require 'nio'
+```ruby
+require 'nio'
 
-	selector = NIO::Selector.new
-	reader, writer = IO.pipe
-	monitor = selector.register(reader, :r)
+selector = NIO::Selector.new
+```
 
-You can monitor IO objects for read readiness (with the :r parameter), write
-readiness (with the :w parameter), or both (with :rw). After registering an
-IO object with the selector, you'll get a NIO::Monitor object which you can
-use for managing how a particular IO object is being monitored. Monitors will
-store an arbitrary value of your choice, which provides an easy way to implement
-callbacks:
+To monitor IO objects, attach them to the selector with the NIO::Selector#register
+method, monitoring them for read readiness with the :r parameter, write
+readiness with the :w parameter, or both with :rw.
 
-	>> monitor = selector.register(reader, :r)
-	 => #<NIO::Monitor:0xfbc>
-	>> monitor.value = proc { puts "Got some data: #{monitor.io.read_nonblock(4096)}" }
-	 => #<Proc:0x1000@(irb):4>
-	>> writer << "Hi there!"
-	 => #<IO:0x103c>
-	>> ready = selector.select
-	 => [#<NIO::Monitor:0xfbc>]
-	>> ready.each { |m| m.value.call }
-	Got some data: Hi there!
-	 => [#<NIO::Monitor:0xfbc>]
+```ruby
+>> reader, writer = IO.pipe
+ => [#<IO:0xf30>, #<IO:0xf34>]
+>> monitor = selector.register(reader, :r)
+ => #<NIO::Monitor:0xfbc>
+```
+
+After registering an IO object with the selector, you'll get a NIO::Monitor
+object which you can use for managing how a particular IO object is being
+monitored. Monitors will store an arbitrary value of your choice, which
+provides an easy way to implement callbacks:
+
+```ruby
+>> monitor = selector.register(reader, :r)
+ => #<NIO::Monitor:0xfbc>
+>> monitor.value = proc { puts "Got some data: #{monitor.io.read_nonblock(4096)}" }
+ => #<Proc:0x1000@(irb):4>
+```
 
 The main method of importance is NIO::Selector#select, which monitors all
 registered IO objects and returns an array of monitors that are ready.
+
+```ruby
+>> writer << "Hi there!"
+ => #<IO:0x103c>
+>> ready = selector.select
+ => [#<NIO::Monitor:0xfbc>]
+>> ready.each { |m| m.value.call }
+Got some data: Hi there!
+ => [#<NIO::Monitor:0xfbc>]
+```
+
 By default, NIO::Selector#select will block indefinitely until one of the IO
 objects being monitored becomes ready. However, you can also pass a timeout to
 wait in seconds to NIO::Selector#select just like you can with Kernel.select:
 
-    ready = selector.select(15) # Wait 15 seconds
+```ruby
+ready = selector.select(15) # Wait 15 seconds
+```
 
 If a timeout occurs, ready will be nil.
+
+You can avoid allocating an array each time you call NIO::Selector#select by
+using NIO::Selector#select_each instead. This method successively yields ready
+NIO::Monitor objects.
 
 When you're done monitoring a particular IO object, just deregister it from
 the selector:
 
-    selector.deregister(reader)
+```ruby
+selector.deregister(reader)
+```
 
 Concurrency
 -----------
