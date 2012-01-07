@@ -5,14 +5,14 @@ module NIO
     java_import "java.nio.channels.SelectionKey"
 
     # Convert nio4r interest symbols to Java NIO interest ops
-    def self.sym2iops(interest)
+    def self.sym2iops(interest, channel)
       case interest
       when :r
-        interest = SelectionKey::OP_READ
+        channel.validOps & (SelectionKey::OP_READ | SelectionKey::OP_ACCEPT | SelectionKey::OP_CONNECT)
       when :w
-        interest = SelectionKey::OP_WRITE
+        SelectionKey::OP_WRITE
       when :rw
-        interest = SelectionKey::OP_READ | SelectionKey::OP_WRITE
+        SelectionKey::OP_READ | SelectionKey::OP_WRITE
       else raise ArgumentError, "invalid interest type: #{interest}"
       end
     end
@@ -20,7 +20,7 @@ module NIO
     # Convert Java NIO interest ops to the corresponding Ruby symbols
     def self.iops2sym(interest_ops)
       case interest_ops
-      when SelectionKey::OP_READ
+      when SelectionKey::OP_READ, SelectionKey::OP_ACCEPT, SelectionKey::OP_CONNECT
         :r
       when SelectionKey::OP_WRITE
         :w
@@ -44,15 +44,14 @@ module NIO
     def register(io, interest)
       java_channel = io.to_channel
       java_channel.configureBlocking(false)
-
-      interest_ops = self.class.sym2iops(interest)
+      interest_ops = self.class.sym2iops(interest, java_channel)
 
       begin
         selector_key = java_channel.register @java_selector, interest_ops
       rescue NativeException => ex
         case ex.cause
         when java.lang.IllegalArgumentException
-          raise ArgumentError, "invalid interest type for #{channel}: #{interest}"
+          raise ArgumentError, "invalid interest type for #{java_channel}: #{interest}"
         else raise
         end
       end
