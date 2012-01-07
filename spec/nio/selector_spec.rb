@@ -88,6 +88,22 @@ describe NIO::Selector do
       readables.should include(monitor2)
       readables.should_not include(monitor3)
     end
+
+    it "allows new monitors to be registered in the select_each block" do
+      server = TCPServer.new("localhost", 10001)
+
+      monitor = subject.register(server, :r)
+      connector = TCPSocket.open("localhost", 10001)
+
+      block_fired = false
+      subject.select_each do |monitor|
+        block_fired = true
+        socket = server.accept
+        subject.register(socket, :r).should be_a NIO::Monitor
+      end
+
+      block_fired.should be_true
+    end
   end
 
   it "closes" do

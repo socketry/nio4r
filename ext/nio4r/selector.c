@@ -130,19 +130,42 @@ static VALUE NIO_Selector_initialize(VALUE self)
     return Qnil;
 }
 
-/* Synchronize the given function with the selector mutex */
+/* Lock the selector mutex */
+static VALUE NIO_Selector_lock(VALUE mutex)
+{
+
+    return Qtrue;
+}
+
+/* Synchronize around a reentrant selector lock */
 static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VALUE *args)
 {
-    VALUE lock;
+    VALUE current_thread, lock_holder, lock;
 
-    lock = rb_ivar_get(self, rb_intern("lock"));
-    rb_funcall(lock, rb_intern("lock"), 0, 0);
-    return rb_ensure(func, (VALUE)args, NIO_Selector_unlock, lock);
+    current_thread = rb_thread_current();
+    lock_holder = rb_ivar_get(self, rb_intern("lock_holder"));
+
+    if(lock_holder != rb_thread_current()) {
+        lock = rb_ivar_get(self, rb_intern("lock"));
+        rb_funcall(lock, rb_intern("lock"), 0, 0);
+        rb_ivar_set(self, rb_intern("lock_holder"), rb_thread_current());
+
+        /* We've acquired the lock, so ensure we unlock it */
+        return rb_ensure(func, (VALUE)args, NIO_Selector_unlock, self);
+    } else {
+        /* We already hold the selector lock, so no need to unlock it */
+        func(args);
+    }
 }
 
 /* Unlock the selector mutex */
-static VALUE NIO_Selector_unlock(VALUE lock)
+static VALUE NIO_Selector_unlock(VALUE self)
 {
+    VALUE lock;
+
+    rb_ivar_set(self, rb_intern("lock_holder"), Qnil);
+
+    lock = rb_ivar_get(self, rb_intern("lock"));
     rb_funcall(lock, rb_intern("unlock"), 0, 0);
 }
 
