@@ -130,13 +130,6 @@ static VALUE NIO_Selector_initialize(VALUE self)
     return Qnil;
 }
 
-/* Lock the selector mutex */
-static VALUE NIO_Selector_lock(VALUE mutex)
-{
-
-    return Qtrue;
-}
-
 /* Synchronize around a reentrant selector lock */
 static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VALUE *args)
 {
