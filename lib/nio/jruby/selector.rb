@@ -87,27 +87,21 @@ module NIO
     # Select which monitors are ready
     def select(timeout = nil)
       @select_lock.synchronize do
-        if timeout
-          ready = @java_selector.select(timeout * 1000)
-        else
-          ready = @java_selector.select
-        end
-
+        ready = run_select(timeout)
         return unless ready > 0 # timeout or wakeup
-        @java_selector.selectedKeys.map { |key| key.attachment }
+
+        selected = @java_selector.selectedKeys.map { |key| key.attachment }
+        @java_selector.selectedKeys.clear
+        selected
       end
     end
 
     # Iterate across all selectable monitors
     def select_each(timeout = nil)
       @select_lock.synchronize do
-        if timeout
-          ready = @java_selector.select(timeout * 1000)
-        else
-          ready = @java_selector.select
-        end
-
+        ready = run_select(timeout)
         return unless ready > 0
+
         @java_selector.selectedKeys.each { |key| yield key.attachment }
         @java_selector.selectedKeys.clear
 
@@ -129,6 +123,19 @@ module NIO
     # Is this selector closed?
     def closed?
       !@java_selector.isOpen
+    end
+
+    #######
+    private
+    #######
+
+    # Run the Java NIO Selector.select, filling selectedKeys as a side effect
+    def run_select(timeout = nil)
+      if timeout
+        @java_selector.select(timeout * 1000)
+      else
+        @java_selector.select
+      end
     end
   end
 end
