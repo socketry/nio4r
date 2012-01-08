@@ -14,8 +14,9 @@ struct NIO_Selector
 {
     struct ev_loop *ev_loop;
     struct ev_timer timer; /* for timeouts */
-    struct ev_async wakeup;
+    struct ev_io wakeup;
 
+    int wakeup_reader, wakeup_writer;
     int closed, selecting;
     int ready_count;
     int ready_buffer_size;

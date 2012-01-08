@@ -5,6 +5,8 @@
 
 #include "nio4r.h"
 #include "rubysig.h"
+#include <unistd.h>
+#include <fcntl.h>
 
 static VALUE mNIO = Qnil;
 static VALUE cNIO_Channel  = Qnil;
@@ -38,7 +40,7 @@ static VALUE NIO_Selector_select_each_synchronized(VALUE *args);
 static int NIO_Selector_fill_ready_buffer(VALUE *args);
 static VALUE NIO_Selector_run_evloop(void *ptr);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
-static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_async *async, int revents);
+static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
 
 /* Default number of slots in the buffer for selected monitors */
 #define INITIAL_READY_BUFFER 32
@@ -69,15 +71,33 @@ void Init_NIO_Selector()
 /* Create the libev event loop and incoming event buffer */
 static VALUE NIO_Selector_allocate(VALUE klass)
 {
-    struct NIO_Selector *selector = (struct NIO_Selector *)xmalloc(sizeof(struct NIO_Selector));
+    struct NIO_Selector *selector;
+    int fds[2];
 
+    /* Use a pipe to implement the wakeup mechanism. I know libev provides
+       async watchers that implement this same behavior, but I'm getting
+       segvs trying to use that between threads, despite claims of thread
+       safety. Pipes are nice and safe to use between threads.
+
+       Note that Java NIO uses this same mechanism */
+    if(pipe(fds) < 0) {
+        rb_sys_fail("pipe");
+    }
+
+    if(fcntl(fds[0], F_SETFL, O_NONBLOCK) < 0) {
+        rb_sys_fail("fcntl");
+    }
+
+    selector = (struct NIO_Selector *)xmalloc(sizeof(struct NIO_Selector));
     selector->ev_loop = ev_loop_new(0);
     ev_init(&selector->timer, NIO_Selector_timeout_callback);
 
-    ev_async_init(&selector->wakeup, NIO_Selector_wakeup_callback);
-    selector->wakeup.data = (void *)selector;
+    selector->wakeup_reader = fds[0];
+    selector->wakeup_writer = fds[1];
 
-    ev_async_start(selector->ev_loop, &selector->wakeup);
+    ev_io_init(&selector->wakeup, NIO_Selector_wakeup_callback, selector->wakeup_reader, EV_READ);
+    selector->wakeup.data = (void *)selector;
+    ev_io_start(selector->ev_loop, &selector->wakeup);
 
     selector->closed = selector->selecting = selector->ready_count = 0;
     selector->ready_buffer_size = INITIAL_READY_BUFFER;
@@ -103,6 +123,9 @@ static void NIO_Selector_shutdown(struct NIO_Selector *selector)
     if(selector->closed) {
         return;
     }
+
+    close(selector->wakeup_reader);
+    close(selector->wakeup_writer);
 
     selector->closed = 1;
 }
@@ -383,7 +406,7 @@ static VALUE NIO_Selector_wakeup(VALUE self)
     struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
-    ev_async_send(selector->ev_loop, &selector->wakeup);
+    write(selector->wakeup_writer, "\0", 1);
 
     return Qnil;
 }
@@ -416,10 +439,14 @@ static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_tim
 }
 
 /* Called whenever a wakeup request is sent to a selector */
-static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_async *async, int revents)
+static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents)
 {
-    struct NIO_Selector *selector = (struct NIO_Selector *)async->data;
+    char buffer[128];
+    struct NIO_Selector *selector = (struct NIO_Selector *)io->data;
     selector->selecting = 0;
+
+    /* Drain the wakeup pipe, giving us level-triggered behavior */
+    while(read(selector->wakeup_reader, buffer, 128) > 0);
 }
 
 /* This gets called from individual monitors. We must be careful here because

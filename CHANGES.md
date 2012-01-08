@@ -1,3 +1,9 @@
+0.2.1
+-----
+* Implement wakeup mechanism using raw pipes instead of ev_async, since
+  ev_async likes to cause segvs when used across threads (despite claims
+  in the documentation to the contrary)
+
 0.2.0
 -----
 * NIO::Monitor#readiness API to query readiness, along with #readable? and
