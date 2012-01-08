@@ -118,6 +118,7 @@ module NIO
 
     # Wake up the other thread that's currently blocking on this selector
     def wakeup
+      raise IOError, "selector is closed" if closed?
       @java_selector.wakeup
       nil
     end

@@ -1,3 +1,7 @@
+0.2.2
+-----
+* Raise IOError if asked to wake up a closed selector
+
 0.2.1
 -----
 * Implement wakeup mechanism using raw pipes instead of ev_async, since

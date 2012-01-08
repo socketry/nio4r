@@ -406,6 +406,10 @@ static VALUE NIO_Selector_wakeup(VALUE self)
     struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
+    if(selector->closed) {
+        rb_raise(rb_eIOError, "selector is closed");
+    }
+
     write(selector->wakeup_writer, "\0", 1);
 
     return Qnil;

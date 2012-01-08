@@ -30,25 +30,25 @@ describe NIO::Selector do
     monitor.should be_closed
   end
 
-  context "select" do
-    it "waits for a timeout when selecting" do
-      reader, writer = IO.pipe
-      monitor = subject.register(reader, :r)
+  it "waits for a timeout when selecting" do
+    reader, writer = IO.pipe
+    monitor = subject.register(reader, :r)
 
-      payload = "hi there"
-      writer << payload
+    payload = "hi there"
+    writer << payload
 
-      timeout = 0.5
-      started_at = Time.now
-      subject.select(timeout).should include monitor
-      (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(0)
-      reader.read_nonblock(payload.size)
+    timeout = 0.5
+    started_at = Time.now
+    subject.select(timeout).should include monitor
+    (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(0)
+    reader.read_nonblock(payload.size)
 
-      started_at = Time.now
-      subject.select(timeout).should be_nil
-      (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(timeout)
-    end
+    started_at = Time.now
+    subject.select(timeout).should be_nil
+    (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(timeout)
+  end
 
+  context "wakeup" do
     it "wakes up if signaled to from another thread" do
       pipe, _ = IO.pipe
       subject.register(pipe, :r)
@@ -64,6 +64,13 @@ describe NIO::Selector do
       subject.wakeup
 
       thread.value.should be_within(TIMEOUT_PRECISION).of(timeout)
+    end
+
+    it "raises IOError if asked to wake up a closed selector" do
+      subject.close
+      subject.should be_closed
+
+      expect { subject.wakeup }.to raise_exception IOError
     end
   end
 
