@@ -8,11 +8,19 @@ module NIO
     def self.sym2iops(interest, channel)
       case interest
       when :r
-        channel.validOps & (SelectionKey::OP_READ | SelectionKey::OP_ACCEPT | SelectionKey::OP_CONNECT)
+        if channel.validOps & SelectionKey::OP_ACCEPT != 0
+          SelectionKey::OP_ACCEPT
+        else
+          SelectionKey::OP_READ
+        end
       when :w
-        SelectionKey::OP_WRITE
+        if channel.respond_to? :connected? and not channel.connected?
+          SelectionKey::OP_CONNECT
+        else
+          SelectionKey::OP_WRITE
+        end
       when :rw
-        SelectionKey::OP_READ | SelectionKey::OP_WRITE
+        super(:r, channel) | super(:w, channel)
       else raise ArgumentError, "invalid interest type: #{interest}"
       end
     end
@@ -20,9 +28,9 @@ module NIO
     # Convert Java NIO interest ops to the corresponding Ruby symbols
     def self.iops2sym(interest_ops)
       case interest_ops
-      when SelectionKey::OP_READ, SelectionKey::OP_ACCEPT, SelectionKey::OP_CONNECT
+      when SelectionKey::OP_READ, SelectionKey::OP_ACCEPT
         :r
-      when SelectionKey::OP_WRITE
+      when SelectionKey::OP_WRITE, SelectionKey::OP_CONNECT
         :w
       when SelectionKey::OP_READ | SelectionKey::OP_WRITE
         :rw
@@ -89,7 +97,7 @@ module NIO
         @java_selector.selectedKeys.map { |key| key.attachment }
       end
     end
-    
+
     # Iterate across all selectable monitors
     def select_each(timeout = nil)
       @select_lock.synchronize do
@@ -98,9 +106,11 @@ module NIO
         else
           ready = @java_selector.select
         end
-        
+
         return unless ready > 0
         @java_selector.selectedKeys.each { |key| yield key.attachment }
+        @java_selector.selectedKeys.clear
+
         ready
       end
     end
