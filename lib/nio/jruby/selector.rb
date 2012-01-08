@@ -34,6 +34,7 @@ module NIO
         :w
       when SelectionKey::OP_READ | SelectionKey::OP_WRITE
         :rw
+      when 0 then nil
       else raise ArgumentError, "unknown interest op combination: 0x#{interest_ops.to_s(16)}"
       end
     end
@@ -86,21 +87,27 @@ module NIO
 
     # Select which monitors are ready
     def select(timeout = nil)
-      @select_lock.synchronize do
-        ready = run_select(timeout)
-        return unless ready > 0 # timeout or wakeup
+      selected = []
+      ready = select_each(timeout) { |monitor| selected << monitor }
+      return unless ready
 
-        selected = @java_selector.selectedKeys.map { |key| key.attachment }
-        @java_selector.selectedKeys.clear
-        selected
-      end
+      selected
     end
 
     # Iterate across all selectable monitors
     def select_each(timeout = nil)
       @select_lock.synchronize do
-        ready = run_select(timeout)
-        return unless ready > 0
+        if timeout == 0
+          # The Java NIO API thinks zero means you want to BLOCK FOREVER o_O
+          # How about we don't block at all instead?
+          ready = @java_selector.selectNow
+        elsif timeout
+          ready = @java_selector.select(timeout * 1000)
+        else
+          ready = @java_selector.select
+        end
+
+        return unless ready > 0 # timeout or wakeup
 
         @java_selector.selectedKeys.each { |key| yield key.attachment }
         @java_selector.selectedKeys.clear
@@ -123,19 +130,6 @@ module NIO
     # Is this selector closed?
     def closed?
       !@java_selector.isOpen
-    end
-
-    #######
-    private
-    #######
-
-    # Run the Java NIO Selector.select, filling selectedKeys as a side effect
-    def run_select(timeout = nil)
-      if timeout
-        @java_selector.select(timeout * 1000)
-      else
-        @java_selector.select
-      end
     end
   end
 end
