@@ -20,8 +20,11 @@ static VALUE NIO_Monitor_close(VALUE self);
 static VALUE NIO_Monitor_is_closed(VALUE self);
 static VALUE NIO_Monitor_io(VALUE self);
 static VALUE NIO_Monitor_interests(VALUE self);
+static VALUE NIO_Monitor_is_readable(VALUE self);
+static VALUE NIO_Monitor_is_writable(VALUE self);
 static VALUE NIO_Monitor_value(VALUE self);
 static VALUE NIO_Monitor_set_value(VALUE self, VALUE obj);
+static VALUE NIO_Monitor_readiness(VALUE self);
 
 /* Internal functions */
 static void NIO_Monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
@@ -46,6 +49,10 @@ void Init_NIO_Monitor()
     rb_define_method(cNIO_Monitor, "interests", NIO_Monitor_interests, 0);
     rb_define_method(cNIO_Monitor, "value", NIO_Monitor_value, 0);
     rb_define_method(cNIO_Monitor, "value=", NIO_Monitor_set_value, 1);
+    rb_define_method(cNIO_Monitor, "readiness", NIO_Monitor_readiness, 0);
+    rb_define_method(cNIO_Monitor, "readable?", NIO_Monitor_is_readable, 0);
+    rb_define_method(cNIO_Monitor, "writable?", NIO_Monitor_is_writable, 0);
+    rb_define_method(cNIO_Monitor, "writeable?", NIO_Monitor_is_writable, 0);
 }
 
 static VALUE NIO_Monitor_allocate(VALUE klass)
@@ -68,7 +75,6 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector_obj, VALUE io, VA
 {
     struct NIO_Monitor *monitor;
     struct NIO_Selector *selector;
-    int events;
     ID interests_id;
 
     #if HAVE_RB_IO_T
@@ -79,21 +85,21 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector_obj, VALUE io, VA
 
     interests_id = SYM2ID(interests);
 
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+
     if(interests_id == rb_intern("r")) {
-        events = EV_READ;
+        monitor->interests = EV_READ;
     } else if(interests_id == rb_intern("w")) {
-        events = EV_WRITE;
+        monitor->interests = EV_WRITE;
     } else if(interests_id == rb_intern("rw")) {
-        events = EV_READ | EV_WRITE;
+        monitor->interests = EV_READ | EV_WRITE;
     } else {
         rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)",
             RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0, 0)));
     }
 
-    Data_Get_Struct(self, struct NIO_Monitor, monitor);
-
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
-    ev_io_init(&monitor->ev_io, NIO_Monitor_callback, FPTR_TO_FD(fptr), events);
+    ev_io_init(&monitor->ev_io, NIO_Monitor_callback, FPTR_TO_FD(fptr), monitor->interests);
 
     rb_ivar_set(self, rb_intern("selector"), selector_obj);
     rb_ivar_set(self, rb_intern("io"), io);
@@ -154,11 +160,53 @@ static VALUE NIO_Monitor_set_value(VALUE self, VALUE obj)
     return rb_ivar_set(self, rb_intern("value"), obj);
 }
 
+static VALUE NIO_Monitor_readiness(VALUE self)
+{
+    struct NIO_Monitor *monitor;
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+
+    if((monitor->revents & (EV_READ | EV_WRITE)) == (EV_READ | EV_WRITE)) {
+        return ID2SYM(rb_intern("rw"));
+    } else if(monitor->revents & EV_READ) {
+        return ID2SYM(rb_intern("r"));
+    } else if(monitor->revents & EV_WRITE) {
+        return ID2SYM(rb_intern("w"));
+    } else {
+        return Qnil;
+    }
+}
+
+static VALUE NIO_Monitor_is_readable(VALUE self)
+{
+    struct NIO_Monitor *monitor;
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+
+    if(monitor->revents & EV_READ) {
+        return Qtrue;
+    } else {
+        return Qfalse;
+    }
+}
+
+static VALUE NIO_Monitor_is_writable(VALUE self)
+{
+    struct NIO_Monitor *monitor;
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+
+    if(monitor->revents & EV_WRITE) {
+        return Qtrue;
+    } else {
+        return Qfalse;
+    }
+}
+
 /* libev callback fired whenever this monitor gets events */
 static void NIO_Monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents)
 {
     struct NIO_Monitor *monitor = (struct NIO_Monitor *)io->data;
 
     assert(monitor->selector != 0);
+    monitor->revents = revents;
+
     NIO_Selector_handle_event(monitor->selector, monitor->self, revents);
 }

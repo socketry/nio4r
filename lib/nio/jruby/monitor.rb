@@ -15,6 +15,22 @@ module NIO
       Selector.iops2sym @key.interestOps
     end
 
+    # What is the IO object ready for?
+    def readiness
+      Selector.iops2sym @key.readyOps
+    end
+
+    # Is the IO object readable?
+    def readable?
+      readiness == :r || readiness == :rw
+    end
+
+    # Is the IO object writable?
+    def writable?
+      readiness == :w || readiness == :rw
+    end
+    alias_method :writeable?, :writable?
+
     # Is this monitor closed?
     def closed?; @closed; end
 

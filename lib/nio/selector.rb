@@ -54,10 +54,8 @@ module NIO
         ready_readers, ready_writers = Kernel.select readers, writers, [], timeout
         return unless ready_readers # timeout or wakeup
 
-        results = ready_readers
-        results.concat ready_writers if ready_writers
-
-        results.map! do |io|
+        results = []
+        ready_readers.each do |io|
           if io == @wakeup
             # Clear all wakeup signals we've received by reading them
             # Wakeups should have level triggered behavior
@@ -71,12 +69,27 @@ module NIO
 
             return
           else
-            @selectables[io]
+            monitor = @selectables[io]
+            monitor.readiness = :r
+            results << monitor
           end
         end
+
+        ready_readwriters = ready_readers & ready_writers
+        ready_writers = ready_writers - ready_readwriters
+
+        [[ready_writers, :w], [ready_readwriters, :rw]].each do |ios, readiness|
+          ios.each do |io|
+            monitor = @selectables[io]
+            monitor.readiness = readiness
+            results << monitor
+          end
+        end
+
+        results
       end
     end
-    
+
     # Select for ready monitors, successively yielding each one in a block
     def select_each(timeout = nil, &block)
       selected = select(timeout)

@@ -31,6 +31,7 @@ struct NIO_callback_data
 struct NIO_Monitor
 {
     VALUE self;
+    int interests, revents;
     struct ev_io ev_io;
     struct NIO_Selector *selector;
 };
