@@ -98,7 +98,12 @@ module NIO
       selected.size
     end
 
-    # Wake up other threads waiting on this selector
+    # Wake up a thread that's in the middle of selecting on this selector, if
+    # any such thread exists.
+    #
+    # Invoking this method more than once between two successive select calls
+    # has the same effect as invoking it just once. In other words, it provides
+    # level-triggered behavior.
     def wakeup
       # Send the selector a signal in the form of writing data to a pipe
       @waker << "\0"
