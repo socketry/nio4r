@@ -40,6 +40,8 @@ Platform notes:
 Usage
 -----
 
+### Selectors
+
 The NIO::Selector class is the main API provided by nio4r. Use it where you
 might otherwise use Kernel.select, but want to monitor the same set of IO
 objects across multiple select calls rather than having to reregister them
@@ -113,6 +115,22 @@ the selector:
 ```ruby
 selector.deregister(reader)
 ```
+
+### Monitors
+
+Monitors provide methods which let you introspect on why a particular IO
+object was selected. These methods are not thread safe unless you are holding
+the selector lock (i.e. if you're in a #select_each callback). Only use them
+if you aren't concerned with thread safety, or you're within a #select_each
+callback:
+
+- ***#interests***: what this monitor is interested in (:r, :w, or :rw)
+- ***#readiness***: what the monitored IO object is ready for according to the last select operation
+- ***#readable?***: was the IO readable last time it was selected?
+- ***#writable?***: was the IO writable last time it was selected?
+
+Monitors also support a ***#value*** and ***#value=*** method for storing a
+handle to an arbitrary object of your choice (e.g. a proc)
 
 Concurrency
 -----------
