@@ -56,6 +56,7 @@ static VALUE IO_Buffer_empty(VALUE self);
 static VALUE IO_Buffer_append(VALUE self, VALUE data);
 static VALUE IO_Buffer_prepend(VALUE self, VALUE data);
 static VALUE IO_Buffer_read(int argc, VALUE *argv, VALUE self);
+static VALUE IO_Buffer_read_frame(VALUE self, VALUE data, VALUE mark);
 static VALUE IO_Buffer_to_str(VALUE self);
 static VALUE IO_Buffer_read_from(VALUE self, VALUE io);
 static VALUE IO_Buffer_write_to(VALUE self, VALUE io);
@@ -67,6 +68,7 @@ static void buffer_free_pool(struct buffer *buf);
 static void buffer_prepend(struct buffer *buf, char *str, unsigned len);
 static void buffer_append(struct buffer *buf, char *str, unsigned len);
 static void buffer_read(struct buffer *buf, char *str, unsigned len);
+static int buffer_read_frame(struct buffer *buf, VALUE str, char frame_mark);
 static void buffer_copy(struct buffer *buf, char *str, unsigned len);
 static int buffer_read_from(struct buffer *buf, int fd);
 static int buffer_write_to(struct buffer *buf, int fd);
@@ -97,6 +99,7 @@ void Init_iobuffer()
   rb_define_method(cIO_Buffer, "write", IO_Buffer_append, 1);
   rb_define_method(cIO_Buffer, "prepend", IO_Buffer_prepend, 1);
   rb_define_method(cIO_Buffer, "read", IO_Buffer_read, -1);
+  rb_define_method(cIO_Buffer, "read_frame", IO_Buffer_read_frame, 2);
 	rb_define_method(cIO_Buffer, "to_str", IO_Buffer_to_str, 0);
 	rb_define_method(cIO_Buffer, "read_from", IO_Buffer_read_from, 1);
   rb_define_method(cIO_Buffer, "write_to", IO_Buffer_write_to, 1);
@@ -297,6 +300,29 @@ static VALUE IO_Buffer_read(int argc, VALUE *argv, VALUE self)
   buffer_read(buf, RSTRING_PTR(str), length);
 
   return str;
+}
+
+/**
+ *  call-seq:
+ *    IO_Buffer#read_frame(str, mark) -> boolean
+ *
+ * Read up to and including the given frame marker (expressed a a 
+ * Fixnum 0-255) byte, copying into the supplied string object. If the mark is
+ * not encountered before the end of the buffer, false is returned but data 
+ * is still copied into str. True is returned if the end of a frame is reached.
+ *
+ */
+static VALUE IO_Buffer_read_frame(VALUE self, VALUE data, VALUE mark) {
+  char mark_c = (char)NUM2INT(mark);
+  struct buffer *buf;
+  
+  Data_Get_Struct(self, struct buffer, buf);
+  
+  if(buffer_read_frame(buf, data, mark_c)) {
+    return Qtrue;
+  } else {
+    return Qfalse;
+  }
 }
 
 /**
@@ -550,6 +576,44 @@ static void buffer_read(struct buffer *buf, char *str, unsigned len)
       if(!buf->head) buf->tail = 0;
     }
   }
+}
+
+/* Read data from the buffer into str until byte frame_mark or empty. 
+   Bytes are copied into str and removed
+   if a complete frame is read, a true value is returned
+*/
+static int buffer_read_frame(struct buffer *buf, VALUE str, char frame_mark)
+{
+  unsigned nbytes = 0;
+  struct buffer_node *tmp;
+
+  while(buf->size > 0) {
+    struct buffer_node *head = buf->head;
+    char *loc,
+         *s = head->data + head->start,
+         *e = head->data + head->end;
+    nbytes = e - s;
+    
+    loc = memchr(s, frame_mark, nbytes);
+
+    if(loc) nbytes = loc - s + 1; //Copy less than everything if we found a frame byte
+    rb_str_cat(str, s, nbytes);
+    
+    //Fixup the buffer pointers to indicate the bytes were consumed
+    head->start += nbytes;
+    buf->size   -= nbytes;
+    if(head->start == head->end) {
+      buf->head = head->next;
+      buffer_node_free(buf, head);
+
+      if(!buf->head) buf->tail = 0;
+    }
+    
+    if(loc) {
+      return 1;
+    }
+  }
+  return 0;
 }
 
 /* Copy data from the buffer without clearing it */

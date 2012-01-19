@@ -123,6 +123,25 @@ describe IO::Buffer do
       IO::Buffer.new(0)
     }.should raise_error(ArgumentError)
   end
+  
+  it "Reads can read a single frame" do
+    @buffer.append("foo\0bar")
+    str = ""
+    @buffer.read_frame(str, 0).should == true
+    str.should == "foo\0"
+    @buffer.size.should == 3
+  end
+  
+  it "Reads a frame, then reads only some data" do
+    @buffer.append("foo\0bar")
+    str = ""
+    @buffer.read_frame(str,0)
+    str = ""
+    #This will read only a partial frame
+    @buffer.read_frame(str,0).should == false
+    str.should == "bar"
+    @buffer.size.should == 0
+  end
 
   #######
   private
