@@ -237,6 +237,23 @@ describe NIO::Selector do
 
       it_behaves_like "an NIO selectable"
       it_behaves_like "an NIO selectable stream"
+
+      it "selects writable when connected" do
+        server = TCPServer.new('127.0.0.1', tcp_port + 5)
+
+        client = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM, 0)
+        monitor = subject.register(client, :w)
+        subject.select(0).should be_nil
+
+        expect do
+          client.connect_nonblock Socket.sockaddr_in(tcp_port + 5, '127.0.0.1')
+        end.to raise_exception Errno::EINPROGRESS
+
+        #server.accept
+        subject.select(0).should include monitor
+        result = client.getsockopt(::Socket::SOL_SOCKET, ::Socket::SO_ERROR)
+        result.unpack('i').first.should be_zero
+      end
     end
 
     context UDPSocket do
