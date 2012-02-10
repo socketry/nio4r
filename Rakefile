@@ -2,8 +2,8 @@
 require "bundler/gem_tasks"
 require "rake/clean"
 
-Dir["tasks/**/*.rake"].each { |task| load task }
+Dir[File.expand_path("../tasks/**/*.rake", __FILE__)].each { |task| load task }
 
 task :default => %w(compile spec)
 
-CLEAN.include "**/*.o", "**/*.so", "**/*.bundle", "pkg"
+CLEAN.include "**/*.o", "**/*.so", "**/*.bundle", "**/*.jar", "pkg", "tmp"
