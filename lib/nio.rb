@@ -20,14 +20,8 @@ else
   if defined?(JRUBY_VERSION)
     require 'java'
     org.nio4r.Nio4r.new.load(JRuby.runtime, false)
-
-    require 'nio/jruby/monitor'
-    require 'nio/jruby/selector'
     NIO::ENGINE = 'java'
   else
     NIO::ENGINE = 'libev'
   end
 end
-
-# TIMTOWTDI!!!
-Nio = NIO
