@@ -1,6 +1,7 @@
 HEAD
 ----
 * Upgrade to libev 4.11
+* Bugfixes for zero/negative select timeouts
 
 0.2.2
 -----

@@ -48,11 +48,11 @@ describe NIO::Selector do
       subject.select(timeout).should be_nil
       (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(timeout)
     end
-    
+
     it "raises ArgumentError if given a negative timeout" do
       reader, _ = IO.pipe
       subject.register(reader, :r)
-      
+
       expect { subject.select(-1) }.to raise_exception(ArgumentError)
     end
   end
@@ -129,43 +129,51 @@ describe NIO::Selector do
 
   context "selectables" do
     shared_context "an NIO selectable" do
-      it "selects for read readiness" do
-        waiting_monitor = subject.register(unreadable_subject, :r)
-        ready_monitor   = subject.register(readable_subject, :r)
-
-        ready_monitors = subject.select
-        ready_monitors.should include ready_monitor
-        ready_monitors.should_not include waiting_monitor
+      it "selects readable objects" do
+        monitor = subject.register(readable_subject, :r)
+        subject.select(0).should include monitor
       end
 
-      it "selects for write readiness" do
-        waiting_monitor = subject.register(unwritable_subject, :w)
-        ready_monitor   = subject.register(writable_subject, :w)
+      it "does not select unreadable objects" do
+        monitor = subject.register(unreadable_subject, :r)
+        subject.select(0).should be_nil
+      end
 
-        ready_monitors = subject.select(0.1)
+      it "selects writable objects" do
+        monitor = subject.register(writable_subject, :w)
+        subject.select(0).should include monitor
+      end
 
-        ready_monitors.should include ready_monitor
-        ready_monitors.should_not include waiting_monitor
+      it "does not select unwritable objects" do
+        monitor = subject.register(unwritable_subject, :w)
+        subject.select(0).should be_nil
+      end
+    end
+
+    shared_context "an NIO selectable stream" do
+      let(:stream) { pair.first }
+      let(:peer)   { pair.last }
+
+      it "selects readable when the other end closes" do
+        monitor = subject.register(stream, :r)
+        subject.select(0).should be_nil
+
+        peer.close
+        subject.select(0).should include monitor
       end
     end
 
     context "IO.pipe" do
+      let(:pair) { IO.pipe }
+
+      let :unreadable_subject do pair.first end
       let :readable_subject do
-        pipe, peer = IO.pipe
+        pipe, peer = pair
         peer << "data"
         pipe
       end
 
-      let :unreadable_subject do
-        pipe, _ = IO.pipe
-        pipe
-      end
-
-      let :writable_subject do
-        _, pipe = IO.pipe
-        pipe
-      end
-
+      let :writable_subject do pair.last end
       let :unwritable_subject do
         reader, pipe = IO.pipe
 
@@ -180,6 +188,7 @@ describe NIO::Selector do
       end
 
       it_behaves_like "an NIO selectable"
+      it_behaves_like "an NIO selectable stream"
     end
 
     context TCPSocket do
@@ -220,7 +229,14 @@ describe NIO::Selector do
         sock
       end
 
+      let :pair do
+        server = TCPServer.new("localhost", tcp_port + 4)
+        client = TCPSocket.open("localhost", tcp_port + 4)
+        [client, server.accept]
+      end
+
       it_behaves_like "an NIO selectable"
+      it_behaves_like "an NIO selectable stream"
     end
 
     context UDPSocket do
