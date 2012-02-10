@@ -30,22 +30,31 @@ describe NIO::Selector do
     monitor.should be_closed
   end
 
-  it "waits for a timeout when selecting" do
-    reader, writer = IO.pipe
-    monitor = subject.register(reader, :r)
+  context :timeouts do
+    it "waits for a timeout when selecting" do
+      reader, writer = IO.pipe
+      monitor = subject.register(reader, :r)
 
-    payload = "hi there"
-    writer << payload
+      payload = "hi there"
+      writer << payload
 
-    timeout = 0.5
-    started_at = Time.now
-    subject.select(timeout).should include monitor
-    (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(0)
-    reader.read_nonblock(payload.size)
+      timeout = 0.5
+      started_at = Time.now
+      subject.select(timeout).should include monitor
+      (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(0)
+      reader.read_nonblock(payload.size)
 
-    started_at = Time.now
-    subject.select(timeout).should be_nil
-    (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(timeout)
+      started_at = Time.now
+      subject.select(timeout).should be_nil
+      (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(timeout)
+    end
+    
+    it "raises ArgumentError if given a negative timeout" do
+      reader, _ = IO.pipe
+      subject.register(reader, :r)
+      
+      expect { subject.select(-1) }.to raise_exception(ArgumentError)
+    end
   end
 
   context "wakeup" do

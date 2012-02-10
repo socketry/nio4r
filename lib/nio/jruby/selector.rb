@@ -102,6 +102,7 @@ module NIO
           # How about we don't block at all instead?
           ready = @java_selector.selectNow
         elsif timeout
+          raise ArgumentError, "time interval must be positive" if timeout < 0
           ready = @java_selector.select(timeout * 1000)
         else
           ready = @java_selector.select

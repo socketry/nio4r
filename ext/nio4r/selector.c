@@ -261,6 +261,10 @@ static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self)
     VALUE args[2];
 
     rb_scan_args(argc, argv, "01", &timeout);
+    
+    if(timeout != Qnil && NUM2DBL(timeout) < 0) {
+        rb_raise(rb_eArgError, "time interval must be positive");
+    }
 
     args[0] = self;
     args[1] = timeout;
@@ -279,6 +283,10 @@ static VALUE NIO_Selector_select_each(int argc, VALUE *argv, VALUE self)
     }
 
     rb_scan_args(argc, argv, "01", &timeout);
+
+    if(timeout != Qnil && NUM2DBL(timeout) < 0) {
+        rb_raise(rb_eArgError, "time interval must be positive");
+    }
 
     args[0] = self;
     args[1] = timeout;
@@ -335,7 +343,8 @@ static int NIO_Selector_fill_ready_buffer(VALUE *args)
 #if defined(HAVE_RB_THREAD_BLOCKING_REGION) || defined(HAVE_RB_THREAD_ALONE)
     /* Implement the optional timeout (if any) as a ev_timer */
     if(timeout != Qnil) {
-        selector->timer.repeat = NUM2DBL(timeout);
+        /* It seems libev is not a fan of timers being zero, so fudge a little */
+        selector->timer.repeat = NUM2DBL(timeout) + 0.0001;
         ev_timer_again(selector->ev_loop, &selector->timer);
     } else {
         ev_timer_stop(selector->ev_loop, &selector->timer);
