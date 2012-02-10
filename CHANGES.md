@@ -1,3 +1,7 @@
+HEAD
+----
+* Upgrade to libev 4.11
+
 0.2.2
 -----
 * Raise IOError if asked to wake up a closed selector
