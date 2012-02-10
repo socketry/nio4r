@@ -261,7 +261,7 @@ static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self)
     VALUE args[2];
 
     rb_scan_args(argc, argv, "01", &timeout);
-    
+
     if(timeout != Qnil && NUM2DBL(timeout) < 0) {
         rb_raise(rb_eArgError, "time interval must be positive");
     }
