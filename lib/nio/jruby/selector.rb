@@ -110,7 +110,24 @@ module NIO
 
         return unless ready > 0 # timeout or wakeup
 
-        @java_selector.selectedKeys.each { |key| yield key.attachment }
+        @java_selector.selectedKeys.each do |key|
+          # NIO has an awesome quirk in its API. If we select a key as
+          # connected and don't cancel the SelectionKey, the next time we
+          # select it will return immediately with 0 events. We need to
+          # stop being interested in connects immediately after we're connected
+          if key.readyOps & SelectionKey::OP_CONNECT != 0
+            interest_ops = key.interestOps
+
+            # Disregard OP_CONNECT, acquire OP_WRITE!
+            interest_ops &= ~SelectionKey::OP_CONNECT
+            interest_ops |= SelectionKey::OP_WRITE
+
+            key.interestOps(interest_ops)
+          end
+
+          yield key.attachment
+        end
+
         @java_selector.selectedKeys.clear
 
         ready
