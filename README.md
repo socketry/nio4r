@@ -100,11 +100,12 @@ ready = selector.select(15) # Wait 15 seconds
 If a timeout occurs, ready will be nil.
 
 You can avoid allocating an array each time you call NIO::Selector#select by
-using NIO::Selector#select_each instead. This method successively yields ready
-NIO::Monitor objects:
+passing a block to select. The block will be called for each ready monitor
+object, with that object passed as an argument. The number of ready monitors
+is returned as a Fixnum:
 
 ```ruby
->> selector.select_each { |m| m.value.call }
+>> selector.select { |m| m.value.call }
 Got some data: Hi there!
  => 1
 ```
@@ -120,9 +121,9 @@ selector.deregister(reader)
 
 Monitors provide methods which let you introspect on why a particular IO
 object was selected. These methods are not thread safe unless you are holding
-the selector lock (i.e. if you're in a #select_each callback). Only use them
-if you aren't concerned with thread safety, or you're within a #select_each
-callback:
+the selector lock (i.e. if you're in a block pased to #select). Only use them
+if you aren't concerned with thread safety, or you're within a #select
+block:
 
 - ***#interests***: what this monitor is interested in (:r, :w, or :rw)
 - ***#readiness***: what the monitored IO object is ready for according to the last select operation

@@ -1,5 +1,7 @@
 HEAD
 ----
+* NIO::Selector#select now takes a block and behaves like select_each
+* NIO::Selector#select_each is now deprecated and will be removed
 * Java extension for JRuby
 * Upgrade to libev 4.11
 * Bugfixes for zero/negative select timeouts

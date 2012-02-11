@@ -54,7 +54,12 @@ module NIO
         ready_readers, ready_writers = Kernel.select readers, writers, [], timeout
         return unless ready_readers # timeout or wakeup
 
-        results = []
+        if block_given?
+          result = 0
+        else
+          result = []
+        end
+
         ready_readers.each do |io|
           if io == @wakeup
             # Clear all wakeup signals we've received by reading them
@@ -71,7 +76,13 @@ module NIO
           else
             monitor = @selectables[io]
             monitor.readiness = :r
-            results << monitor
+
+            if block_given?
+              yield monitor
+              result += 1
+            else
+              result << monitor
+            end
           end
         end
 
@@ -82,11 +93,17 @@ module NIO
           ios.each do |io|
             monitor = @selectables[io]
             monitor.readiness = readiness
-            results << monitor
+
+            if block_given?
+              yield monitor
+              result += 1
+            else
+              result << monitor
+            end
           end
         end
 
-        results
+        result
       end
     end
 

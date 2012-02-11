@@ -298,12 +298,21 @@ static VALUE NIO_Selector_select_each(int argc, VALUE *argv, VALUE self)
 static VALUE NIO_Selector_select_synchronized(VALUE *args)
 {
     struct NIO_Selector *selector;
-    int ready = NIO_Selector_fill_ready_buffer(args);
+    int i, ready = NIO_Selector_fill_ready_buffer(args);
 
     Data_Get_Struct(args[0], struct NIO_Selector, selector);
 
     if(ready > 0) {
-        return rb_ary_new4(ready, selector->ready_buffer);
+        if(rb_block_given_p()) {
+            for(i = 0; i < ready; i++) {
+                rb_yield(selector->ready_buffer[i]);
+            }
+
+            return INT2NUM(ready);
+        } else {
+            /* new4 memcpys the ready buffer */
+            return rb_ary_new4(ready, selector->ready_buffer);
+        }
     } else {
         return Qnil;
     }

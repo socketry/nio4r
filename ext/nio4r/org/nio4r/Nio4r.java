@@ -197,12 +197,12 @@ public class Nio4r implements Library {
         }
 
         @JRubyMethod
-        public synchronized IRubyObject select(ThreadContext context) {
-            return select(context, context.nil);
+        public synchronized IRubyObject select(ThreadContext context, Block block) {
+            return select(context, context.nil, block);
         }
 
         @JRubyMethod
-        public synchronized IRubyObject select(ThreadContext context, IRubyObject timeout) {
+        public synchronized IRubyObject select(ThreadContext context, IRubyObject timeout, Block block) {
             Ruby runtime = context.getRuntime();
             int ready = doSelect(runtime, timeout);
 
@@ -210,16 +210,29 @@ public class Nio4r implements Library {
             if(ready <= 0)
                 return context.nil;
 
-            RubyArray array = runtime.newArray(selector.selectedKeys().size());
+            RubyArray array = null;
+            if(!block.isGiven()) {
+                array = runtime.newArray(selector.selectedKeys().size());
+            }
+
             Iterator selectedKeys = selector.selectedKeys().iterator();
             while (selectedKeys.hasNext()) {
                 SelectionKey key = (SelectionKey)selectedKeys.next();
                 processKey(key);
                 selectedKeys.remove();
-                array.add(key.attachment());
+
+                if(block.isGiven()) {
+                    block.call(context, (IRubyObject)key.attachment());
+                } else {
+                    array.add(key.attachment());
+                }
             }
 
-            return array;
+            if(block.isGiven()) {
+                return RubyNumeric.int2fix(runtime, ready);
+            } else {
+                return array;
+            }
         }
 
         @JRubyMethod
