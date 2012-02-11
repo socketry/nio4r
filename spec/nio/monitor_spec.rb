@@ -5,11 +5,14 @@ describe NIO::Monitor do
   let(:reader) { pipes.first }
   let(:writer) { pipes.last }
   let(:selector) { NIO::Selector.new }
-  subject { selector.register(reader, :r) }
-  after   { selector.close }
+
+  subject    { selector.register(reader, :rw) }
+  let(:peer) { selector.register(writer, :rw) }
+  after      { selector.close }
 
   it "knows its interests" do
-    subject.interests.should == :r
+    subject.interests.should == :rw
+    peer.interests.should == :rw
   end
 
   it "stores arbitrary values" do
@@ -19,12 +22,25 @@ describe NIO::Monitor do
 
   it "knows what operations IO objects are ready for" do
     # For whatever odd reason this breaks unless we eagerly evaluate subject
-    monitor = subject
+    reader_monitor, writer_monitor = subject, peer
+
+    selected = selector.select(0)
+    selected.should_not include(reader_monitor)
+    selected.should include(writer_monitor)
+
+    writer_monitor.readiness.should == :w
+    writer_monitor.should_not be_readable
+    writer_monitor.should be_writable
+
     writer << "loldata"
 
-    selector.select(1).should include(monitor)
-    monitor.readiness.should == :r
-    monitor.should be_readable
+    selected = selector.select(0)
+    selected.should include(reader_monitor)
+
+    reader_monitor.readiness.should == :r
+    reader_monitor.should be_readable
+    reader_monitor.should_not be_writable
+
   end
 
   it "closes" do
