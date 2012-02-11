@@ -30,7 +30,7 @@ describe NIO::Selector do
     monitor.should be_closed
   end
 
-  context :timeouts do
+  context "timeouts" do
     it "waits for a timeout when selecting" do
       reader, writer = IO.pipe
       monitor = subject.register(reader, :r)
