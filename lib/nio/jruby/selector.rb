@@ -115,6 +115,7 @@ module NIO
           # connected and don't cancel the SelectionKey, the next time we
           # select it will return immediately with 0 events. We need to
           # stop being interested in connects immediately after we're connected
+          # See: http://stackoverflow.com/questions/204186/java-nio-select-returns-without-selected-keys-why
           if key.readyOps & SelectionKey::OP_CONNECT != 0
             interest_ops = key.interestOps
 

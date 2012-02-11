@@ -1,5 +1,6 @@
 package org.nio4r;
 
+import java.util.Iterator;
 import java.io.IOException;
 import java.nio.channels.Channel;
 import java.nio.channels.SocketChannel;
@@ -10,11 +11,14 @@ import org.jruby.RubyModule;
 import org.jruby.RubyClass;
 import org.jruby.RubyObject;
 import org.jruby.RubyIO;
+import org.jruby.RubyNumeric;
+import org.jruby.RubyArray;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.load.Library;
 import org.jruby.runtime.builtin.IRubyObject;
+import org.jruby.runtime.Block;
 
 public class Nio4r implements Library {
     private Ruby ruby;
@@ -141,6 +145,108 @@ public class Nio4r implements Library {
 
             return monitor;
         }
+
+        @JRubyMethod
+        public synchronized IRubyObject select(ThreadContext context) {
+            return select(context, context.nil);
+        }
+
+        @JRubyMethod
+        public synchronized IRubyObject select(ThreadContext context, IRubyObject timeout) {
+            Ruby runtime = context.getRuntime();
+            int ready = doSelect(runtime, timeout);
+
+            /* Timeout or wakeup */
+            if(ready <= 0)
+                return context.nil;
+
+            RubyArray array = runtime.newArray(selector.selectedKeys().size());
+            Iterator selectedKeys = selector.selectedKeys().iterator();
+            while (selectedKeys.hasNext()) {
+                SelectionKey key = (SelectionKey)selectedKeys.next();
+                selectedKeys.remove();
+                array.add(key.attachment());
+            }
+
+            return array;
+        }
+
+        @JRubyMethod
+        public synchronized IRubyObject select_each(ThreadContext context, Block block) {
+            return select_each(context, context.nil, block);
+        }
+
+        @JRubyMethod
+        public synchronized IRubyObject select_each(ThreadContext context, IRubyObject timeout, Block block) {
+            Ruby runtime = context.getRuntime();
+            int ready = doSelect(runtime, timeout);
+
+            /* Timeout or wakeup */
+            if(ready <= 0)
+                return context.nil;
+
+            return context.nil;
+        }
+
+        private int doSelect(Ruby runtime, IRubyObject timeout) {
+            try {
+                if(timeout.isNil()) {
+                    return selector.select();
+                } else {
+                    double t = RubyNumeric.num2dbl(timeout);
+                    if(t == 0) {
+                        return selector.selectNow();
+                    } else if(t < 0) {
+                        throw runtime.newArgumentError("time interval must be positive");
+                    } else {
+                        return selector.select((long)(t * 1000));
+                    }
+                }
+            } catch(IOException ie) {
+                throw runtime.newIOError(ie.getLocalizedMessage());
+            }
+        }
+
+        /*
+        # Iterate across all selectable monitors
+        def select_each(timeout = nil)
+          @select_lock.synchronize do
+            if timeout == 0
+              # The Java NIO API thinks zero means you want to BLOCK FOREVER o_O
+              # How about we don't block at all instead?
+              ready = @java_selector.selectNow
+            elsif timeout
+              raise ArgumentError, "time interval must be positive" if timeout < 0
+              ready = @java_selector.select(timeout * 1000)
+            else
+              ready = @java_selector.select
+            end
+
+            return unless ready > 0 # timeout or wakeup
+
+            @java_selector.selectedKeys.each do |key|
+              # NIO has an awesome quirk in its API. If we select a key as
+              # connected and don't cancel the SelectionKey, the next time we
+              # select it will return immediately with 0 events. We need to
+              # stop being interested in connects immediately after we're connected
+              if key.readyOps & SelectionKey::OP_CONNECT != 0
+                interest_ops = key.interestOps
+
+                # Disregard OP_CONNECT, acquire OP_WRITE!
+                interest_ops &= ~SelectionKey::OP_CONNECT
+                interest_ops |= SelectionKey::OP_WRITE
+
+                key.interestOps(interest_ops)
+              end
+
+              yield key.attachment
+            end
+
+            @java_selector.selectedKeys.clear
+
+            ready
+          end
+        end*/
     }
 
     public class Monitor extends RubyObject {
@@ -152,6 +258,7 @@ public class Nio4r implements Library {
 
         public void setSelectionKey(SelectionKey k) {
             key = k;
+            key.attach(this);
         }
 
         @JRubyMethod
