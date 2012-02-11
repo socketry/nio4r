@@ -226,6 +226,12 @@ describe NIO::Selector do
           _, writers = select [], [sock], [], 0
         end while writers and writers.include? sock
 
+        # One more for good measure!
+        begin
+          sock.write_nonblock "JUNK IN THE TUBES"
+        rescue Errno::EWOULDBLOCK
+        end
+
         sock
       end
 
