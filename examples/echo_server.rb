@@ -23,6 +23,9 @@ class EchoServer
 
   def accept
     socket = @server.accept
+    _, port, host = socket.peeraddr
+    puts "*** #{host}:#{port} connected"
+
     monitor = @selector.register(socket, :r)
     monitor.value = proc { read(socket) }
   end
@@ -30,6 +33,12 @@ class EchoServer
   def read(socket)
     data = socket.read_nonblock(4096)
     socket.write_nonblock(data)
+  rescue EOFError
+    _, port, host = socket.peeraddr
+    puts "*** #{host}:#{port} disconnected"
+
+    @selector.deregister(socket)
+    socket.close
   end
 end
 
