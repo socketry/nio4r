@@ -6,11 +6,17 @@ require 'spec_helper'
 TIMEOUT_PRECISION = 0.1
 
 describe NIO::Selector do
-  it "monitors IO objects" do
-    pipe, _ = IO.pipe
+  context "register" do
+    it "registers IO objects" do
+      pipe, _ = IO.pipe
 
-    monitor = subject.register(pipe, :r)
-    monitor.should_not be_closed
+      monitor = subject.register(pipe, :r)
+      monitor.should_not be_closed
+    end
+
+    it "raises TypeError if asked to register non-IO objects" do
+      expect { subject.register(42, :r) }.to raise_exception TypeError
+    end
   end
 
   it "knows which IO objects are registered" do

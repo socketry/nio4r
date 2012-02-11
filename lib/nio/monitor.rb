@@ -6,6 +6,16 @@ module NIO
 
     # :nodoc
     def initialize(io, interests)
+      unless io.is_a?(IO)
+        if IO.respond_to? :try_convert
+          io = IO.try_convert(io)
+        elsif io.respond_to? :to_io
+          io = io.to_io
+        end
+
+        raise TypeError, "can't convert #{io.class} into IO" unless io.is_a? IO
+      end
+
       @io, @interests = io, interests
       @closed = false
     end
