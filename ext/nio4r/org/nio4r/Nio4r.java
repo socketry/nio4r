@@ -82,19 +82,6 @@ public class Nio4r implements Library {
         }
     }
 
-    // Remove connect interest from connected sockets
-    // See: http://stackoverflow.com/questions/204186/java-nio-select-returns-without-selected-keys-why
-    public static void processKey(SelectionKey key) {
-        if((key.readyOps() & SelectionKey.OP_CONNECT) != 0) {
-            int interestOps = key.interestOps();
-
-            interestOps &= ~SelectionKey.OP_CONNECT;
-            interestOps |=  SelectionKey.OP_WRITE;
-
-            key.interestOps(interestOps);
-        }
-    }
-
     public class Selector extends RubyObject {
         private java.nio.channels.Selector selector;
 
@@ -177,7 +164,7 @@ public class Nio4r implements Library {
             Iterator selectedKeys = selector.selectedKeys().iterator();
             while (selectedKeys.hasNext()) {
                 SelectionKey key = (SelectionKey)selectedKeys.next();
-                Nio4r.processKey(key);
+                processKey(key);
                 selectedKeys.remove();
                 array.add(key.attachment());
             }
@@ -202,7 +189,7 @@ public class Nio4r implements Library {
             Iterator selectedKeys = selector.selectedKeys().iterator();
             while (selectedKeys.hasNext()) {
                 SelectionKey key = (SelectionKey)selectedKeys.next();
-                Nio4r.processKey(key);
+                processKey(key);
                 selectedKeys.remove();
                 block.call(context, (IRubyObject)key.attachment());
             }
@@ -226,6 +213,19 @@ public class Nio4r implements Library {
                 }
             } catch(IOException ie) {
                 throw runtime.newIOError(ie.getLocalizedMessage());
+            }
+        }
+
+        // Remove connect interest from connected sockets
+        // See: http://stackoverflow.com/questions/204186/java-nio-select-returns-without-selected-keys-why
+        private void processKey(SelectionKey key) {
+            if((key.readyOps() & SelectionKey.OP_CONNECT) != 0) {
+                int interestOps = key.interestOps();
+
+                interestOps &= ~SelectionKey.OP_CONNECT;
+                interestOps |=  SelectionKey.OP_WRITE;
+
+                key.interestOps(interestOps);
             }
         }
 
