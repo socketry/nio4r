@@ -291,6 +291,11 @@ public class Nio4r implements Library {
         }
 
         @JRubyMethod
+        public IRubyObject io(ThreadContext context) {
+            return io;
+        }
+
+        @JRubyMethod
         public IRubyObject interests(ThreadContext context) {
             return Nio4r.interestOpsToSymbol(context.getRuntime(), key.interestOps());
         }
