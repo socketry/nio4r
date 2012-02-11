@@ -62,6 +62,22 @@ public class Nio4r implements Library {
         }
     }
 
+    public static IRubyObject interestOpsToSymbol(Ruby ruby, int interestOps) {
+        switch(interestOps) {
+            case SelectionKey.OP_READ:
+            case SelectionKey.OP_ACCEPT:
+                return ruby.newSymbol("r");
+            case SelectionKey.OP_WRITE:
+            case SelectionKey.OP_CONNECT:
+                return ruby.newSymbol("w");
+            case SelectionKey.OP_READ | SelectionKey.OP_CONNECT:
+            case SelectionKey.OP_READ | SelectionKey.OP_WRITE:
+                return ruby.newSymbol("rw");
+            default:
+                throw ruby.newArgumentError("unknown interest op combination");
+        }
+    }
+
     public class Selector extends RubyObject {
         private java.nio.channels.Selector selector;
 
@@ -125,6 +141,11 @@ public class Nio4r implements Library {
 
         public void setSelectionKey(SelectionKey k) {
             key = k;
+        }
+
+        @JRubyMethod
+        public IRubyObject interests(ThreadContext context) {
+            return Nio4r.interestOpsToSymbol(context.getRuntime(), key.interestOps());
         }
     }
 }
