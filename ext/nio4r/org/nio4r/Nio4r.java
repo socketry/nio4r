@@ -228,6 +228,12 @@ public class Nio4r implements Library {
                 throw runtime.newIOError(ie.getLocalizedMessage());
             }
         }
+
+        @JRubyMethod
+        public IRubyObject wakeup(ThreadContext context) {
+            selector.wakeup();
+            return context.nil;
+        }
     }
 
     public class Monitor extends RubyObject {
