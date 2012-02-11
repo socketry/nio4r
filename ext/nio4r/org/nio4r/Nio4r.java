@@ -238,9 +238,16 @@ public class Nio4r implements Library {
 
     public class Monitor extends RubyObject {
         private SelectionKey key;
+        private RubyIO io;
 
         public Monitor(final Ruby ruby, RubyClass rubyClass) {
             super(ruby, rubyClass);
+        }
+
+        @JRubyMethod
+        public IRubyObject initialize(ThreadContext context, IRubyObject selectable) {
+            io = (RubyIO)selectable;
+            return context.nil;
         }
 
         public void setSelectionKey(SelectionKey k) {
