@@ -97,6 +97,17 @@ public class Nio4r implements Library {
         }
 
         @JRubyMethod
+        public IRubyObject close(ThreadContext context) {
+            try {
+                selector.close();
+            } catch(IOException ie) {
+                throw context.runtime.newIOError(ie.getLocalizedMessage());
+            }
+
+            return context.nil;
+        }
+
+        @JRubyMethod
         public IRubyObject register(ThreadContext context, IRubyObject io, IRubyObject interest) {
             Ruby runtime = context.getRuntime();
             Channel raw_channel = ((RubyIO)io).getChannel();
