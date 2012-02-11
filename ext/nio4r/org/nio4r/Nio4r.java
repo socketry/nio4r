@@ -340,7 +340,7 @@ public class Nio4r implements Library {
             }
         }
 
-        @JRubyMethod(name = "writable?")
+        @JRubyMethod(name = {"writable?", "writeable?"})
         public IRubyObject writable(ThreadContext context) {
             Ruby runtime  = context.getRuntime();
             int  readyOps = key.readyOps();
