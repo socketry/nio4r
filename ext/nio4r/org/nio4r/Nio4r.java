@@ -185,6 +185,13 @@ public class Nio4r implements Library {
             if(ready <= 0)
                 return context.nil;
 
+            Iterator selectedKeys = selector.selectedKeys().iterator();
+            while (selectedKeys.hasNext()) {
+                SelectionKey key = (SelectionKey)selectedKeys.next();
+                selectedKeys.remove();
+                block.call(context, (IRubyObject)key.attachment());
+            }
+
             return context.nil;
         }
 
