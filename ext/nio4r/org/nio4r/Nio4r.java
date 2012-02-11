@@ -153,6 +153,27 @@ public class Nio4r implements Library {
         }
 
         @JRubyMethod
+        public IRubyObject deregister(ThreadContext context, IRubyObject io) {
+            Ruby runtime = context.getRuntime();
+            Channel raw_channel = ((RubyIO)io).getChannel();
+
+            if(!(raw_channel instanceof SelectableChannel)) {
+                throw runtime.newArgumentError("not a selectable IO object");
+            }
+
+            SelectableChannel channel = (SelectableChannel)raw_channel;
+            SelectionKey key = channel.keyFor(selector);
+
+            if(key == null)
+                return context.nil;
+
+            Monitor monitor = (Monitor)key.attachment();
+            monitor.close(context);
+
+            return monitor;
+        }
+
+        @JRubyMethod
         public synchronized IRubyObject select(ThreadContext context) {
             return select(context, context.nil);
         }
@@ -288,6 +309,7 @@ public class Nio4r implements Library {
 
         @JRubyMethod
         public IRubyObject close(ThreadContext context) {
+            key.cancel();
             closed = context.getRuntime().getTrue();
             return context.nil;
         }
