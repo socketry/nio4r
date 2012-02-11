@@ -1,5 +1,6 @@
 HEAD
 ----
+* Java extension for JRuby
 * Upgrade to libev 4.11
 * Bugfixes for zero/negative select timeouts
 * Handle OP_CONNECT properly on JRuby
