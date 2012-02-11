@@ -59,8 +59,18 @@ public class Nio4r implements Library {
                 return SelectionKey.OP_WRITE;
             }
         } else if(interest == ruby.newSymbol("rw")) {
-              return symbolToInterestOps(ruby, channel, ruby.newSymbol("r")) |
-                     symbolToInterestOps(ruby, channel, ruby.newSymbol("w"));
+            int interestOps = 0;
+
+            /* nio4r emulates the POSIX behavior, which is sloppy about allowed modes */
+            if((channel.validOps() & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0) {
+                interestOps |= symbolToInterestOps(ruby, channel, ruby.newSymbol("r"));
+            }
+
+            if((channel.validOps() & (SelectionKey.OP_WRITE | SelectionKey.OP_CONNECT)) != 0) {
+                interestOps |= symbolToInterestOps(ruby, channel, ruby.newSymbol("w"));
+            }
+
+            return interestOps;
         } else {
             throw ruby.newArgumentError("invalid interest type: " + interest);
         }
@@ -118,7 +128,7 @@ public class Nio4r implements Library {
         }
 
         @JRubyMethod
-        public IRubyObject register(ThreadContext context, IRubyObject io, IRubyObject interest) {
+        public IRubyObject register(ThreadContext context, IRubyObject io, IRubyObject interests) {
             Ruby runtime = context.getRuntime();
             Channel raw_channel = ((RubyIO)io).getChannel();
 
@@ -134,19 +144,19 @@ public class Nio4r implements Library {
                 throw runtime.newIOError(ie.getLocalizedMessage());
             }
 
-            int interestOps = Nio4r.symbolToInterestOps(runtime, channel, interest);
+            int interestOps = Nio4r.symbolToInterestOps(runtime, channel, interests);
             SelectionKey key;
 
             try {
                 key = channel.register(selector, interestOps);
             } catch(java.lang.IllegalArgumentException ia) {
-                throw runtime.newArgumentError("invalid interest type:" + interest);
+                throw runtime.newArgumentError("mode not supported for this object: " + interests);
             } catch(java.nio.channels.ClosedChannelException cce) {
                 throw context.runtime.newIOError(cce.getLocalizedMessage());
             }
 
             RubyClass monitorClass = runtime.getModule("NIO").getClass("Monitor");
-            Monitor monitor = (Monitor)monitorClass.newInstance(context, io, null);
+            Monitor monitor = (Monitor)monitorClass.newInstance(context, io, interests, null);
             monitor.setSelectionKey(key);
 
             return monitor;
@@ -306,15 +316,17 @@ public class Nio4r implements Library {
     public class Monitor extends RubyObject {
         private SelectionKey key;
         private RubyIO io;
-        private IRubyObject value, closed;
+        private IRubyObject interestSym, value, closed;
 
         public Monitor(final Ruby ruby, RubyClass rubyClass) {
             super(ruby, rubyClass);
         }
 
         @JRubyMethod
-        public IRubyObject initialize(ThreadContext context, IRubyObject selectable) {
+        public IRubyObject initialize(ThreadContext context, IRubyObject selectable, IRubyObject interests) {
             io = (RubyIO)selectable;
+            interestSym = interests;
+
             value = context.nil;
             closed = context.getRuntime().getFalse();
 
@@ -333,7 +345,7 @@ public class Nio4r implements Library {
 
         @JRubyMethod
         public IRubyObject interests(ThreadContext context) {
-            return Nio4r.interestOpsToSymbol(context.getRuntime(), key.interestOps());
+            return interestSym;
         }
 
         @JRubyMethod
