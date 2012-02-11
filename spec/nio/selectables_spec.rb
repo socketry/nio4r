@@ -94,10 +94,22 @@ describe "NIO selectables" do
       sock = TCPSocket.open("localhost", tcp_port + 3)
       peer = server.accept
 
-      begin
-        sock.write_nonblock "JUNK IN THE TUBES"
-        _, writers = select [], [sock], [], 0
-      end while writers and writers.include? sock
+      if defined? JRUBY_VERSION
+        # The implementation below seems more reliable, but triggers a JRuby
+        # bug. See: http://jira.codehaus.org/browse/JRUBY-6442
+        begin
+          sock.write_nonblock "JUNK IN THE TUBES"
+          _, writers = select [], [sock], [], 0
+        end while writers and writers.include? sock
+      else
+        loop do
+          begin
+            sock.write_nonblock("JUNK IN THE TUBES")
+          rescue Errno::EWOULDBLOCK
+            break
+          end
+        end
+      end
 
       # One more for good measure!
       begin
