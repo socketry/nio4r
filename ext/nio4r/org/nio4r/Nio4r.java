@@ -258,6 +258,10 @@ public class Nio4r implements Library {
 
         @JRubyMethod
         public IRubyObject wakeup(ThreadContext context) {
+            if(!selector.isOpen()) {
+                throw context.getRuntime().newIOError("selector is closed");
+            }
+
             selector.wakeup();
             return context.nil;
         }
