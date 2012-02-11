@@ -245,7 +245,7 @@ public class Nio4r implements Library {
     public class Monitor extends RubyObject {
         private SelectionKey key;
         private RubyIO io;
-        private IRubyObject value;
+        private IRubyObject value, closed;
 
         public Monitor(final Ruby ruby, RubyClass rubyClass) {
             super(ruby, rubyClass);
@@ -255,6 +255,7 @@ public class Nio4r implements Library {
         public IRubyObject initialize(ThreadContext context, IRubyObject selectable) {
             io = (RubyIO)selectable;
             value = context.nil;
+            closed = context.getRuntime().getFalse();
 
             return context.nil;
         }
@@ -283,6 +284,17 @@ public class Nio4r implements Library {
         public IRubyObject setValue(ThreadContext context, IRubyObject obj) {
             value = obj;
             return context.nil;
+        }
+
+        @JRubyMethod
+        public IRubyObject close(ThreadContext context) {
+            closed = context.getRuntime().getTrue();
+            return context.nil;
+        }
+
+        @JRubyMethod(name = "closed?")
+        public IRubyObject isClosed(ThreadContext context) {
+            return closed;
         }
     }
 }
