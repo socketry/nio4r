@@ -24,6 +24,7 @@ Supported Platforms
 nio4r is known to work on the following Ruby implementations:
 
 * MRI/YARV 1.8.7, 1.9.2, 1.9.3
+* REE (2011.12)
 * JRuby 1.6.x (and likely earlier versions too)
 * Rubinius 1.x/2.0
 * A pure Ruby implementation based on Kernel.select is also provided
@@ -32,7 +33,7 @@ Platform notes:
 
 * MRI/YARV and Rubinius implement nio4j with a C extension based on libev,
   which provides a high performance binding to native IO APIs
-* JRuby uses a special backend based on the high performance Java NIO subsystem
+* JRuby uses a Java extension based on the high performance Java NIO subsystem
 * A pure Ruby implementation is also provided for Ruby implementations which
   don't implement the MRI C extension API
 
@@ -152,9 +153,12 @@ nio4r is not a full-featured event framework like EventMachine or Cool.io.
 Instead, nio4r is the sort of thing you might write a library like that on
 top of. nio4r provides a minimal API such that individual Ruby implementers
 may choose to produce optimized versions for their platform, without having
-to maintain a large codebase. As of the time of writing, the current
-implementation is a little over 100 lines of code for both the pure Ruby and
-JRuby backends. The native extension uses approximately 500 lines of C code.
+to maintain a large codebase.
+
+As of the time of writing, the current implementation is
+* ~200 lines of Ruby code
+* ~700 lines of "custom" C code (not counting libev)
+* ~400 lines of Java code
 
 nio4r is also not a replacement for Kinder Gentler IO (KGIO), a set of
 advanced Ruby IO APIs. At some point in the future nio4r might provide a
@@ -164,7 +168,7 @@ however this is not the case today.
 License
 -------
 
-Copyright (c) 2011 Tony Arcieri. Distributed under the MIT License. See
+Copyright (c) 2011-12 Tony Arcieri. Distributed under the MIT License. See
 LICENSE.txt for further details.
 
 Includes libev. Copyright (C)2007-09 Marc Alexander Lehmann. Distributed under
