@@ -82,6 +82,19 @@ public class Nio4r implements Library {
         }
     }
 
+    // Remove connect interest from connected sockets
+    // See: http://stackoverflow.com/questions/204186/java-nio-select-returns-without-selected-keys-why
+    public static void processKey(SelectionKey key) {
+        if((key.readyOps() & SelectionKey.OP_CONNECT) != 0) {
+            int interestOps = key.interestOps();
+
+            interestOps &= ~SelectionKey.OP_CONNECT;
+            interestOps |=  SelectionKey.OP_WRITE;
+
+            key.interestOps(interestOps);
+        }
+    }
+
     public class Selector extends RubyObject {
         private java.nio.channels.Selector selector;
 
@@ -164,6 +177,7 @@ public class Nio4r implements Library {
             Iterator selectedKeys = selector.selectedKeys().iterator();
             while (selectedKeys.hasNext()) {
                 SelectionKey key = (SelectionKey)selectedKeys.next();
+                Nio4r.processKey(key);
                 selectedKeys.remove();
                 array.add(key.attachment());
             }
@@ -188,6 +202,7 @@ public class Nio4r implements Library {
             Iterator selectedKeys = selector.selectedKeys().iterator();
             while (selectedKeys.hasNext()) {
                 SelectionKey key = (SelectionKey)selectedKeys.next();
+                Nio4r.processKey(key);
                 selectedKeys.remove();
                 block.call(context, (IRubyObject)key.attachment());
             }
@@ -213,47 +228,6 @@ public class Nio4r implements Library {
                 throw runtime.newIOError(ie.getLocalizedMessage());
             }
         }
-
-        /*
-        # Iterate across all selectable monitors
-        def select_each(timeout = nil)
-          @select_lock.synchronize do
-            if timeout == 0
-              # The Java NIO API thinks zero means you want to BLOCK FOREVER o_O
-              # How about we don't block at all instead?
-              ready = @java_selector.selectNow
-            elsif timeout
-              raise ArgumentError, "time interval must be positive" if timeout < 0
-              ready = @java_selector.select(timeout * 1000)
-            else
-              ready = @java_selector.select
-            end
-
-            return unless ready > 0 # timeout or wakeup
-
-            @java_selector.selectedKeys.each do |key|
-              # NIO has an awesome quirk in its API. If we select a key as
-              # connected and don't cancel the SelectionKey, the next time we
-              # select it will return immediately with 0 events. We need to
-              # stop being interested in connects immediately after we're connected
-              if key.readyOps & SelectionKey::OP_CONNECT != 0
-                interest_ops = key.interestOps
-
-                # Disregard OP_CONNECT, acquire OP_WRITE!
-                interest_ops &= ~SelectionKey::OP_CONNECT
-                interest_ops |= SelectionKey::OP_WRITE
-
-                key.interestOps(interest_ops)
-              end
-
-              yield key.attachment
-            end
-
-            @java_selector.selectedKeys.clear
-
-            ready
-          end
-        end*/
     }
 
     public class Monitor extends RubyObject {
