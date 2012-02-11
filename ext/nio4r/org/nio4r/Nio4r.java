@@ -239,6 +239,7 @@ public class Nio4r implements Library {
     public class Monitor extends RubyObject {
         private SelectionKey key;
         private RubyIO io;
+        private IRubyObject value;
 
         public Monitor(final Ruby ruby, RubyClass rubyClass) {
             super(ruby, rubyClass);
@@ -247,6 +248,8 @@ public class Nio4r implements Library {
         @JRubyMethod
         public IRubyObject initialize(ThreadContext context, IRubyObject selectable) {
             io = (RubyIO)selectable;
+            value = context.nil;
+
             return context.nil;
         }
 
@@ -263,6 +266,17 @@ public class Nio4r implements Library {
         @JRubyMethod
         public IRubyObject readiness(ThreadContext context) {
             return Nio4r.interestOpsToSymbol(context.getRuntime(), key.readyOps());
+        }
+
+        @JRubyMethod(name = "value")
+        public IRubyObject getValue(ThreadContext context) {
+            return value;
+        }
+
+        @JRubyMethod(name = "value=")
+        public IRubyObject setValue(ThreadContext context, IRubyObject obj) {
+            value = obj;
+            return context.nil;
         }
     }
 }
