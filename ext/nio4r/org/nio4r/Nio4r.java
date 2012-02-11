@@ -111,6 +111,12 @@ public class Nio4r implements Library {
             return context.nil;
         }
 
+        @JRubyMethod(name = "closed?")
+        public IRubyObject isClosed(ThreadContext context) {
+            Ruby runtime = context.getRuntime();
+            return selector.isOpen() ? runtime.getFalse() : runtime.getTrue();
+        }
+
         @JRubyMethod
         public IRubyObject register(ThreadContext context, IRubyObject io, IRubyObject interest) {
             Ruby runtime = context.getRuntime();
