@@ -305,6 +305,30 @@ public class Nio4r implements Library {
             return Nio4r.interestOpsToSymbol(context.getRuntime(), key.readyOps());
         }
 
+        @JRubyMethod(name = "readable?")
+        public IRubyObject isReadable(ThreadContext context) {
+            Ruby runtime  = context.getRuntime();
+            int  readyOps = key.readyOps();
+
+            if((readyOps & SelectionKey.OP_READ) != 0 || (readyOps & SelectionKey.OP_ACCEPT) != 0) {
+                return runtime.getTrue();
+            } else {
+                return runtime.getFalse();
+            }
+        }
+
+        @JRubyMethod(name = "writable?")
+        public IRubyObject writable(ThreadContext context) {
+            Ruby runtime  = context.getRuntime();
+            int  readyOps = key.readyOps();
+
+            if((readyOps & SelectionKey.OP_WRITE) != 0 || (readyOps & SelectionKey.OP_CONNECT) != 0) {
+                return runtime.getTrue();
+            } else {
+                return runtime.getFalse();
+            }
+        }
+
         @JRubyMethod(name = "value")
         public IRubyObject getValue(ThreadContext context) {
             return value;
