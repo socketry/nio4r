@@ -45,7 +45,10 @@ describe NIO::Monitor do
 
   it "closes" do
     subject.should_not be_closed
+    selector.registered?(reader).should be_true
+
     subject.close
     subject.should be_closed
+    selector.registered?(reader).should be_false
   end
 end

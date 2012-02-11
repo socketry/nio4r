@@ -209,9 +209,9 @@ static VALUE NIO_Selector_register_synchronized(VALUE *args)
         rb_raise(rb_eArgError, "this IO is already registered with selector");
 
     /* Create a new NIO::Monitor */
-    monitor_args[0] = self;
-    monitor_args[1] = io;
-    monitor_args[2] = interests;
+    monitor_args[0] = io;
+    monitor_args[1] = interests;
+    monitor_args[2] = self;
 
     monitor = rb_class_new_instance(3, monitor_args, cNIO_Monitor);
     rb_hash_aset(selectables, io, monitor);
@@ -239,7 +239,7 @@ static VALUE NIO_Selector_deregister_synchronized(VALUE *args)
     monitor = rb_hash_delete(selectables, io);
 
     if(monitor != Qnil) {
-        rb_funcall(monitor, rb_intern("close"), 0, 0);
+        rb_funcall(monitor, rb_intern("close"), 1, Qfalse);
     }
 
     return monitor;
@@ -474,11 +474,11 @@ static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *
 /* This gets called from individual monitors. We must be careful here because
    the GIL isn't held, so we must rely only on standard C and can't touch
    anything Ruby-related.
-   
+
    It's scary because there's a VALUE here, and VALUEs are a Ruby thing,
    however we're not going to dereference that VALUE or attempt to do anything
    with it. We just treat it as completely opaque until we have the GIL back.
-   
+
    In order for this function to even get called, the monitor the VALUE points to
    must be attached to this Selector, and if it's attached to this Selector
    then we hold a reference to it in the @selectables instance variable, so

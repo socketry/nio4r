@@ -16,7 +16,7 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor);
 
 /* Methods */
 static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE interests);
-static VALUE NIO_Monitor_close(VALUE self);
+static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self);
 static VALUE NIO_Monitor_is_closed(VALUE self);
 static VALUE NIO_Monitor_io(VALUE self);
 static VALUE NIO_Monitor_interests(VALUE self);
@@ -43,7 +43,7 @@ void Init_NIO_Monitor()
     rb_define_alloc_func(cNIO_Monitor, NIO_Monitor_allocate);
 
     rb_define_method(cNIO_Monitor, "initialize", NIO_Monitor_initialize, 3);
-    rb_define_method(cNIO_Monitor, "close", NIO_Monitor_close, 0);
+    rb_define_method(cNIO_Monitor, "close", NIO_Monitor_close, -1);
     rb_define_method(cNIO_Monitor, "closed?", NIO_Monitor_is_closed, 0);
     rb_define_method(cNIO_Monitor, "io", NIO_Monitor_io, 0);
     rb_define_method(cNIO_Monitor, "interests", NIO_Monitor_interests, 0);
@@ -71,7 +71,7 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor)
     xfree(monitor);
 }
 
-static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector_obj, VALUE io, VALUE interests)
+static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE selector_obj)
 {
     struct NIO_Monitor *monitor;
     struct NIO_Selector *selector;
@@ -101,9 +101,9 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector_obj, VALUE io, VA
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
     ev_io_init(&monitor->ev_io, NIO_Monitor_callback, FPTR_TO_FD(fptr), monitor->interests);
 
-    rb_ivar_set(self, rb_intern("selector"), selector_obj);
     rb_ivar_set(self, rb_intern("io"), io);
     rb_ivar_set(self, rb_intern("interests"), interests);
+    rb_ivar_set(self, rb_intern("selector"), selector_obj);
 
     Data_Get_Struct(selector_obj, struct NIO_Selector, selector);
 
@@ -119,14 +119,25 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector_obj, VALUE io, VA
     return Qnil;
 }
 
-static VALUE NIO_Monitor_close(VALUE self)
+static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
 {
+    VALUE deregister, selector;
     struct NIO_Monitor *monitor;
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
-    if(monitor->selector) {
+    rb_scan_args(argc, argv, "01", &deregister);
+    selector = rb_ivar_get(self, rb_intern("selector"));
+
+    if(selector != Qnil) {
         ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
         monitor->selector = 0;
+        rb_ivar_set(self, rb_intern("selector"), Qnil);
+
+        /* Default value is true */
+        if(deregister == Qtrue || deregister == Qnil) {
+            puts("Deregistering!");
+            rb_funcall(selector, rb_intern("deregister"), 1, rb_ivar_get(self, rb_intern("io")));
+        }
     }
 
     return Qnil;

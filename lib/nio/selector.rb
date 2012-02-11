@@ -20,7 +20,7 @@ module NIO
       @lock.synchronize do
         raise ArgumentError, "this IO is already registered with the selector" if @selectables[io]
 
-        monitor = Monitor.new(io, interest)
+        monitor = Monitor.new(io, interest, self)
         @selectables[io] = monitor
 
         monitor
@@ -31,7 +31,7 @@ module NIO
     def deregister(io)
       @lock.synchronize do
         monitor = @selectables.delete io
-        monitor.close if monitor
+        monitor.close(false) if monitor and not monitor.closed?
         monitor
       end
     end
