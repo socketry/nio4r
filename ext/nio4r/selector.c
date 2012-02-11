@@ -473,7 +473,17 @@ static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *
 
 /* This gets called from individual monitors. We must be careful here because
    the GIL isn't held, so we must rely only on standard C and can't touch
-   anything Ruby-related */
+   anything Ruby-related.
+   
+   It's scary because there's a VALUE here, and VALUEs are a Ruby thing,
+   however we're not going to dereference that VALUE or attempt to do anything
+   with it. We just treat it as completely opaque until we have the GIL back.
+   
+   In order for this function to even get called, the monitor the VALUE points to
+   must be attached to this Selector, and if it's attached to this Selector
+   then we hold a reference to it in the @selectables instance variable, so
+   there's no danger of this monitor getting garbage collected before we have
+   the GIL back as we hold a reference. */
 void NIO_Selector_handle_event(struct NIO_Selector *selector, VALUE monitor, int revents)
 {
     /* Grow the ready buffer if it's too small */
