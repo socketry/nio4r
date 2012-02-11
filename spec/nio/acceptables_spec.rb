@@ -1,4 +1,4 @@
-describe "acceptables" do
+describe "NIO acceptables" do
   shared_context "an NIO acceptable" do
     let(:selector) { NIO::Selector.new }
 

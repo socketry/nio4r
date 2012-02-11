@@ -83,6 +83,23 @@ describe NIO::Selector do
     end
   end
 
+  context "select" do
+    it "selects IO objects" do
+      readable, writer = IO.pipe
+      writer << "ohai"
+
+      unreadable, _ = IO.pipe
+
+      readable_monitor   = subject.register(readable, :r)
+      unreadable_monitor = subject.register(unreadable, :r)
+
+      selected = subject.select(0)
+      selected.size.should == 1
+      selected.should include(readable_monitor)
+      selected.should_not include(unreadable_monitor)
+    end
+  end
+
   context "select_each" do
     it "iterates across ready selectables" do
       readable1, writer = IO.pipe
