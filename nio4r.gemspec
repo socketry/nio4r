@@ -16,7 +16,7 @@ Gem::Specification.new do |gem|
   gem.version       = NIO::VERSION
   gem.extensions    = ["ext/nio4r/extconf.rb"]
 
-  gem.add_development_dependency "rake-compiler", "~> 0.7.9"
+  gem.add_development_dependency "rake-compiler"
   gem.add_development_dependency "rake"
-  gem.add_development_dependency "rspec", ">= 2.7.0"
+  gem.add_development_dependency "rspec"
 end
