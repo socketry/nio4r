@@ -156,10 +156,11 @@ top of. nio4r provides a minimal API such that individual Ruby implementers
 may choose to produce optimized versions for their platform, without having
 to maintain a large codebase.
 
-As of the time of writing, the current implementation is
-* ~200 lines of Ruby code
-* ~700 lines of "custom" C code (not counting libev)
-* ~400 lines of Java code
+As of the time of writing, the current implementation is (approximately):
+
+* 200 lines of Ruby code
+* 700 lines of "custom" C code (not counting libev)
+* 400 lines of Java code
 
 nio4r is also not a replacement for Kinder Gentler IO (KGIO), a set of
 advanced Ruby IO APIs. At some point in the future nio4r might provide a
