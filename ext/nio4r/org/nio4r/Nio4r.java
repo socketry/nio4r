@@ -1,6 +1,7 @@
 package org.nio4r;
 
 import java.util.Iterator;
+import java.util.HashMap;
 import java.io.IOException;
 import java.nio.channels.Channel;
 import java.nio.channels.SocketChannel;
@@ -102,7 +103,7 @@ public class Nio4r implements Library {
         @JRubyMethod
         public IRubyObject initialize(ThreadContext context) {
             try {
-                selector = java.nio.channels.Selector.open();
+                this.selector = java.nio.channels.Selector.open();
             } catch(IOException ie) {
                 throw context.runtime.newIOError(ie.getLocalizedMessage());
             }
@@ -113,7 +114,7 @@ public class Nio4r implements Library {
         @JRubyMethod
         public IRubyObject close(ThreadContext context) {
             try {
-                selector.close();
+                this.selector.close();
             } catch(IOException ie) {
                 throw context.runtime.newIOError(ie.getLocalizedMessage());
             }
@@ -124,7 +125,7 @@ public class Nio4r implements Library {
         @JRubyMethod(name = "closed?")
         public IRubyObject isClosed(ThreadContext context) {
             Ruby runtime = context.getRuntime();
-            return selector.isOpen() ? runtime.getFalse() : runtime.getTrue();
+            return this.selector.isOpen() ? runtime.getFalse() : runtime.getTrue();
         }
 
         @JRubyMethod
@@ -148,7 +149,7 @@ public class Nio4r implements Library {
             SelectionKey key;
 
             try {
-                key = channel.register(selector, interestOps);
+                key = channel.register(this.selector, interestOps);
             } catch(java.lang.IllegalArgumentException ia) {
                 throw runtime.newArgumentError("mode not supported for this object: " + interests);
             } catch(java.nio.channels.ClosedChannelException cce) {
@@ -172,7 +173,7 @@ public class Nio4r implements Library {
             }
 
             SelectableChannel channel = (SelectableChannel)raw_channel;
-            SelectionKey key = channel.keyFor(selector);
+            SelectionKey key = channel.keyFor(this.selector);
 
             if(key == null)
                 return context.nil;
@@ -193,7 +194,7 @@ public class Nio4r implements Library {
             }
 
             SelectableChannel channel = (SelectableChannel)raw_channel;
-            SelectionKey key = channel.keyFor(selector);
+            SelectionKey key = channel.keyFor(this.selector);
 
             if(key == null)
                 return context.nil;
@@ -222,10 +223,10 @@ public class Nio4r implements Library {
 
             RubyArray array = null;
             if(!block.isGiven()) {
-                array = runtime.newArray(selector.selectedKeys().size());
+                array = runtime.newArray(this.selector.selectedKeys().size());
             }
 
-            Iterator selectedKeys = selector.selectedKeys().iterator();
+            Iterator selectedKeys = this.selector.selectedKeys().iterator();
             while (selectedKeys.hasNext()) {
                 SelectionKey key = (SelectionKey)selectedKeys.next();
                 processKey(key);
@@ -259,7 +260,7 @@ public class Nio4r implements Library {
             if(ready <= 0)
                 return context.nil;
 
-            Iterator selectedKeys = selector.selectedKeys().iterator();
+            Iterator selectedKeys = this.selector.selectedKeys().iterator();
             while (selectedKeys.hasNext()) {
                 SelectionKey key = (SelectionKey)selectedKeys.next();
                 processKey(key);
@@ -273,15 +274,15 @@ public class Nio4r implements Library {
         private int doSelect(Ruby runtime, IRubyObject timeout) {
             try {
                 if(timeout.isNil()) {
-                    return selector.select();
+                    return this.selector.select();
                 } else {
                     double t = RubyNumeric.num2dbl(timeout);
                     if(t == 0) {
-                        return selector.selectNow();
+                        return this.selector.selectNow();
                     } else if(t < 0) {
                         throw runtime.newArgumentError("time interval must be positive");
                     } else {
-                        return selector.select((long)(t * 1000));
+                        return this.selector.select((long)(t * 1000));
                     }
                 }
             } catch(IOException ie) {
@@ -304,11 +305,11 @@ public class Nio4r implements Library {
 
         @JRubyMethod
         public IRubyObject wakeup(ThreadContext context) {
-            if(!selector.isOpen()) {
+            if(!this.selector.isOpen()) {
                 throw context.getRuntime().newIOError("selector is closed");
             }
 
-            selector.wakeup();
+            this.selector.wakeup();
             return context.nil;
         }
     }
@@ -328,14 +329,14 @@ public class Nio4r implements Library {
             this.interests = interests;
             this.selector  = selector;
 
-            value  = context.nil;
-            closed = context.getRuntime().getFalse();
+            this.value  = context.nil;
+            this.closed = context.getRuntime().getFalse();
 
             return context.nil;
         }
 
-        public void setSelectionKey(SelectionKey k) {
-            key = k;
+        public void setSelectionKey(SelectionKey key) {
+            this.key = key;
             key.attach(this);
         }
 
@@ -362,7 +363,7 @@ public class Nio4r implements Library {
         @JRubyMethod(name = "readable?")
         public IRubyObject isReadable(ThreadContext context) {
             Ruby runtime  = context.getRuntime();
-            int  readyOps = key.readyOps();
+            int  readyOps = this.key.readyOps();
 
             if((readyOps & SelectionKey.OP_READ) != 0 || (readyOps & SelectionKey.OP_ACCEPT) != 0) {
                 return runtime.getTrue();
@@ -374,7 +375,7 @@ public class Nio4r implements Library {
         @JRubyMethod(name = {"writable?", "writeable?"})
         public IRubyObject writable(ThreadContext context) {
             Ruby runtime  = context.getRuntime();
-            int  readyOps = key.readyOps();
+            int  readyOps = this.key.readyOps();
 
             if((readyOps & SelectionKey.OP_WRITE) != 0 || (readyOps & SelectionKey.OP_CONNECT) != 0) {
                 return runtime.getTrue();
@@ -385,25 +386,25 @@ public class Nio4r implements Library {
 
         @JRubyMethod(name = "value")
         public IRubyObject getValue(ThreadContext context) {
-            return value;
+            return this.value;
         }
 
         @JRubyMethod(name = "value=")
         public IRubyObject setValue(ThreadContext context, IRubyObject obj) {
-            value = obj;
+            this.value = obj;
             return context.nil;
         }
 
         @JRubyMethod
         public IRubyObject close(ThreadContext context) {
-            key.cancel();
-            closed = context.getRuntime().getTrue();
+            this.key.cancel();
+            this.closed = context.getRuntime().getTrue();
             return context.nil;
         }
 
         @JRubyMethod(name = "closed?")
         public IRubyObject isClosed(ThreadContext context) {
-            return closed;
+            return this.closed;
         }
     }
 }
