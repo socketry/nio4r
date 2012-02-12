@@ -1,3 +1,7 @@
+0.3.1
+-----
+* Prevent CancelledKeyExceptions on JRuby
+
 0.3.0
 -----
 * NIO::Selector#select now takes a block and behaves like select_each
