@@ -35,6 +35,22 @@ describe NIO::Selector do
     monitor.should be_closed
   end
 
+  # This spec might seem a bit silly, but this actually something the
+  # Java NIO API specifically precludes that we need to work around
+  it "allows regegistration of the same IO object across select calls" do
+    monitor = subject.register(reader, :r)
+    writer << "ohai"
+
+    subject.select.should include monitor
+    reader.read(4).should == "ohai"
+    subject.deregister(reader)
+
+    new_monitor = subject.register(reader, :r)
+    writer << "thar"
+    subject.select.should include new_monitor
+    reader.read(4).should == "thar"
+  end
+
   context "timeouts" do
     it "waits for a timeout when selecting" do
       monitor = subject.register(reader, :r)
