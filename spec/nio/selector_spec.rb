@@ -37,7 +37,7 @@ describe NIO::Selector do
 
   # This spec might seem a bit silly, but this actually something the
   # Java NIO API specifically precludes that we need to work around
-  it "allows regegistration of the same IO object across select calls" do
+  it "allows reregistration of the same IO object across select calls" do
     monitor = subject.register(reader, :r)
     writer << "ohai"
 
