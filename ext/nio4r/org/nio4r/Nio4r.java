@@ -95,6 +95,7 @@ public class Nio4r implements Library {
 
     public class Selector extends RubyObject {
         private java.nio.channels.Selector selector;
+        private HashMap<SelectableChannel,SelectionKey> cancelledKeys;
 
         public Selector(final Ruby ruby, RubyClass rubyClass) {
             super(ruby, rubyClass);
@@ -102,6 +103,7 @@ public class Nio4r implements Library {
 
         @JRubyMethod
         public IRubyObject initialize(ThreadContext context) {
+            this.cancelledKeys = new HashMap<SelectableChannel,SelectionKey>();
             try {
                 this.selector = java.nio.channels.Selector.open();
             } catch(IOException ie) {
@@ -148,12 +150,18 @@ public class Nio4r implements Library {
             int interestOps = Nio4r.symbolToInterestOps(runtime, channel, interests);
             SelectionKey key;
 
-            try {
-                key = channel.register(this.selector, interestOps);
-            } catch(java.lang.IllegalArgumentException ia) {
-                throw runtime.newArgumentError("mode not supported for this object: " + interests);
-            } catch(java.nio.channels.ClosedChannelException cce) {
-                throw context.runtime.newIOError(cce.getLocalizedMessage());
+            key = this.cancelledKeys.remove(channel);
+
+            if(key != null) {
+                key.interestOps(interestOps);
+            } else {
+                try {
+                    key = channel.register(this.selector, interestOps);
+                } catch(java.lang.IllegalArgumentException ia) {
+                    throw runtime.newArgumentError("mode not supported for this object: " + interests);
+                } catch(java.nio.channels.ClosedChannelException cce) {
+                    throw context.runtime.newIOError(cce.getLocalizedMessage());
+                }
             }
 
             RubyClass monitorClass = runtime.getModule("NIO").getClass("Monitor");
@@ -179,7 +187,8 @@ public class Nio4r implements Library {
                 return context.nil;
 
             Monitor monitor = (Monitor)key.attachment();
-            monitor.close(context);
+            monitor.close(context, runtime.getFalse());
+            cancelledKeys.put(channel, key);
 
             return monitor;
         }
@@ -227,7 +236,7 @@ public class Nio4r implements Library {
             }
 
             Iterator selectedKeys = this.selector.selectedKeys().iterator();
-            while (selectedKeys.hasNext()) {
+            while(selectedKeys.hasNext()) {
                 SelectionKey key = (SelectionKey)selectedKeys.next();
                 processKey(key);
                 selectedKeys.remove();
@@ -272,6 +281,13 @@ public class Nio4r implements Library {
         }
 
         private int doSelect(Ruby runtime, IRubyObject timeout) {
+            Iterator cancelledKeys = this.cancelledKeys.entrySet().iterator();
+            while(cancelledKeys.hasNext()) {
+                SelectionKey key = (SelectionKey)cancelledKeys.next();
+                key.cancel();
+                cancelledKeys.remove();
+            }
+
             try {
                 if(timeout.isNil()) {
                     return this.selector.select();
@@ -397,8 +413,18 @@ public class Nio4r implements Library {
 
         @JRubyMethod
         public IRubyObject close(ThreadContext context) {
-            this.key.cancel();
-            this.closed = context.getRuntime().getTrue();
+            return close(context, context.getRuntime().getTrue());
+        }
+
+        @JRubyMethod
+        public IRubyObject close(ThreadContext context, IRubyObject deregister) {
+            Ruby runtime = context.getRuntime();
+            this.closed = runtime.getTrue();
+
+            if(deregister == runtime.getTrue()) {
+                selector.callMethod(context, "deregister", io);
+            }
+
             return context.nil;
         }
 
