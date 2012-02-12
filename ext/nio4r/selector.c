@@ -9,7 +9,6 @@
 #include <fcntl.h>
 
 static VALUE mNIO = Qnil;
-static VALUE cNIO_Channel  = Qnil;
 static VALUE cNIO_Monitor  = Qnil;
 static VALUE cNIO_Selector = Qnil;
 
@@ -52,8 +51,6 @@ static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *
 void Init_NIO_Selector()
 {
     mNIO = rb_define_module("NIO");
-    cNIO_Channel  = rb_define_class_under(mNIO, "Channel",  rb_cObject);
-    cNIO_Monitor  = rb_define_class_under(mNIO, "Monitor",  rb_cObject);
     cNIO_Selector = rb_define_class_under(mNIO, "Selector", rb_cObject);
     rb_define_alloc_func(cNIO_Selector, NIO_Selector_allocate);
 
@@ -66,6 +63,8 @@ void Init_NIO_Selector()
     rb_define_method(cNIO_Selector, "wakeup", NIO_Selector_wakeup, 0);
     rb_define_method(cNIO_Selector, "close", NIO_Selector_close, 0);
     rb_define_method(cNIO_Selector, "closed?", NIO_Selector_closed, 0);
+
+    cNIO_Monitor = rb_define_class_under(mNIO, "Monitor",  rb_cObject);
 }
 
 /* Create the libev event loop and incoming event buffer */
