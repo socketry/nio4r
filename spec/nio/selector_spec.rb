@@ -6,11 +6,13 @@ require 'spec_helper'
 TIMEOUT_PRECISION = 0.1
 
 describe NIO::Selector do
+  let(:pair)   { IO.pipe }
+  let(:reader) { pair.first }
+  let(:writer) { pair.last }
+
   context "register" do
     it "registers IO objects" do
-      pipe, _ = IO.pipe
-
-      monitor = subject.register(pipe, :r)
+      monitor = subject.register(reader, :r)
       monitor.should_not be_closed
     end
 
@@ -20,25 +22,21 @@ describe NIO::Selector do
   end
 
   it "knows which IO objects are registered" do
-    reader, writer = IO.pipe
     subject.register(reader, :r)
-
     subject.should be_registered(reader)
     subject.should_not be_registered(writer)
   end
 
   it "deregisters IO objects" do
-    pipe, _ = IO.pipe
+    subject.register(reader, :r)
 
-    subject.register(pipe, :r)
-    monitor = subject.deregister(pipe)
-    subject.should_not be_registered(pipe)
+    monitor = subject.deregister(reader)
+    subject.should_not be_registered(reader)
     monitor.should be_closed
   end
 
   context "timeouts" do
     it "waits for a timeout when selecting" do
-      reader, writer = IO.pipe
       monitor = subject.register(reader, :r)
 
       payload = "hi there"
@@ -56,7 +54,6 @@ describe NIO::Selector do
     end
 
     it "raises ArgumentError if given a negative timeout" do
-      reader, _ = IO.pipe
       subject.register(reader, :r)
 
       expect { subject.select(-1) }.to raise_exception(ArgumentError)
@@ -65,8 +62,7 @@ describe NIO::Selector do
 
   context "wakeup" do
     it "wakes up if signaled to from another thread" do
-      pipe, _ = IO.pipe
-      subject.register(pipe, :r)
+      subject.register(reader, :r)
 
       thread = Thread.new do
         started_at = Time.now
@@ -91,18 +87,16 @@ describe NIO::Selector do
 
   context "select" do
     it "selects IO objects" do
-      readable, writer = IO.pipe
       writer << "ohai"
+      unready, _ = IO.pipe
 
-      unreadable, _ = IO.pipe
-
-      readable_monitor   = subject.register(readable, :r)
-      unreadable_monitor = subject.register(unreadable, :r)
+      reader_monitor   = subject.register(reader, :r)
+      unready_monitor = subject.register(unready, :r)
 
       selected = subject.select(0)
       selected.size.should == 1
-      selected.should include(readable_monitor)
-      selected.should_not include(unreadable_monitor)
+      selected.should include(reader_monitor)
+      selected.should_not include(unready_monitor)
     end
 
     it "iterates across selected objects with a block" do
