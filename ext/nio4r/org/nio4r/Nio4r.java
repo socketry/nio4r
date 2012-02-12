@@ -1,6 +1,7 @@
 package org.nio4r;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.HashMap;
 import java.io.IOException;
 import java.nio.channels.Channel;
@@ -283,7 +284,8 @@ public class Nio4r implements Library {
         private int doSelect(Ruby runtime, IRubyObject timeout) {
             Iterator cancelledKeys = this.cancelledKeys.entrySet().iterator();
             while(cancelledKeys.hasNext()) {
-                SelectionKey key = (SelectionKey)cancelledKeys.next();
+                Map.Entry entry = (Map.Entry)cancelledKeys.next();
+                SelectionKey key = (SelectionKey)entry.getValue();
                 key.cancel();
                 cancelledKeys.remove();
             }
