@@ -20,6 +20,7 @@ static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self);
 static VALUE NIO_Monitor_is_closed(VALUE self);
 static VALUE NIO_Monitor_io(VALUE self);
 static VALUE NIO_Monitor_interests(VALUE self);
+static VALUE NIO_Monitor_selector(VALUE self);
 static VALUE NIO_Monitor_is_readable(VALUE self);
 static VALUE NIO_Monitor_is_writable(VALUE self);
 static VALUE NIO_Monitor_value(VALUE self);
@@ -47,6 +48,7 @@ void Init_NIO_Monitor()
     rb_define_method(cNIO_Monitor, "closed?", NIO_Monitor_is_closed, 0);
     rb_define_method(cNIO_Monitor, "io", NIO_Monitor_io, 0);
     rb_define_method(cNIO_Monitor, "interests", NIO_Monitor_interests, 0);
+    rb_define_method(cNIO_Monitor, "selector", NIO_Monitor_selector, 0);
     rb_define_method(cNIO_Monitor, "value", NIO_Monitor_value, 0);
     rb_define_method(cNIO_Monitor, "value=", NIO_Monitor_set_value, 1);
     rb_define_method(cNIO_Monitor, "readiness", NIO_Monitor_readiness, 0);
@@ -159,6 +161,11 @@ static VALUE NIO_Monitor_io(VALUE self)
 static VALUE NIO_Monitor_interests(VALUE self)
 {
     return rb_ivar_get(self, rb_intern("interests"));
+}
+
+static VALUE NIO_Monitor_selector(VALUE self)
+{
+    return rb_ivar_get(self, rb_intern("selector"));
 }
 
 static VALUE NIO_Monitor_value(VALUE self)

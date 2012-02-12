@@ -15,6 +15,14 @@ describe NIO::Monitor do
     peer.interests.should == :rw
   end
 
+  it "knows its IO object" do
+    subject.io.should == reader
+  end
+
+  it "knows its selector" do
+    subject.selector.should == selector
+  end
+
   it "stores arbitrary values" do
     subject.value = 42
     subject.value.should == 42
@@ -40,7 +48,6 @@ describe NIO::Monitor do
     reader_monitor.readiness.should == :r
     reader_monitor.should be_readable
     reader_monitor.should_not be_writable
-
   end
 
   it "closes" do

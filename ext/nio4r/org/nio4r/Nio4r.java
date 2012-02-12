@@ -156,7 +156,7 @@ public class Nio4r implements Library {
             }
 
             RubyClass monitorClass = runtime.getModule("NIO").getClass("Monitor");
-            Monitor monitor = (Monitor)monitorClass.newInstance(context, io, interests, null);
+            Monitor monitor = (Monitor)monitorClass.newInstance(context, io, interests, this, null);
             monitor.setSelectionKey(key);
 
             return monitor;
@@ -316,18 +316,19 @@ public class Nio4r implements Library {
     public class Monitor extends RubyObject {
         private SelectionKey key;
         private RubyIO io;
-        private IRubyObject interestSym, value, closed;
+        private IRubyObject interests, selector, value, closed;
 
         public Monitor(final Ruby ruby, RubyClass rubyClass) {
             super(ruby, rubyClass);
         }
 
         @JRubyMethod
-        public IRubyObject initialize(ThreadContext context, IRubyObject selectable, IRubyObject interests) {
-            io = RubyIO.convertToIO(context, selectable);
-            interestSym = interests;
+        public IRubyObject initialize(ThreadContext context, IRubyObject selectable, IRubyObject interests, IRubyObject selector) {
+            this.io        = RubyIO.convertToIO(context, selectable);
+            this.interests = interests;
+            this.selector  = selector;
 
-            value = context.nil;
+            value  = context.nil;
             closed = context.getRuntime().getFalse();
 
             return context.nil;
@@ -344,8 +345,13 @@ public class Nio4r implements Library {
         }
 
         @JRubyMethod
+        public IRubyObject selector(ThreadContext context) {
+            return selector;
+        }
+
+        @JRubyMethod
         public IRubyObject interests(ThreadContext context) {
-            return interestSym;
+            return interests;
         }
 
         @JRubyMethod
