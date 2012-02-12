@@ -102,6 +102,11 @@ describe "NIO selectables" do
         _, writers = select [], [sock], [], 0
       end while writers and writers.include? sock
 
+      # I think the kernel might manage to drain its buffer a bit even after
+      # the socket first goes unwritable. Attempt to sleep past this and then
+      # attempt to write again
+      sleep 0.1
+
       # Once more for good measure!
       begin
         sock.write_nonblock "X" * 1024
