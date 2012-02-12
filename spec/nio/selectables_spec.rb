@@ -76,17 +76,20 @@ describe "NIO selectables" do
     end
 
     let :unreadable_subject do
-      if defined?(JRUBY_VERSION) and ENV['TRAVIS']
-        pending "This is sporadically showing up readable on JRuby in CI"
-      else
-        TCPServer.new("localhost", tcp_port + 1)
-        TCPSocket.open("localhost", tcp_port + 1)
+      TCPServer.new("localhost", tcp_port + 1)
+      sock = TCPSocket.new("localhost", tcp_port + 1)
+
+      # Sanity check to make sure we actually produced an unreadable socket
+      if select([sock], [], [], 0)
+        pending "Failed to produce an unreadable socket"
       end
+
+      sock
     end
 
     let :writable_subject do
       TCPServer.new("localhost", tcp_port + 2)
-      TCPSocket.open("localhost", tcp_port + 2)
+      TCPSocket.new("localhost", tcp_port + 2)
     end
 
     let :unwritable_subject do
