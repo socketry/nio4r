@@ -137,7 +137,6 @@ static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
 
         /* Default value is true */
         if(deregister == Qtrue || deregister == Qnil) {
-            puts("Deregistering!");
             rb_funcall(selector, rb_intern("deregister"), 1, rb_ivar_get(self, rb_intern("io")));
         }
     }
