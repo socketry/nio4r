@@ -97,29 +97,15 @@ describe "NIO selectables" do
       sock = TCPSocket.open("localhost", tcp_port + 3)
       peer = server.accept
 
-      if defined? JRUBY_VERSION
-        # The implementation below seems more reliable, but triggers a JRuby
-        # bug. See: http://jira.codehaus.org/browse/JRUBY-6442
-        begin
-          sock.write_nonblock "JUNK IN THE TUBES"
-          _, writers = select [], [sock], [], 0
-        end while writers and writers.include? sock
-      else
-        loop do
-          begin
-            sock.write_nonblock("JUNK IN THE TUBES")
-          rescue Errno::EWOULDBLOCK
-            break
-          end
-        end
-      end
+      begin
+        sock.write_nonblock "X" * 1024
+        _, writers = select [], [sock], [], 0
+      end while writers and writers.include? sock
 
-      # A few more for good measure!
-      3.times do
-        begin
-          sock.write_nonblock "JUNK IN THE TUBES"
-        rescue Errno::EWOULDBLOCK
-        end
+      # Once more for good measure!
+      begin
+        sock.write_nonblock "X" * 1024
+      rescue Errno::EWOULDBLOCK
       end
 
       # Sanity check to make sure we actually produced an unwritable socket
