@@ -1,5 +1,5 @@
-HEAD
-----
+0.3.0
+-----
 * NIO::Selector#select now takes a block and behaves like select_each
 * NIO::Selector#select_each is now deprecated and will be removed
 * Closing monitors detaches them from their selector
