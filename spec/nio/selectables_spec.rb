@@ -90,11 +90,6 @@ describe "NIO selectables" do
     end
 
     let :unwritable_subject do
-      # Getting sporadic build failures for rbx on Travis ;(
-      if defined?(RUBY_ENGINE) and RUBY_ENGINE == "rbx" and ENV['CI']
-        pending "rbx fails sporadically on this spec"
-      end
-
       server = TCPServer.new("localhost", tcp_port + 3)
       sock = TCPSocket.open("localhost", tcp_port + 3)
       peer = server.accept
@@ -116,11 +111,16 @@ describe "NIO selectables" do
         end
       end
 
-      # One more for good measure!
-      begin
-        sock.write_nonblock "JUNK IN THE TUBES"
-      rescue Errno::EWOULDBLOCK
+      # A few more for good measure!
+      3.times do
+        begin
+          sock.write_nonblock "JUNK IN THE TUBES"
+        rescue Errno::EWOULDBLOCK
+        end
       end
+
+      # Sanity check to make sure we actually produced an unwritable socket
+      select([], [sock], [], 0).should be_nil
 
       sock
     end
