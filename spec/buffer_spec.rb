@@ -142,6 +142,17 @@ describe IO::Buffer do
     str.should == "bar"
     @buffer.size.should == 0
   end
+  
+  it "Returns nil when reading from a filehandle at EOF" do
+    (rp, wp) = File.pipe
+    
+    wp.write("Foo")
+    wp.flush
+    @buffer.read_from(rp).should == 3
+    @buffer.read_from(rp).should == 0
+    wp.close
+    @buffer.read_from(rp).should == nil
+  end
 
   #######
   private
