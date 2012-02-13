@@ -39,14 +39,18 @@ describe "NIO selectables" do
   describe "IO.pipe" do
     let(:pair) { IO.pipe }
 
-    let :unreadable_subject do pair.first end
+    let :unreadable_subject do
+      pair.first
+    end
     let :readable_subject do
       pipe, peer = pair
       peer << "data"
       pipe
     end
 
-    let :writable_subject do pair.last end
+    let :writable_subject do
+      pair.last
+    end
     let :unwritable_subject do
       reader, pipe = IO.pipe
 
