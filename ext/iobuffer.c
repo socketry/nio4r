@@ -691,7 +691,7 @@ static int buffer_read_from(struct buffer *buf, int fd)
 		bytes_read = read(fd, buf->tail->data + buf->tail->end, nbytes);
 	
 		if(bytes_read < 1) {
-			if(errno != EAGAIN)
+			if(bytes_read != 0 && errno != EAGAIN)
         rb_sys_fail("read");
 			
 			return total_bytes_read;
