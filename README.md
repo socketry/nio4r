@@ -1,5 +1,6 @@
 IO::Buffer
 ==========
+[![Build Status](http://travis-ci.org/tarcieri/iobuffer.png)](http://travis-ci.org/tarcieri/iobuffer)
 
 IO::Buffer is a fast byte queue which is primarily intended for non-blocking
 I/O applications but is suitable wherever buffering is required. IO::Buffer
