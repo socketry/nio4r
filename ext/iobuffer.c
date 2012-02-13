@@ -75,12 +75,12 @@ static int      buffer_write_to(struct buffer * buf, int fd);
 
 /*
  * High-performance I/O buffer intended for use in non-blocking programs
- * 
+ *
  * Data is stored in as a memory-pooled linked list of equally sized chunks.
  * Routines are provided for high speed non-blocking reads and writes from
  * Ruby IO objects.
  */
-void 
+void
 Init_iobuffer()
 {
 	cIO_Buffer = rb_define_class_under(rb_cIO, "Buffer", rb_cObject);
@@ -108,20 +108,20 @@ Init_iobuffer()
 	rb_define_const(cIO_Buffer, "MAX_SIZE", INT2NUM(MAX_BUFFER_SIZE));
 }
 
-static VALUE 
+static VALUE
 IO_Buffer_allocate(VALUE klass)
 {
 	return Data_Wrap_Struct(klass, IO_Buffer_mark, IO_Buffer_free, buffer_new());
 }
 
-static void 
+static void
 IO_Buffer_mark(struct buffer * buf)
 {
 	/* Naively discard the memory pool whenever Ruby garbage collects */
 	buffer_free_pool(buf);
 }
 
-static void 
+static void
 IO_Buffer_free(struct buffer * buf)
 {
 	buffer_free(buf);
@@ -133,7 +133,7 @@ IO_Buffer_free(struct buffer * buf)
  *
  * Retrieves the current value of the default node size.
  */
-static VALUE 
+static VALUE
 IO_Buffer_default_node_size(VALUE klass)
 {
 	return UINT2NUM(default_node_size);
@@ -143,7 +143,7 @@ IO_Buffer_default_node_size(VALUE klass)
  * safely converts node sizes from Ruby numerics to C and raising
  * ArgumentError or RangeError on invalid sizes
  */
-static unsigned 
+static unsigned
 convert_node_size(VALUE size)
 {
 	if (
@@ -161,7 +161,7 @@ convert_node_size(VALUE size)
  *
  * Sets the default node size for calling IO::Buffer.new with no arguments.
  */
-static VALUE 
+static VALUE
 IO_Buffer_set_default_node_size(VALUE klass, VALUE size)
 {
 	default_node_size = convert_node_size(size);
@@ -175,7 +175,7 @@ IO_Buffer_set_default_node_size(VALUE klass, VALUE size)
  *
  * Create a new IO_Buffer with linked segments of the given size
  */
-static VALUE 
+static VALUE
 IO_Buffer_initialize(int argc, VALUE * argv, VALUE self)
 {
 	VALUE           node_size_obj;
@@ -202,7 +202,7 @@ IO_Buffer_initialize(int argc, VALUE * argv, VALUE self)
  *
  * Clear all data from the IO_Buffer
  */
-static VALUE 
+static VALUE
 IO_Buffer_clear(VALUE self)
 {
 	struct buffer *buf;
@@ -219,7 +219,7 @@ IO_Buffer_clear(VALUE self)
  *
  * Return the size of the buffer in bytes
  */
-static VALUE 
+static VALUE
 IO_Buffer_size(VALUE self)
 {
 	struct buffer *buf;
@@ -234,7 +234,7 @@ IO_Buffer_size(VALUE self)
  *
  * Is the buffer empty?
  */
-static VALUE 
+static VALUE
 IO_Buffer_empty(VALUE self)
 {
 	struct buffer *buf;
@@ -249,7 +249,7 @@ IO_Buffer_empty(VALUE self)
  *
  * Append the given data to the end of the buffer
  */
-static VALUE 
+static VALUE
 IO_Buffer_append(VALUE self, VALUE data)
 {
 	struct buffer *buf;
@@ -268,7 +268,7 @@ IO_Buffer_append(VALUE self, VALUE data)
  *
  * Prepend the given data to the beginning of the buffer
  */
-static VALUE 
+static VALUE
 IO_Buffer_prepend(VALUE self, VALUE data)
 {
 	struct buffer *buf;
@@ -288,7 +288,7 @@ IO_Buffer_prepend(VALUE self, VALUE data)
  * is given the entire contents of the buffer are returned.  Any data
  * read from the buffer is cleared.
  */
-static VALUE 
+static VALUE
 IO_Buffer_read(int argc, VALUE * argv, VALUE self)
 {
 	VALUE  length_obj, str;
@@ -328,7 +328,7 @@ IO_Buffer_read(int argc, VALUE * argv, VALUE self)
  * is still copied into str. True is returned if the end of a frame is reached.
  *
  */
-static VALUE 
+static VALUE
 IO_Buffer_read_frame(VALUE self, VALUE data, VALUE mark)
 {
 	char mark_c = (char) NUM2INT(mark);
@@ -349,7 +349,7 @@ IO_Buffer_read_frame(VALUE self, VALUE data, VALUE mark)
  *
  * Convert the Buffer to a String.  The original buffer is unmodified.
  */
-static VALUE 
+static VALUE
 IO_Buffer_to_str(VALUE self)
 {
 	VALUE          str;
@@ -371,7 +371,7 @@ IO_Buffer_to_str(VALUE self)
  * the buffer with any data received.  The call will read as much
  * data as it can until the read would block.
  */
-static VALUE 
+static VALUE
 IO_Buffer_read_from(VALUE self, VALUE io)
 {
 	struct buffer  *buf;
@@ -398,7 +398,7 @@ IO_Buffer_read_from(VALUE self, VALUE io)
  * As much data as possible is written until the call would block.
  * Any data which is written is removed from the buffer.
  */
-static VALUE 
+static VALUE
 IO_Buffer_write_to(VALUE self, VALUE io)
 {
 	struct buffer  *buf;
@@ -435,7 +435,7 @@ buffer_new(void)
 }
 
 /* Clear all data from a buffer */
-static void 
+static void
 buffer_clear(struct buffer * buf)
 {
 	/* Move everything into the buffer pool */
@@ -450,7 +450,7 @@ buffer_clear(struct buffer * buf)
 }
 
 /* Free a buffer */
-static void 
+static void
 buffer_free(struct buffer * buf)
 {
 	buffer_clear(buf);
@@ -460,7 +460,7 @@ buffer_free(struct buffer * buf)
 }
 
 /* Free the memory pool */
-static void 
+static void
 buffer_free_pool(struct buffer * buf)
 {
 	struct buffer_node *tmp;
@@ -499,7 +499,7 @@ buffer_node_new(struct buffer * buf)
 }
 
 /* Free a buffer node (i.e. return it to the memory pool) */
-static void 
+static void
 buffer_node_free(struct buffer * buf, struct buffer_node * node)
 {
 	node->next = buf->pool_head;
@@ -511,7 +511,7 @@ buffer_node_free(struct buffer * buf, struct buffer_node * node)
 }
 
 /* Prepend data to the front of the buffer */
-static void 
+static void
 buffer_prepend(struct buffer * buf, char *str, unsigned len)
 {
 	struct buffer_node *node, *tmp;
@@ -552,7 +552,7 @@ buffer_prepend(struct buffer * buf, char *str, unsigned len)
 }
 
 /* Append data to the front of the buffer */
-static void 
+static void
 buffer_append(struct buffer * buf, char *str, unsigned len)
 {
 	unsigned nbytes;
@@ -589,7 +589,7 @@ buffer_append(struct buffer * buf, char *str, unsigned len)
 }
 
 /* Read data from the buffer (and clear what we've read) */
-static void 
+static void
 buffer_read(struct buffer * buf, char *str, unsigned len)
 {
 	unsigned nbytes;
@@ -623,7 +623,7 @@ buffer_read(struct buffer * buf, char *str, unsigned len)
  * are copied into str and removed if a complete frame is read, a true value
  * is returned
  */
-static int 
+static int
 buffer_read_frame(struct buffer * buf, VALUE str, char frame_mark)
 {
 	unsigned nbytes = 0;
@@ -639,14 +639,14 @@ buffer_read_frame(struct buffer * buf, VALUE str, char frame_mark)
 		if (loc) {
 			nbytes = loc - s + 1;
 		}
-			
+
 	    /* Copy less than everything if we found a frame byte */
 		rb_str_cat(str, s, nbytes);
 
 	    /* Fixup the buffer pointers to indicate the bytes were consumed */
 		head->start += nbytes;
 		buf->size -= nbytes;
-		
+
 		if (head->start == head->end) {
 			buf->head = head->next;
 			buffer_node_free(buf, head);
@@ -654,17 +654,17 @@ buffer_read_frame(struct buffer * buf, VALUE str, char frame_mark)
 			if (!buf->head)
 				buf->tail = 0;
 		}
-		
+
 		if (loc) {
 			return 1;
 		}
 	}
-	
+
 	return 0;
 }
 
 /* Copy data from the buffer without clearing it */
-static void 
+static void
 buffer_copy(struct buffer * buf, char *str, unsigned len)
 {
 	unsigned nbytes;
@@ -686,7 +686,7 @@ buffer_copy(struct buffer * buf, char *str, unsigned len)
 }
 
 /* Write data from the buffer to a file descriptor */
-static int 
+static int
 buffer_write_to(struct buffer * buf, int fd)
 {
 	int bytes_written, total_bytes_written = 0;
@@ -702,7 +702,7 @@ buffer_write_to(struct buffer * buf, int fd)
 
 			return total_bytes_written;
 		}
-		
+
 		total_bytes_written += bytes_written;
 		buf->size -= bytes_written;
 
@@ -725,7 +725,7 @@ buffer_write_to(struct buffer * buf, int fd)
 
 /* Read data from a file descriptor to a buffer */
 /* Append data to the front of the buffer */
-static int 
+static int
 buffer_read_from(struct buffer * buf, int fd)
 {
 	int      bytes_read, total_bytes_read = 0;
@@ -736,7 +736,7 @@ buffer_read_from(struct buffer * buf, int fd)
 		buf->head = buffer_node_new(buf);
 		buf->tail = buf->head;
 	}
-	
+
 	do {
 		nbytes = buf->node_size - buf->tail->end;
 		bytes_read = read(fd, buf->tail->data + buf->tail->end, nbytes);

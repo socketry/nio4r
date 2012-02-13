@@ -38,7 +38,7 @@ is also available:
 >> buf.to_str
 => "foobarbaz"
 ```
- 
+
 IO::Buffer#read can be used to retrieve the contents of a buffer.  You can mix
 reads alongside adding more data to the buffer:
 
@@ -63,7 +63,7 @@ Finally, IO::Buffer provides methods for performing non-blocking I/O with the
 contents of the buffer.  The IO::Buffer#read_from(IO) method will read as much
 data as possible from the given IO object until the read would block.
 
-The IO::Buffer#write_to(IO) method writes the contents of the buffer to the 
+The IO::Buffer#write_to(IO) method writes the contents of the buffer to the
 given IO object until either the buffer is empty or the write would block:
 
 ```ruby
@@ -76,7 +76,7 @@ given IO object until either the buffer is empty or the write would block:
 >> buf.to_str
 => "= IO::Buffer\n\nIO::Buffer is a fast byte queue...
 ```
- 
+
 If the file descriptor is not ready for I/O, the Errno::EAGAIN exception is
 raised indicating no I/O was performed.
 

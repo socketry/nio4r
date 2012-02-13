@@ -123,7 +123,7 @@ describe IO::Buffer do
       IO::Buffer.new(0)
     }.should raise_error(ArgumentError)
   end
-  
+
   it "Reads can read a single frame" do
     @buffer.append("foo\0bar")
     str = ""
@@ -131,7 +131,7 @@ describe IO::Buffer do
     str.should == "foo\0"
     @buffer.size.should == 3
   end
-  
+
   it "Reads a frame, then reads only some data" do
     @buffer.append("foo\0bar")
     str = ""
@@ -142,10 +142,10 @@ describe IO::Buffer do
     str.should == "bar"
     @buffer.size.should == 0
   end
-  
+
   it "Returns nil when reading from a filehandle at EOF" do
     (rp, wp) = File.pipe
-    
+
     wp.write("Foo")
     wp.flush
     @buffer.read_from(rp).should == 3

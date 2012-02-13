@@ -13,9 +13,9 @@ Gem::Specification.new do |gem|
   gem.authors     = ['Tony Arcieri']
   gem.email       = ['tony.arcieri@gmail.com']
   gem.homepage    = 'https://github.com/tarcieri/iobuffer'
-  
+
   gem.required_rubygems_version = '>= 1.3.6'
-  
+
   gem.files        = Dir['README.md', 'lib/**/*', 'ext/**/*.{c,rb}']
   gem.require_path = 'lib'
 
