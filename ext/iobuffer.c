@@ -81,7 +81,7 @@ static int      buffer_write_to(struct buffer * buf, int fd);
  * Ruby IO objects.
  */
 void
-Init_iobuffer()
+Init_iobuffer_ext()
 {
 	cIO_Buffer = rb_define_class_under(rb_cIO, "Buffer", rb_cObject);
 	rb_define_alloc_func(cIO_Buffer, IO_Buffer_allocate);
@@ -287,6 +287,9 @@ IO_Buffer_prepend(VALUE self, VALUE data)
  * Read the specified abount of data from the buffer.  If no value
  * is given the entire contents of the buffer are returned.  Any data
  * read from the buffer is cleared.
+ * The given length must be greater than 0 or an exception would raise.
+ * If the buffer size is zero then an empty string is returned (regardless
+ * the given length).
  */
 static VALUE
 IO_Buffer_read(int argc, VALUE * argv, VALUE self)
@@ -299,18 +302,15 @@ IO_Buffer_read(int argc, VALUE * argv, VALUE self)
 
 	if (rb_scan_args(argc, argv, "01", &length_obj) == 1) {
 		length = NUM2INT(length_obj);
-	} else {
-		if (buf->size == 0)
-			return rb_str_new2("");
-
-		length = buf->size;
-	}
-
-	if (length > buf->size)
+		if(length < 1)
+		  rb_raise(rb_eArgError, "length must be greater than zero");
+		if(length > buf->size)
+		  length = buf->size;
+	} else
 		length = buf->size;
 
-	if (length < 1)
-		rb_raise(rb_eArgError, "length must be greater than zero");
+	if(buf->size == 0)
+		return rb_str_new2("");
 
 	str = rb_str_new(0, length);
 	buffer_read(buf, RSTRING_PTR(str), length);
