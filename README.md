@@ -88,3 +88,8 @@ Contributing
 * If I like them I'll merge them
 * If I've accepted a patch, feel free to ask for commit access
 
+License
+-------
+
+Copyright (c) 2008-12 Tony Arcieri. Distributed under the MIT License. See
+LICENSE.txt for further details.
