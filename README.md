@@ -91,5 +91,5 @@ Contributing
 License
 -------
 
-Copyright (c) 2008-12 Tony Arcieri. Distributed under the MIT License. See
+Copyright (c) 2007-12 Tony Arcieri. Distributed under the MIT License. See
 LICENSE.txt for further details.

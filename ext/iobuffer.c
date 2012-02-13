@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-08 Tony Arcieri
+ * Copyright (C) 2007-12 Tony Arcieri
  * You may redistribute this under the terms of the MIT license.
  * See LICENSE for details
  */
