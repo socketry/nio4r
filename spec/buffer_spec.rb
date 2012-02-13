@@ -153,6 +153,23 @@ describe IO::Buffer do
     wp.close
     @buffer.read_from(rp).should == nil
   end
+  
+  it "Maintains proper buffer size" do
+    #TODO use more methods
+    
+    #Testing of normal append
+    str = "clarp of the flarn"
+    @buffer.append(str)
+    s = @buffer.size
+    s.should == str.length
+    
+    #Testing of read_from
+    (rp, wp) = File.pipe
+    wp.write(str)
+    wp.close
+    @buffer.read_from(rp)
+    @buffer.size.should == 2*str.length
+  end
 
   #######
   private
