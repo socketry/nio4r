@@ -81,7 +81,7 @@ static int      buffer_write_to(struct buffer * buf, int fd);
  * Ruby IO objects.
  */
 void
-Init_iobuffer()
+Init_iobuffer_ext()
 {
 	cIO_Buffer = rb_define_class_under(rb_cIO, "Buffer", rb_cObject);
 	rb_define_alloc_func(cIO_Buffer, IO_Buffer_allocate);

@@ -16,7 +16,7 @@ Gem::Specification.new do |gem|
 
   gem.required_rubygems_version = '>= 1.3.6'
 
-  gem.files        = Dir['README.md', 'lib/**/*', 'ext/**/*.{c,rb}']
+  gem.files        = Dir['README.md', 'lib/iobuffer', 'lib/**/*', 'ext/**/*.{c,rb}']
   gem.require_path = 'lib'
 
   gem.extensions = ["ext/extconf.rb"]
