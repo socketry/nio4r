@@ -353,6 +353,7 @@ static VALUE IO_Buffer_to_str(VALUE self) {
  */
 static VALUE IO_Buffer_read_from(VALUE self, VALUE io) {
 	struct buffer *buf;
+  int ret;
 #if HAVE_RB_IO_T
   rb_io_t *fptr;
 #else
@@ -362,8 +363,9 @@ static VALUE IO_Buffer_read_from(VALUE self, VALUE io) {
   Data_Get_Struct(self, struct buffer, buf);
   GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
   rb_io_set_nonblock(fptr);
-
-  return INT2NUM(buffer_read_from(buf, FPTR_TO_FD(fptr)));
+  
+  ret = buffer_read_from(buf, FPTR_TO_FD(fptr));
+  return ret == -1 ? Qnil : INT2NUM(ret);
 }
 
 /**
@@ -690,10 +692,12 @@ static int buffer_read_from(struct buffer *buf, int fd)
 	  nbytes = buf->node_size - buf->tail->end;
 		bytes_read = read(fd, buf->tail->data + buf->tail->end, nbytes);
 	
-		if(bytes_read < 1) {
-			if(bytes_read != 0 && errno != EAGAIN)
+		if(bytes_read == 0) {
+      return -1; //When the file reaches EOF
+		} else if(bytes_read < 0) {
+			if(errno != EAGAIN)
         rb_sys_fail("read");
-			
+
 			return total_bytes_read;
 		}
 		
