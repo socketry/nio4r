@@ -19,6 +19,8 @@ Gem::Specification.new do |gem|
   gem.files        = Dir['README.md', 'lib/**/*', 'ext/**/*.{c,rb}']
   gem.require_path = 'lib'
 
+  gem.extensions = ["ext/extconf.rb"]
+
   gem.add_development_dependency 'rake-compiler'
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'rspec'
