@@ -17,7 +17,7 @@ class EchoServer
 
   def run
     while true
-      @selector.select_each { |monitor| monitor.value.call(monitor) }
+      @selector.select { |monitor| monitor.value.call(monitor) }
     end
   end
 
