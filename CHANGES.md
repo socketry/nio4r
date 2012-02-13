@@ -1,3 +1,7 @@
+1.1.1
+-----
+* Fix problems with native extension not compiling
+
 1.1.0
 -----
 * IO::Buffer#read_frame for reading delimited data
