@@ -153,7 +153,46 @@ describe IO::Buffer do
     wp.close
     @buffer.read_from(rp).should == nil
   end
-
+  
+  it "Maintains proper buffer size" do
+    #TODO use more methods
+    
+    #Testing of normal append
+    str = "clarp of the flarn"
+    @buffer.append(str)
+    s = @buffer.size
+    s.should == str.length
+    
+    #Testing of read_from
+    (rp, wp) = File.pipe
+    wp.write(str)
+    wp.close
+    @buffer.read_from(rp)
+    @buffer.size.should == 2*str.length
+  end
+  
+  it "Can handle lots of data" do
+    (rp, wp) = File.pipe
+    rng = Random.new(1)
+    
+    total = 0
+    100.times do
+      chunk_size = rng.rand(2048) #We don't actually know the pipe buffer size!
+      if rng.rand > 0.5
+        wp.write("x" * chunk_size)
+        @buffer.read_from(rp)
+      else
+        @buffer.append("x" * chunk_size)
+      end
+      total += chunk_size
+    end
+    wp.close
+    @buffer.read_from(rp)
+    
+    @buffer.size.should == total
+    @buffer.read.should == "x" * total
+  end
+  
   #######
   private
   #######
