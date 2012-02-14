@@ -1,3 +1,8 @@
+1.1.2
+-----
+* Bugfixes for native extension compilation
+* Bugfixes for internal corruption
+
 1.1.1
 -----
 * Fix problems with native extension not compiling
