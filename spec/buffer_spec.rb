@@ -172,13 +172,13 @@ describe IO::Buffer do
   end
   
   it "Can handle lots of data" do
-    (rp, wp) = File.pipe
-    rng = Random.new(1)
+    rp, wp = File.pipe
+    srand 1
     
     total = 0
     100.times do
-      chunk_size = rng.rand(2048) #We don't actually know the pipe buffer size!
-      if rng.rand > 0.5
+      chunk_size = rand(2048) #We don't actually know the pipe buffer size!
+      if rand > 0.5
         wp.write("x" * chunk_size)
         @buffer.read_from(rp)
       else
