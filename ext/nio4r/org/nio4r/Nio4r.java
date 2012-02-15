@@ -134,13 +134,13 @@ public class Nio4r implements Library {
         @JRubyMethod
         public IRubyObject register(ThreadContext context, IRubyObject io, IRubyObject interests) {
             Ruby runtime = context.getRuntime();
-            Channel raw_channel = RubyIO.convertToIO(context, io).getChannel();
+            Channel rawChannel = RubyIO.convertToIO(context, io).getChannel();
 
-            if(!(raw_channel instanceof SelectableChannel)) {
+            if(!(rawChannel instanceof SelectableChannel)) {
                 throw runtime.newArgumentError("not a selectable IO object");
             }
 
-            SelectableChannel channel = (SelectableChannel)raw_channel;
+            SelectableChannel channel = (SelectableChannel)rawChannel;
 
             try {
                 channel.configureBlocking(false);
@@ -175,13 +175,13 @@ public class Nio4r implements Library {
         @JRubyMethod
         public IRubyObject deregister(ThreadContext context, IRubyObject io) {
             Ruby runtime = context.getRuntime();
-            Channel raw_channel = RubyIO.convertToIO(context, io).getChannel();
+            Channel rawChannel = RubyIO.convertToIO(context, io).getChannel();
 
-            if(!(raw_channel instanceof SelectableChannel)) {
+            if(!(rawChannel instanceof SelectableChannel)) {
                 throw runtime.newArgumentError("not a selectable IO object");
             }
 
-            SelectableChannel channel = (SelectableChannel)raw_channel;
+            SelectableChannel channel = (SelectableChannel)rawChannel;
             SelectionKey key = channel.keyFor(this.selector);
 
             if(key == null)
@@ -197,13 +197,13 @@ public class Nio4r implements Library {
         @JRubyMethod(name = "registered?")
         public IRubyObject isRegistered(ThreadContext context, IRubyObject io) {
             Ruby runtime = context.getRuntime();
-            Channel raw_channel = RubyIO.convertToIO(context, io).getChannel();
+            Channel rawChannel = RubyIO.convertToIO(context, io).getChannel();
 
-            if(!(raw_channel instanceof SelectableChannel)) {
+            if(!(rawChannel instanceof SelectableChannel)) {
                 throw runtime.newArgumentError("not a selectable IO object");
             }
 
-            SelectableChannel channel = (SelectableChannel)raw_channel;
+            SelectableChannel channel = (SelectableChannel)rawChannel;
             SelectionKey key = channel.keyFor(this.selector);
 
             if(key == null)
