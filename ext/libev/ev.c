@@ -2932,12 +2932,17 @@ time_update (EV_P_ ev_tstamp max_block)
 
 /* ########## NIO4R PATCHERY HO! ########## */
 #if defined(HAVE_RB_THREAD_BLOCKING_REGION)
+struct ev_poll_args {
+  struct ev_loop *loop;
+  ev_tstamp waittime;
+};
+
 static
-VALUE ev_backend_poll(void **args)
+VALUE ev_backend_poll(void *ptr)
 {
-  struct ev_loop *loop = (struct ev_loop *)args[0];
-  ev_tstamp waittime = *(ev_tstamp *)args[1];
-  backend_poll (EV_A_ waittime);
+  struct ev_poll_args *args = (struct ev_poll_args *)ptr;
+  struct ev_loop *loop = args->loop;
+  backend_poll (EV_A_ args->waittime);
 }
 #endif
 /* ######################################## */
@@ -2947,7 +2952,7 @@ ev_run (EV_P_ int flags)
 {
 /* ########## NIO4R PATCHERY HO! ########## */
 #if defined(HAVE_RB_THREAD_BLOCKING_REGION)
-    void *poll_args[2];
+    struct ev_poll_args poll_args;
 #endif
 /* ######################################## */
 
@@ -3102,8 +3107,8 @@ Let this be a lesson to the all: CALLBACKS FUCKING BLOW
 */
 
 #if defined(HAVE_RB_THREAD_BLOCKING_REGION)
-        poll_args[0] = (void *)loop;
-        poll_args[1] = (void *)&waittime;
+        poll_args.loop = loop;
+        poll_args.waittime = waittime;
         rb_thread_blocking_region(ev_backend_poll, (void *)&poll_args, RUBY_UBF_IO, 0);
 #else
         backend_poll (EV_A_ waittime);
