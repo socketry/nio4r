@@ -1,3 +1,7 @@
+HEAD
+----
+* Only release the GIL during the libev polling system call
+
 0.3.1
 -----
 * Prevent CancelledKeyExceptions on JRuby
