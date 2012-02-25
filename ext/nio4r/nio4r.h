@@ -50,6 +50,6 @@ struct NIO_Monitor
 #endif /* GetReadFile */
 
 /* Thunk between libev callbacks in NIO::Monitors and NIO::Selectors */
-void NIO_Selector_handle_event(struct NIO_Selector *selector, VALUE monitor, int revents);
+void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
 
 #endif /* NIO4R_H */

@@ -4,7 +4,6 @@
  */
 
 #include "nio4r.h"
-#include <assert.h>
 
 static VALUE mNIO = Qnil;
 static VALUE cNIO_Monitor = Qnil;
@@ -101,7 +100,7 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
     }
 
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
-    ev_io_init(&monitor->ev_io, NIO_Monitor_callback, FPTR_TO_FD(fptr), monitor->interests);
+    ev_io_init(&monitor->ev_io, NIO_Selector_monitor_callback, FPTR_TO_FD(fptr), monitor->interests);
 
     rb_ivar_set(self, rb_intern("io"), io);
     rb_ivar_set(self, rb_intern("interests"), interests);
@@ -215,15 +214,4 @@ static VALUE NIO_Monitor_is_writable(VALUE self)
     } else {
         return Qfalse;
     }
-}
-
-/* libev callback fired whenever this monitor gets events */
-static void NIO_Monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents)
-{
-    struct NIO_Monitor *monitor = (struct NIO_Monitor *)io->data;
-
-    assert(monitor->selector != 0);
-    monitor->revents = revents;
-
-    NIO_Selector_handle_event(monitor->selector, monitor->self, revents);
 }

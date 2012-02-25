@@ -7,6 +7,7 @@
 #include "rubysig.h"
 #include <unistd.h>
 #include <fcntl.h>
+#include <assert.h>
 
 static VALUE mNIO = Qnil;
 static VALUE cNIO_Monitor  = Qnil;
@@ -470,21 +471,16 @@ static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *
     while(read(selector->wakeup_reader, buffer, 128) > 0);
 }
 
-/* This gets called from individual monitors. We must be careful here because
-   the GIL isn't held, so we must rely only on standard C and can't touch
-   anything Ruby-related.
-
-   It's scary because there's a VALUE here, and VALUEs are a Ruby thing,
-   however we're not going to dereference that VALUE or attempt to do anything
-   with it. We just treat it as completely opaque until we have the GIL back.
-
-   In order for this function to even get called, the monitor the VALUE points to
-   must be attached to this Selector, and if it's attached to this Selector
-   then we hold a reference to it in the @selectables instance variable, so
-   there's no danger of this monitor getting garbage collected before we have
-   the GIL back as we hold a reference. */
-void NIO_Selector_handle_event(struct NIO_Selector *selector, VALUE monitor, int revents)
+/* libev callback fired whenever this monitor gets events */
+void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents)
 {
+    struct NIO_Monitor *monitor_data = (struct NIO_Monitor *)io->data;
+    struct NIO_Selector *selector = monitor_data->selector;
+    VALUE monitor = monitor_data->self;
+
+    assert(selector != 0);
+    monitor_data->revents = revents;
+
     /* Grow the ready buffer if it's too small */
     if(selector->ready_count >= selector->ready_buffer_size) {
       selector->ready_buffer_size *= 2;
