@@ -107,14 +107,6 @@ module NIO
       end
     end
 
-    # Select for ready monitors, successively yielding each one in a block
-    def select_each(timeout = nil, &block)
-      selected = select(timeout)
-      return unless selected
-      selected.each(&block)
-      selected.size
-    end
-
     # Wake up a thread that's in the middle of selecting on this selector, if
     # any such thread exists.
     #

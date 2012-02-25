@@ -1,5 +1,6 @@
 HEAD
 ----
+* NIO::Selector#select_each removed
 * Only release the GIL during the libev polling system call
 
 0.3.1

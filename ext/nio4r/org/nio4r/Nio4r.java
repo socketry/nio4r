@@ -256,40 +256,9 @@ public class Nio4r implements Library {
             }
         }
 
-        @JRubyMethod
-        public synchronized IRubyObject select_each(ThreadContext context, Block block) {
-            return select_each(context, context.nil, block);
-        }
-
-        @JRubyMethod
-        public synchronized IRubyObject select_each(ThreadContext context, IRubyObject timeout, Block block) {
-            Ruby runtime = context.getRuntime();
-            int ready = doSelect(runtime, timeout);
-
-            /* Timeout or wakeup */
-            if(ready <= 0)
-                return context.nil;
-
-            Iterator selectedKeys = this.selector.selectedKeys().iterator();
-            while (selectedKeys.hasNext()) {
-                SelectionKey key = (SelectionKey)selectedKeys.next();
-                processKey(key);
-                selectedKeys.remove();
-                block.call(context, (IRubyObject)key.attachment());
-            }
-
-            return context.nil;
-        }
-
+        /* Run the selector */
         private int doSelect(Ruby runtime, IRubyObject timeout) {
-            Iterator cancelledKeys = this.cancelledKeys.entrySet().iterator();
-            while(cancelledKeys.hasNext()) {
-                Map.Entry entry = (Map.Entry)cancelledKeys.next();
-                SelectionKey key = (SelectionKey)entry.getValue();
-                key.cancel();
-                cancelledKeys.remove();
-            }
-
+            cancelKeys();
             try {
                 if(timeout.isNil()) {
                     return this.selector.select();
@@ -305,6 +274,17 @@ public class Nio4r implements Library {
                 }
             } catch(IOException ie) {
                 throw runtime.newIOError(ie.getLocalizedMessage());
+            }
+        }
+
+        /* Flush our internal buffer of cancelled keys */
+        private void cancelKeys() {
+            Iterator cancelledKeys = this.cancelledKeys.entrySet().iterator();
+            while(cancelledKeys.hasNext()) {
+                Map.Entry entry = (Map.Entry)cancelledKeys.next();
+                SelectionKey key = (SelectionKey)entry.getValue();
+                key.cancel();
+                cancelledKeys.remove();
             }
         }
 
