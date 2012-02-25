@@ -38,7 +38,6 @@ static VALUE NIO_Selector_deregister_synchronized(VALUE *args);
 static VALUE NIO_Selector_select_synchronized(VALUE *args);
 static VALUE NIO_Selector_select_each_synchronized(VALUE *args);
 static int NIO_Selector_fill_ready_buffer(VALUE *args);
-static VALUE NIO_Selector_run_evloop(void *ptr);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
 static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
 
@@ -364,8 +363,8 @@ static int NIO_Selector_fill_ready_buffer(VALUE *args)
 #endif
 
 #if defined(HAVE_RB_THREAD_BLOCKING_REGION)
-    /* Ruby 1.9 lets us release the GIL and make a blocking I/O call */
-    rb_thread_blocking_region(NIO_Selector_run_evloop, selector, RUBY_UBF_IO, 0);
+    /* libev is patched to release the GIL when it makes its system call */
+    ev_loop(selector->ev_loop, EVLOOP_ONESHOT);
 #elif defined(HAVE_RB_THREAD_ALONE)
     /* If we're the only thread we can make a blocking system call */
     if(rb_thread_alone()) {
@@ -376,7 +375,7 @@ static int NIO_Selector_fill_ready_buffer(VALUE *args)
 
 #if !defined(HAVE_RB_THREAD_BLOCKING_REGION)
         TRAP_BEG;
-        NIO_Selector_run_evloop(selector);
+        ev_loop(selector->ev_loop, EVLOOP_ONESHOT);
         TRAP_END;
     } else {
         /* We need to busy wait as not to stall the green thread scheduler
@@ -387,7 +386,7 @@ static int NIO_Selector_fill_ready_buffer(VALUE *args)
         /* Loop until we receive events */
         while(selector->selecting && !selector->ready_count) {
             TRAP_BEG;
-            NIO_Selector_run_evloop(selector);
+            ev_loop(selector->ev_loop, EVLOOP_ONESHOT);
             TRAP_END;
 
             /* Run the next green thread */
@@ -406,16 +405,6 @@ static int NIO_Selector_fill_ready_buffer(VALUE *args)
     selector->selecting = selector->ready_count = 0;
 
     return result;
-}
-
-/* Run the libev event loop */
-static VALUE NIO_Selector_run_evloop(void *ptr)
-{
-    struct NIO_Selector *selector = (struct NIO_Selector *)ptr;
-
-    ev_loop(selector->ev_loop, EVLOOP_ONESHOT);
-
-    return Qnil;
 }
 
 /* Wake the selector up from another thread */
