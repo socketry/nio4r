@@ -423,13 +423,7 @@ void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, in
     monitor_data->revents = revents;
 
     if(rb_block_given_p()) {
-#if defined(HAVE_RB_THREAD_BLOCKING_REGION)
         rb_yield(monitor);
-#else
-        TRAP_END;
-        rb_yield(monitor);
-        TRAP_BEG;
-#endif
     } else {
         assert(selector->ready_array != Qnil);
         rb_ary_push(selector->ready_array, monitor);
