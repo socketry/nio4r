@@ -35,7 +35,7 @@ static VALUE NIO_Selector_unlock(VALUE lock);
 static VALUE NIO_Selector_register_synchronized(VALUE *args);
 static VALUE NIO_Selector_deregister_synchronized(VALUE *args);
 static VALUE NIO_Selector_select_synchronized(VALUE *args);
-static int NIO_Selector_fill_ready_buffer(VALUE *args);
+static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
 static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
 
@@ -96,8 +96,7 @@ static VALUE NIO_Selector_allocate(VALUE klass)
     ev_io_start(selector->ev_loop, &selector->wakeup);
 
     selector->closed = selector->selecting = selector->ready_count = 0;
-    selector->ready_buffer_size = INITIAL_READY_BUFFER;
-    selector->ready_buffer = (VALUE *)xmalloc(sizeof(VALUE) * INITIAL_READY_BUFFER);
+    selector->ready_array = Qnil;
 
     return Data_Wrap_Struct(klass, NIO_Selector_mark, NIO_Selector_free, selector);
 }
@@ -105,6 +104,9 @@ static VALUE NIO_Selector_allocate(VALUE klass)
 /* NIO selectors store all Ruby objects in instance variables so mark is a stub */
 static void NIO_Selector_mark(struct NIO_Selector *selector)
 {
+    if(selector->ready_array != Qnil) {
+        rb_gc_mark(selector->ready_array);
+    }
 }
 
 /* Free a Selector's system resources.
@@ -130,8 +132,6 @@ static void NIO_Selector_shutdown(struct NIO_Selector *selector)
 static void NIO_Selector_free(struct NIO_Selector *selector)
 {
     NIO_Selector_shutdown(selector);
-
-    xfree(selector->ready_buffer);
     xfree(selector);
 }
 
@@ -271,37 +271,33 @@ static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self)
 /* Internal implementation of select with the selector lock held */
 static VALUE NIO_Selector_select_synchronized(VALUE *args)
 {
+    int i, ready;
+    VALUE ready_array;
     struct NIO_Selector *selector;
-    int i, ready = NIO_Selector_fill_ready_buffer(args);
 
     Data_Get_Struct(args[0], struct NIO_Selector, selector);
+    if(!rb_block_given_p()) {
+        selector->ready_array = rb_ary_new();
+    }
 
+    ready = NIO_Selector_run(selector, args[1]);
     if(ready > 0) {
         if(rb_block_given_p()) {
-            for(i = 0; i < ready; i++) {
-                rb_yield(selector->ready_buffer[i]);
-            }
-
             return INT2NUM(ready);
         } else {
-            /* new4 memcpys the ready buffer */
-            return rb_ary_new4(ready, selector->ready_buffer);
+            ready_array = selector->ready_array;
+            selector->ready_array = Qnil;
+            return ready_array;
         }
     } else {
+        selector->ready_array = Qnil;
         return Qnil;
     }
 }
 
-static int NIO_Selector_fill_ready_buffer(VALUE *args)
+static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
 {
-    VALUE self, timeout;
-    struct NIO_Selector *selector;
     int result;
-
-    self = args[0];
-    timeout = args[1];
-
-    Data_Get_Struct(self, struct NIO_Selector, selector);
     selector->selecting = 1;
 
 #if defined(HAVE_RB_THREAD_BLOCKING_REGION) || defined(HAVE_RB_THREAD_ALONE)
@@ -374,7 +370,6 @@ static VALUE NIO_Selector_wakeup(VALUE self)
     }
 
     write(selector->wakeup_writer, "\0", 1);
-
     return Qnil;
 }
 
@@ -416,7 +411,7 @@ static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *
     while(read(selector->wakeup_reader, buffer, 128) > 0);
 }
 
-/* libev callback fired whenever this monitor gets events */
+/* libev callback fired whenever a monitor gets an event */
 void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents)
 {
     struct NIO_Monitor *monitor_data = (struct NIO_Monitor *)io->data;
@@ -424,14 +419,13 @@ void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, in
     VALUE monitor = monitor_data->self;
 
     assert(selector != 0);
+    selector->ready_count++;
     monitor_data->revents = revents;
 
-    /* Grow the ready buffer if it's too small */
-    if(selector->ready_count >= selector->ready_buffer_size) {
-      selector->ready_buffer_size *= 2;
-      selector->ready_buffer = (VALUE *)xrealloc(selector->ready_buffer, sizeof(VALUE) * selector->ready_buffer_size);
+    if(rb_block_given_p()) {
+        rb_yield(monitor);
+    } else {
+        assert(selector->ready_array != Qnil);
+        rb_ary_push(selector->ready_array, monitor);
     }
-
-    selector->ready_buffer[selector->ready_count] = monitor;
-    selector->ready_count++;
 }

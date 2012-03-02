@@ -19,8 +19,8 @@ struct NIO_Selector
     int wakeup_reader, wakeup_writer;
     int closed, selecting;
     int ready_count;
-    int ready_buffer_size;
-    VALUE *ready_buffer;
+
+    VALUE ready_array;
 };
 
 struct NIO_callback_data
