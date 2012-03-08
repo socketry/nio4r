@@ -1,8 +1,9 @@
-0.3.2
+0.3.3
 -----
 * NIO::Selector#select_each removed
 * Remove event buffer
 * Patch GIL unlock directly into libev
+* Re-release since 0.3.2 was botched :(
 
 0.3.1
 -----
