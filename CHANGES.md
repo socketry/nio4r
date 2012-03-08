@@ -1,7 +1,8 @@
-HEAD
-----
+0.3.2
+-----
 * NIO::Selector#select_each removed
-* Only release the GIL during the libev polling system call
+* Remove event buffer
+* Patch GIL unlock directly into libev
 
 0.3.1
 -----
