@@ -3,7 +3,9 @@ shared_context "an NIO selectable" do
 
   it "selects readable objects" do
     monitor = selector.register(readable_subject, :r)
-    selector.select(0).should include monitor
+    ready = selector.select(0)
+    ready.should be_an Array
+    ready.should include monitor
   end
 
   it "does not select unreadable objects" do
@@ -13,7 +15,9 @@ shared_context "an NIO selectable" do
 
   it "selects writable objects" do
     monitor = selector.register(writable_subject, :w)
-    selector.select(0).should include monitor
+    ready = selector.select(0)
+    ready.should be_an Array
+    ready.should include monitor
   end
 
   it "does not select unwritable objects" do
