@@ -110,8 +110,7 @@ if RUBY_VERSION > "1.9.0"
       begin
         sclient.write_nonblock "X" * 1024
         _, writers = select [], [sclient], [], 0
-      rescue OpenSSL::SSL::SSLError => ex
-        raise unless ex.to_s["would block"]
+      rescue IO::WaitReadable, IO::WaitWritable
       end while writers and writers.include? sclient
 
       # I think the kernel might manage to drain its buffer a bit even after
