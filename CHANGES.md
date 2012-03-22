@@ -1,3 +1,7 @@
+HEAD
+----
+* OpenSSL::SSL::SSLSocket support
+
 0.3.3
 -----
 * NIO::Selector#select_each removed
