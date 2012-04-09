@@ -132,5 +132,9 @@ module NIO
 
     # Is this selector closed?
     def closed?; @closed end
+    
+    def empty?
+      @selectables.empty?
+    end
   end
 end
