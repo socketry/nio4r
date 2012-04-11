@@ -28,6 +28,7 @@ static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self);
 static VALUE NIO_Selector_wakeup(VALUE self);
 static VALUE NIO_Selector_close(VALUE self);
 static VALUE NIO_Selector_closed(VALUE self);
+static VALUE NIO_Selector_is_empty(VALUE self);
 
 /* Internal functions */
 static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VALUE *args);
@@ -60,6 +61,7 @@ void Init_NIO_Selector()
     rb_define_method(cNIO_Selector, "wakeup", NIO_Selector_wakeup, 0);
     rb_define_method(cNIO_Selector, "close", NIO_Selector_close, 0);
     rb_define_method(cNIO_Selector, "closed?", NIO_Selector_closed, 0);
+    rb_define_method(cNIO_Selector, "empty?", NIO_Selector_is_empty, 0);
 
     cNIO_Monitor = rb_define_class_under(mNIO, "Monitor",  rb_cObject);
 }
@@ -392,6 +394,15 @@ static VALUE NIO_Selector_closed(VALUE self)
 
     return selector->closed ? Qtrue : Qfalse;
 }
+
+/* True if there are monitors on the loop */
+static VALUE NIO_Selector_is_empty(VALUE self)
+{
+    VALUE selectables = rb_ivar_get(self, rb_intern("selectables"));
+    
+    return rb_funcall(selectables, rb_intern("empty?"), 0) == Qtrue ? Qtrue : Qfalse;
+}
+
 
 /* Called whenever a timeout fires on the event loop */
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents)
