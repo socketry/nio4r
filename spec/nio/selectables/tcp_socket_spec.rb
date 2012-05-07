@@ -66,7 +66,8 @@ describe TCPSocket do
 
   it_behaves_like "an NIO selectable"
   it_behaves_like "an NIO selectable stream"
-
+  it_behaves_like "an NIO bidirectional stream"
+  
   context :connect do
     it "selects writable when connected" do
       selector = NIO::Selector.new
