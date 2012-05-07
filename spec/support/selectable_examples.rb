@@ -4,7 +4,7 @@ shared_context "an NIO selectable" do
   it "selects readable objects" do
     monitor = selector.register(readable_subject, :r)
     ready = selector.select(0)
-    ready.should be_an Array
+    ready.should be_an Enumerable
     ready.should include monitor
   end
 
@@ -16,7 +16,7 @@ shared_context "an NIO selectable" do
   it "selects writable objects" do
     monitor = selector.register(writable_subject, :w)
     ready = selector.select(0)
-    ready.should be_an Array
+    ready.should be_an Enumerable
     ready.should include monitor
   end
 
