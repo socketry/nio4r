@@ -1,8 +1,9 @@
 require 'spec_helper'
 
 describe TCPSocket do
-  let(:tcp_port) { 12345 }
-
+  port_offset = 0
+  let(:tcp_port) { 12345 + (port_offset += 1) }
+  
   let :readable_subject do
     server = TCPServer.new("localhost", tcp_port)
     sock = TCPSocket.open("localhost", tcp_port)
@@ -12,8 +13,8 @@ describe TCPSocket do
   end
 
   let :unreadable_subject do
-    TCPServer.new("localhost", tcp_port + 1)
-    sock = TCPSocket.new("localhost", tcp_port + 1)
+    TCPServer.new("localhost", tcp_port)
+    sock = TCPSocket.new("localhost", tcp_port)
 
     # Sanity check to make sure we actually produced an unreadable socket
     if select([sock], [], [], 0)
@@ -24,13 +25,13 @@ describe TCPSocket do
   end
 
   let :writable_subject do
-    TCPServer.new("localhost", tcp_port + 2)
-    TCPSocket.new("localhost", tcp_port + 2)
+    TCPServer.new("localhost", tcp_port)
+    TCPSocket.new("localhost", tcp_port)
   end
 
   let :unwritable_subject do
-    server = TCPServer.new("localhost", tcp_port + 3)
-    sock = TCPSocket.open("localhost", tcp_port + 3)
+    server = TCPServer.new("localhost", tcp_port)
+    sock = TCPSocket.open("localhost", tcp_port)
     peer = server.accept
 
     begin
@@ -58,24 +59,25 @@ describe TCPSocket do
   end
 
   let :pair do
-    server = TCPServer.new("localhost", tcp_port + 4)
-    client = TCPSocket.open("localhost", tcp_port + 4)
+    server = TCPServer.new("localhost", tcp_port)
+    client = TCPSocket.open("localhost", tcp_port)
     [client, server.accept]
   end
 
   it_behaves_like "an NIO selectable"
   it_behaves_like "an NIO selectable stream"
-
+  it_behaves_like "an NIO bidirectional stream"
+  
   context :connect do
     it "selects writable when connected" do
       selector = NIO::Selector.new
-      server = TCPServer.new('127.0.0.1', tcp_port + 5)
+      server = TCPServer.new('127.0.0.1', tcp_port)
 
       client = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM, 0)
       monitor = selector.register(client, :w)
 
       expect do
-        client.connect_nonblock Socket.sockaddr_in(tcp_port + 5, '127.0.0.1')
+        client.connect_nonblock Socket.sockaddr_in(tcp_port, '127.0.0.1')
       end.to raise_exception Errno::EINPROGRESS
 
       selector.select(0).should include monitor
