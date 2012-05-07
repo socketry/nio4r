@@ -114,7 +114,7 @@ if RUBY_VERSION > "1.9.0"
       rescue IO::WaitReadable, IO::WaitWritable
         pending "SSL will report writable but not accept writes"
         raise if(writers.include? sclient)
-      end while writers.include? sclient
+      end while writers and writers.include? sclient
 
       # I think the kernel might manage to drain its buffer a bit even after
       # the socket first goes unwritable. Attempt to sleep past this and then
