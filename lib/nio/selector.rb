@@ -49,16 +49,13 @@ module NIO
         @selectables.each do |io, monitor|
           readers << io if monitor.interests == :r || monitor.interests == :rw
           writers << io if monitor.interests == :w || monitor.interests == :rw
+          monitor.readiness = nil
         end
 
         ready_readers, ready_writers = Kernel.select readers, writers, [], timeout
         return unless ready_readers # timeout or wakeup
-
-        if block_given?
-          result = 0
-        else
-          result = []
-        end
+        
+        selected_monitors = Set.new
 
         ready_readers.each do |io|
           if io == @wakeup
@@ -76,34 +73,29 @@ module NIO
           else
             monitor = @selectables[io]
             monitor.readiness = :r
-
-            if block_given?
-              yield monitor
-              result += 1
-            else
-              result << monitor
-            end
+            selected_monitors << monitor
           end
         end
-
-        ready_readwriters = ready_readers & ready_writers
-        ready_writers = ready_writers - ready_readwriters
-
-        [[ready_writers, :w], [ready_readwriters, :rw]].each do |ios, readiness|
-          ios.each do |io|
-            monitor = @selectables[io]
-            monitor.readiness = readiness
-
-            if block_given?
-              yield monitor
-              result += 1
-            else
-              result << monitor
-            end
+        
+        ready_writers.each do |io|
+          monitor = @selectables[io]
+          monitor.readiness = case monitor.readiness
+          when :r
+            :rw
+          else
+            :w
           end
+          selected_monitors << monitor
         end
-
-        result
+        
+        if block_given?
+          selected_monitors.each do |m|
+            yield m
+          end
+          selected_monitors.size
+        else
+          selected_monitors
+        end
       end
     end
 

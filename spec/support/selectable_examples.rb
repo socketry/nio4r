@@ -36,6 +36,21 @@ shared_context "an NIO selectable stream" do
     selector.select(0).should be_nil
 
     peer.close
-    selector.select(0).should include monitor
+    #Wait and give the TCP session time to close
+    selector.select(0.1).should include monitor
   end
+end
+
+shared_context "an NIO bidirectional stream" do
+  let(:selector) { NIO::Selector.new }
+  let(:stream)   { pair.first }
+  let(:peer)     { pair.last }
+
+  it "selects readable and writable" do
+    monitor = selector.register(readable_subject, :rw)
+    selector.select(0) do |m|
+      m.readiness.should == :rw
+    end
+  end
+  
 end
