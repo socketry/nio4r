@@ -3101,7 +3101,15 @@ other and thus cannot be composed.
 And thus we are left with no choice but to patch the internals of libev in
 order to release a mutex at just the precise moment.
 
-Let this be a lesson to the all: CALLBACKS FUCKING BLOW
+This is a great example of a situation where granular locking and unlocking
+of the GVL is practically required. The goal is to get as close to the
+system call as possible, and to keep the GVL unlocked for the shortest
+amount of time possible.
+
+Perhaps Ruby could benefit from such an API, e.g:
+
+rb_thread_unsafe_dangerous_crazy_blocking_region_begin(...);
+rb_thread_unsafe_dangerous_crazy_blocking_region_end(...);
 
 #######################################################################
 */
