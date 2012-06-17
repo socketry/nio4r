@@ -150,9 +150,10 @@ describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
     ssl_client.sync_close = true
 
     # SSLSocket#connect and #accept are blocking calls.
-    Thread.new { ssl_client.connect }
+    thread = Thread.new { ssl_client.connect }
+    ssl_peer.accept
 
-    [ssl_client, ssl_peer.accept]
+    [thread.value, ssl_peer]
   end
 
   it_behaves_like "an NIO selectable"
