@@ -45,7 +45,10 @@ describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
     ssl_peer.accept
     ssl_peer << "data"
 
-    thread.value
+    thread.join
+    pending "Failed to produce a readable SSL socket" unless select([ssl_client], [], [], 0)
+
+    ssl_client
   end
 
   let :unreadable_subject do
@@ -62,13 +65,10 @@ describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
     # SSLSocket#connect and #accept are blocking calls.
     thread = Thread.new { ssl_client.connect }
     ssl_peer.accept
+    thread.join
 
-    # Sanity check to make sure we actually produced an unreadable socket
-    if select([ssl_client], [], [], 0)
-      pending "Failed to produce an unreadable socket"
-    end
-
-    thread.value
+    pending "Failed to produce an unreadable socket" if select([ssl_client], [], [], 0)
+    ssl_client
   end
 
   let :writable_subject do
@@ -86,8 +86,9 @@ describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
     thread = Thread.new { ssl_client.connect }
 
     ssl_peer.accept
+    thread.join
 
-    thread.value
+    ssl_client
   end
 
   let :unwritable_subject do
