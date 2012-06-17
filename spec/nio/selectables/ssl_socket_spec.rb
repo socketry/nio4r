@@ -33,19 +33,19 @@ describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
     client = TCPSocket.open("localhost", tcp_port)
     peer = server.accept
 
-    speer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
-    speer.sync_close = true
+    ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
+    ssl_peer.sync_close = true
 
-    sclient = OpenSSL::SSL::SSLSocket.new(client)
-    sclient.sync_close = true
+    ssl_client = OpenSSL::SSL::SSLSocket.new(client)
+    ssl_client.sync_close = true
 
     # SSLSocket#connect and #accept are blocking calls.
-    Thread.new { sclient.connect }
+    thread = Thread.new { ssl_client.connect }
 
-    speer.accept
-    speer << "data"
+    ssl_peer.accept
+    ssl_peer << "data"
 
-    sclient
+    thread.value
   end
 
   let :unreadable_subject do
@@ -53,21 +53,22 @@ describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
     client = TCPSocket.new("localhost", tcp_port + 1)
     peer = server.accept
 
-    speer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
-    speer.sync_close = true
+    ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
+    ssl_peer.sync_close = true
 
-    sclient = OpenSSL::SSL::SSLSocket.new(client)
-    sclient.sync_close = true
+    ssl_client = OpenSSL::SSL::SSLSocket.new(client)
+    ssl_client.sync_close = true
 
     # SSLSocket#connect and #accept are blocking calls.
-    Thread.new { sclient.connect }
+    thread = Thread.new { ssl_client.connect }
+    ssl_peer.accept
 
     # Sanity check to make sure we actually produced an unreadable socket
-    if select([sclient], [], [], 0)
+    if select([ssl_client], [], [], 0)
       pending "Failed to produce an unreadable socket"
     end
 
-    sclient
+    thread.value
   end
 
   let :writable_subject do
@@ -75,18 +76,18 @@ describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
     client = TCPSocket.new("localhost", tcp_port + 2)
     peer = server.accept
 
-    speer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
-    speer.sync_close = true
+    ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
+    ssl_peer.sync_close = true
 
-    sclient = OpenSSL::SSL::SSLSocket.new(client)
-    sclient.sync_close = true
+    ssl_client = OpenSSL::SSL::SSLSocket.new(client)
+    ssl_client.sync_close = true
 
     # SSLSocket#connect and #accept are blocking calls.
-    Thread.new { sclient.connect }
+    thread = Thread.new { ssl_client.connect }
 
-    speer.accept
+    ssl_peer.accept
 
-    sclient
+    thread.value
   end
 
   let :unwritable_subject do
@@ -94,25 +95,26 @@ describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
     client = TCPSocket.open("localhost", tcp_port + 3)
     peer = server.accept
 
-    speer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
-    speer.sync_close = true
+    ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
+    ssl_peer.sync_close = true
 
-    sclient = OpenSSL::SSL::SSLSocket.new(client)
-    sclient.sync_close = true
+    ssl_client = OpenSSL::SSL::SSLSocket.new(client)
+    ssl_client.sync_close = true
 
     # SSLSocket#connect and #accept are blocking calls.
-    Thread.new { sclient.connect }
+    thread = Thread.new { ssl_client.connect }
 
-    speer.accept
+    ssl_peer.accept
+    thread.join
 
     begin
-      _, writers = select [], [sclient], [], 0
-      count = sclient.write_nonblock "X" * 1024
+      _, writers = select [], [ssl_client], [], 0
+      count = ssl_client.write_nonblock "X" * 1024
       count.should_not == 0
     rescue IO::WaitReadable, IO::WaitWritable
       pending "SSL will report writable but not accept writes"
-      raise if(writers.include? sclient)
-    end while writers and writers.include? sclient
+      raise if(writers.include? ssl_client)
+    end while writers and writers.include? ssl_client
 
     # I think the kernel might manage to drain its buffer a bit even after
     # the socket first goes unwritable. Attempt to sleep past this and then
@@ -121,17 +123,17 @@ describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
 
     # Once more for good measure!
     begin
-#        sclient.write_nonblock "X" * 1024
-      loop { sclient.write_nonblock "X" * 1024 }
+#        ssl_client.write_nonblock "X" * 1024
+      loop { ssl_client.write_nonblock "X" * 1024 }
     rescue OpenSSL::SSL::SSLError
     end
 
     # Sanity check to make sure we actually produced an unwritable socket
-#      if select([], [sclient], [], 0)
+#      if select([], [ssl_client], [], 0)
 #        pending "Failed to produce an unwritable socket"
 #      end
 
-    sclient
+    ssl_client
   end
 
   let :pair do
@@ -141,16 +143,16 @@ describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
     client = TCPSocket.open("localhost", tcp_port + 4)
     peer = server.accept
 
-    speer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
-    speer.sync_close = true
+    ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
+    ssl_peer.sync_close = true
 
-    sclient = OpenSSL::SSL::SSLSocket.new(client)
-    sclient.sync_close = true
+    ssl_client = OpenSSL::SSL::SSLSocket.new(client)
+    ssl_client.sync_close = true
 
     # SSLSocket#connect and #accept are blocking calls.
-    Thread.new { sclient.connect }
+    Thread.new { ssl_client.connect }
 
-    [sclient, speer.accept]
+    [ssl_client, ssl_peer.accept]
   end
 
   it_behaves_like "an NIO selectable"
