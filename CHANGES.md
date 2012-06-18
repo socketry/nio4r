@@ -1,5 +1,5 @@
-HEAD
-----
+0.4.0
+-----
 * OpenSSL::SSL::SSLSocket support
 
 0.3.3
