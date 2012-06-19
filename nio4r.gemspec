@@ -14,7 +14,13 @@ Gem::Specification.new do |gem|
   gem.name          = "nio4r"
   gem.require_paths = ["lib"]
   gem.version       = NIO::VERSION
-  gem.extensions    = ["ext/nio4r/extconf.rb"]
+
+  if defined? JRUBY_VERSION
+    gem.files << "lib/nio4r_ext.jar"
+    gem.platform = "java"
+  else
+    gem.extensions = ["ext/nio4r/extconf.rb"]
+  end
 
   gem.add_development_dependency "rake-compiler"
   gem.add_development_dependency "rake"
