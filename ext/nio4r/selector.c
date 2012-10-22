@@ -36,6 +36,8 @@ static VALUE NIO_Selector_unlock(VALUE lock);
 static VALUE NIO_Selector_register_synchronized(VALUE *args);
 static VALUE NIO_Selector_deregister_synchronized(VALUE *args);
 static VALUE NIO_Selector_select_synchronized(VALUE *args);
+static VALUE NIO_Selector_close_synchronized(VALUE self);
+
 static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
 static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
@@ -389,7 +391,11 @@ static VALUE NIO_Selector_close(VALUE self)
 /* Is the selector closed? */
 static VALUE NIO_Selector_closed(VALUE self)
 {
-    struct NIO_Selector *selector;
+    return NIO_Selector_synchronize(self, NIO_Selector_close_synchronized, self);
+}
+
+static VALUE NIO_Selector_close_synchronized(VALUE self)
+{    struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
     return selector->closed ? Qtrue : Qfalse;
