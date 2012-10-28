@@ -1,4 +1,5 @@
 require 'thread'
+require 'socket'
 require 'nio/version'
 
 # New I/O for Ruby
