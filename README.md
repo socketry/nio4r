@@ -1,6 +1,6 @@
 New IO for Ruby
 ===============
-[![Build Status](http://travis-ci.org/tarcieri/nio4r.png)](http://travis-ci.org/tarcieri/nio4r)
+[![Build Status](https://secure.travis-ci.org/tarcieri/nio4r.png?branch=master)](http://travis-ci.org/tarcieri/nio4r)
 
 When it comes to managing many IO objects on Ruby, there aren't a whole lot of
 options. The most powerful API Ruby itself gives you is Kernel.select, and
