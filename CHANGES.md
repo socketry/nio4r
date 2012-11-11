@@ -1,3 +1,7 @@
+0.4.1
+-----
+* Thread synchronization when closing selectors
+
 0.4.0
 -----
 * OpenSSL::SSL::SSLSocket support
