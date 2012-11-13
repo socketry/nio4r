@@ -1,3 +1,7 @@
+0.4.2
+-----
+* Attempt to work around packaging problems with bundler-api o_O
+
 0.4.1
 -----
 * Thread synchronization when closing selectors
