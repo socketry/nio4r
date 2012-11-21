@@ -37,6 +37,7 @@ static VALUE NIO_Selector_register_synchronized(VALUE *args);
 static VALUE NIO_Selector_deregister_synchronized(VALUE *args);
 static VALUE NIO_Selector_select_synchronized(VALUE *args);
 static VALUE NIO_Selector_close_synchronized(VALUE self);
+static VALUE NIO_Selector_closed_synchronized(VALUE self);
 
 static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
@@ -117,11 +118,6 @@ static void NIO_Selector_mark(struct NIO_Selector *selector)
    Called by both NIO::Selector#close and the finalizer below */
 static void NIO_Selector_shutdown(struct NIO_Selector *selector)
 {
-    if(selector->ev_loop) {
-        ev_loop_destroy(selector->ev_loop);
-        selector->ev_loop = 0;
-    }
-
     if(selector->closed) {
         return;
     }
@@ -129,6 +125,10 @@ static void NIO_Selector_shutdown(struct NIO_Selector *selector)
     close(selector->wakeup_reader);
     close(selector->wakeup_writer);
 
+    if(selector->ev_loop) {
+        ev_loop_destroy(selector->ev_loop);
+        selector->ev_loop = 0;
+    }
     selector->closed = 1;
 }
 
@@ -380,6 +380,11 @@ static VALUE NIO_Selector_wakeup(VALUE self)
 /* Close the selector and free system resources */
 static VALUE NIO_Selector_close(VALUE self)
 {
+    return NIO_Selector_synchronize(self, NIO_Selector_close_synchronized, self);
+}
+
+static VALUE NIO_Selector_close_synchronized(VALUE self)
+{
     struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
@@ -391,10 +396,10 @@ static VALUE NIO_Selector_close(VALUE self)
 /* Is the selector closed? */
 static VALUE NIO_Selector_closed(VALUE self)
 {
-    return NIO_Selector_synchronize(self, NIO_Selector_close_synchronized, self);
+    return NIO_Selector_synchronize(self, NIO_Selector_closed_synchronized, self);
 }
 
-static VALUE NIO_Selector_close_synchronized(VALUE self)
+static VALUE NIO_Selector_closed_synchronized(VALUE self)
 {    struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
@@ -405,7 +410,7 @@ static VALUE NIO_Selector_close_synchronized(VALUE self)
 static VALUE NIO_Selector_is_empty(VALUE self)
 {
     VALUE selectables = rb_ivar_get(self, rb_intern("selectables"));
-    
+
     return rb_funcall(selectables, rb_intern("empty?"), 0) == Qtrue ? Qtrue : Qfalse;
 }
 
