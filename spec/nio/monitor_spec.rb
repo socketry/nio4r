@@ -6,12 +6,12 @@ describe NIO::Monitor do
   let(:writer) { pipes.last }
   let(:selector) { NIO::Selector.new }
 
-  subject    { selector.register(reader, :rw) }
+  subject    { selector.register(reader, :r) }
   let(:peer) { selector.register(writer, :rw) }
   after      { selector.close }
 
   it "knows its interests" do
-    subject.interests.should == :rw
+    subject.interests.should == :r
     peer.interests.should == :rw
   end
 
