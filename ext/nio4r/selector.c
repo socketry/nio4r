@@ -42,6 +42,11 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
 static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
 
+/* ID values for instance variables and methods */
+static ID ivar_selectables_id;
+static ID ivar_lock_id;
+static ID ivar_lock_holder_id;
+
 /* Default number of slots in the buffer for selected monitors */
 #define INITIAL_READY_BUFFER 32
 
@@ -66,6 +71,10 @@ void Init_NIO_Selector()
     rb_define_method(cNIO_Selector, "empty?", NIO_Selector_is_empty, 0);
 
     cNIO_Monitor = rb_define_class_under(mNIO, "Monitor",  rb_cObject);
+    
+    ivar_selectables_id = rb_intern("@selectables");
+    ivar_lock_id        = rb_intern("@lock");
+    ivar_lock_holder_id = rb_intern("@lock_holder");
 }
 
 /* Create the libev event loop and incoming event buffer */
@@ -145,10 +154,10 @@ static VALUE NIO_Selector_initialize(VALUE self)
 {
     VALUE lock;
 
-    rb_ivar_set(self, rb_intern("selectables"), rb_hash_new());
+    rb_ivar_set(self, ivar_selectables_id, rb_hash_new());
 
     lock = rb_class_new_instance(0, 0, rb_const_get(rb_cObject, rb_intern("Mutex")));
-    rb_ivar_set(self, rb_intern("lock"), lock);
+    rb_ivar_set(self, ivar_lock_id, lock);
 
     return Qnil;
 }
@@ -159,12 +168,12 @@ static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VA
     VALUE current_thread, lock_holder, lock;
 
     current_thread = rb_thread_current();
-    lock_holder = rb_ivar_get(self, rb_intern("lock_holder"));
+    lock_holder = rb_ivar_get(self, ivar_lock_holder_id);
 
     if(lock_holder != rb_thread_current()) {
-        lock = rb_ivar_get(self, rb_intern("lock"));
+        lock = rb_ivar_get(self, ivar_lock_id);
         rb_funcall(lock, rb_intern("lock"), 0, 0);
-        rb_ivar_set(self, rb_intern("lock_holder"), rb_thread_current());
+        rb_ivar_set(self, ivar_lock_holder_id, rb_thread_current());
 
         /* We've acquired the lock, so ensure we unlock it */
         return rb_ensure(func, (VALUE)args, NIO_Selector_unlock, self);
@@ -179,9 +188,9 @@ static VALUE NIO_Selector_unlock(VALUE self)
 {
     VALUE lock;
 
-    rb_ivar_set(self, rb_intern("lock_holder"), Qnil);
+    rb_ivar_set(self, ivar_lock_holder_id, Qnil);
 
-    lock = rb_ivar_get(self, rb_intern("lock"));
+    lock = rb_ivar_get(self, ivar_lock_id);
     rb_funcall(lock, rb_intern("unlock"), 0, 0);
 }
 
@@ -202,7 +211,7 @@ static VALUE NIO_Selector_register_synchronized(VALUE *args)
     io = args[1];
     interests = args[2];
 
-    selectables = rb_ivar_get(self, rb_intern("selectables"));
+    selectables = rb_ivar_get(self, ivar_selectables_id);
     monitor = rb_hash_lookup(selectables, io);
 
     if(monitor != Qnil)
@@ -235,7 +244,7 @@ static VALUE NIO_Selector_deregister_synchronized(VALUE *args)
     self = args[0];
     io = args[1];
 
-    selectables = rb_ivar_get(self, rb_intern("selectables"));
+    selectables = rb_ivar_get(self, ivar_selectables_id);
     monitor = rb_hash_delete(selectables, io);
 
     if(monitor != Qnil) {
@@ -248,7 +257,7 @@ static VALUE NIO_Selector_deregister_synchronized(VALUE *args)
 /* Is the given IO object registered with the selector */
 static VALUE NIO_Selector_is_registered(VALUE self, VALUE io)
 {
-    VALUE selectables = rb_ivar_get(self, rb_intern("selectables"));
+    VALUE selectables = rb_ivar_get(self, ivar_selectables_id);
 
     /* Perhaps this should be holding the mutex? */
     return rb_funcall(selectables, rb_intern("has_key?"), 1, io);
@@ -404,7 +413,7 @@ static VALUE NIO_Selector_close_synchronized(VALUE self)
 /* True if there are monitors on the loop */
 static VALUE NIO_Selector_is_empty(VALUE self)
 {
-    VALUE selectables = rb_ivar_get(self, rb_intern("selectables"));
+    VALUE selectables = rb_ivar_get(self, ivar_selectables_id);
     
     return rb_funcall(selectables, rb_intern("empty?"), 0) == Qtrue ? Qtrue : Qfalse;
 }
