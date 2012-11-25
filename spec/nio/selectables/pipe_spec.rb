@@ -18,8 +18,13 @@ describe "IO.pipe" do
   let :unwritable_subject do
     reader, pipe = IO.pipe
 
+    #HACK: On OS X 10.8, this str must be larger than PIPE_BUF. Otherwise,
+    #      the write is atomic and select() will return writable but write()
+    #      will throw EAGAIN if there is too little space to write the string
+    # TODO: Use FFI to lookup the platform-specific size of PIPE_BUF
+    str = "JUNK IN THE TUBES" * 10000
     begin
-      pipe.write_nonblock "JUNK IN THE TUBES"
+      pipe.write_nonblock str
       _, writers = select [], [pipe], [], 0
     rescue Errno::EPIPE
       break
