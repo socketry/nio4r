@@ -17,14 +17,17 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor);
 static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE interests);
 static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self);
 static VALUE NIO_Monitor_is_closed(VALUE self);
-static VALUE NIO_Monitor_io(VALUE self);
+static VALUE NIO_Monitor_set_interests(VALUE self, VALUE rhs);
 static VALUE NIO_Monitor_interests(VALUE self);
-static VALUE NIO_Monitor_selector(VALUE self);
 static VALUE NIO_Monitor_is_readable(VALUE self);
 static VALUE NIO_Monitor_is_writable(VALUE self);
-static VALUE NIO_Monitor_value(VALUE self);
-static VALUE NIO_Monitor_set_value(VALUE self, VALUE obj);
 static VALUE NIO_Monitor_readiness(VALUE self);
+
+/* Internal IDs */
+static ID ivar_io_id;
+static ID ivar_selector_id;
+static ID ivar_interests_id;
+static ID ivar_value_id;
 
 /* Internal functions */
 static void NIO_Monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
@@ -45,15 +48,17 @@ void Init_NIO_Monitor()
     rb_define_method(cNIO_Monitor, "initialize", NIO_Monitor_initialize, 3);
     rb_define_method(cNIO_Monitor, "close", NIO_Monitor_close, -1);
     rb_define_method(cNIO_Monitor, "closed?", NIO_Monitor_is_closed, 0);
-    rb_define_method(cNIO_Monitor, "io", NIO_Monitor_io, 0);
+    rb_define_method(cNIO_Monitor, "interests=", NIO_Monitor_set_interests, 1);
     rb_define_method(cNIO_Monitor, "interests", NIO_Monitor_interests, 0);
-    rb_define_method(cNIO_Monitor, "selector", NIO_Monitor_selector, 0);
-    rb_define_method(cNIO_Monitor, "value", NIO_Monitor_value, 0);
-    rb_define_method(cNIO_Monitor, "value=", NIO_Monitor_set_value, 1);
     rb_define_method(cNIO_Monitor, "readiness", NIO_Monitor_readiness, 0);
     rb_define_method(cNIO_Monitor, "readable?", NIO_Monitor_is_readable, 0);
     rb_define_method(cNIO_Monitor, "writable?", NIO_Monitor_is_writable, 0);
     rb_define_method(cNIO_Monitor, "writeable?", NIO_Monitor_is_writable, 0);
+    
+    ivar_io_id        = rb_intern("@io");
+    ivar_selector_id  = rb_intern("@selector");
+    ivar_interests_id = rb_intern("@interests");
+    ivar_value_id     = rb_intern("@value");
 }
 
 static VALUE NIO_Monitor_allocate(VALUE klass)
@@ -76,7 +81,7 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
 {
     struct NIO_Monitor *monitor;
     struct NIO_Selector *selector;
-    ID interests_id;
+    
 
     #if HAVE_RB_IO_T
         rb_io_t *fptr;
@@ -84,27 +89,17 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
         OpenFile *fptr;
     #endif
 
-    interests_id = SYM2ID(interests);
 
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
-    if(interests_id == rb_intern("r")) {
-        monitor->interests = EV_READ;
-    } else if(interests_id == rb_intern("w")) {
-        monitor->interests = EV_WRITE;
-    } else if(interests_id == rb_intern("rw")) {
-        monitor->interests = EV_READ | EV_WRITE;
-    } else {
-        rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)",
-            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0, 0)));
-    }
+    rb_funcall(self, rb_intern("interests="), 1, interests);
 
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
     ev_io_init(&monitor->ev_io, NIO_Selector_monitor_callback, FPTR_TO_FD(fptr), monitor->interests);
 
-    rb_ivar_set(self, rb_intern("io"), io);
-    rb_ivar_set(self, rb_intern("interests"), interests);
-    rb_ivar_set(self, rb_intern("selector"), selector_obj);
+    rb_ivar_set(self, ivar_io_id, io);
+    rb_ivar_set(self, ivar_interests_id, interests);
+    rb_ivar_set(self, ivar_selector_id, selector_obj);
 
     Data_Get_Struct(selector_obj, struct NIO_Selector, selector);
 
@@ -127,16 +122,16 @@ static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
     rb_scan_args(argc, argv, "01", &deregister);
-    selector = rb_ivar_get(self, rb_intern("selector"));
+    selector = rb_ivar_get(self, ivar_selector_id);
 
     if(selector != Qnil) {
         ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
         monitor->selector = 0;
-        rb_ivar_set(self, rb_intern("selector"), Qnil);
+        rb_ivar_set(self, ivar_selector_id, Qnil);
 
         /* Default value is true */
         if(deregister == Qtrue || deregister == Qnil) {
-            rb_funcall(selector, rb_intern("deregister"), 1, rb_ivar_get(self, rb_intern("io")));
+            rb_funcall(selector, rb_intern("deregister"), 1, rb_ivar_get(self, ivar_io_id));
         }
     }
 
@@ -151,29 +146,40 @@ static VALUE NIO_Monitor_is_closed(VALUE self)
     return !monitor->selector;
 }
 
-static VALUE NIO_Monitor_io(VALUE self)
+static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests)
 {
-    return rb_ivar_get(self, rb_intern("io"));
+    struct NIO_Monitor *monitor;
+    ID interests_id = SYM2ID(interests);
+    
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+    
+    if(interests_id == rb_intern("r")) {
+        monitor->interests = EV_READ;
+    } else if(interests_id == rb_intern("w")) {
+        monitor->interests = EV_WRITE;
+    } else if(interests_id == rb_intern("rw")) {
+        monitor->interests = EV_READ | EV_WRITE;
+    } else {
+        rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)",
+            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0, 0)));
+    }
 }
 
 static VALUE NIO_Monitor_interests(VALUE self)
 {
-    return rb_ivar_get(self, rb_intern("interests"));
-}
+    struct NIO_Monitor *monitor;
 
-static VALUE NIO_Monitor_selector(VALUE self)
-{
-    return rb_ivar_get(self, rb_intern("selector"));
-}
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
-static VALUE NIO_Monitor_value(VALUE self)
-{
-    return rb_ivar_get(self, rb_intern("value"));
-}
-
-static VALUE NIO_Monitor_set_value(VALUE self, VALUE obj)
-{
-    return rb_ivar_set(self, rb_intern("value"), obj);
+    if((monitor->interests & (EV_READ | EV_WRITE)) == (EV_READ | EV_WRITE)) {
+        return ID2SYM(rb_intern("rw"));
+    } else if(monitor->interests & EV_READ) {
+        return ID2SYM(rb_intern("r"));
+    } else if(monitor->interests & EV_WRITE) {
+        return ID2SYM(rb_intern("w"));
+    } else {
+        return Qnil;
+    }
 }
 
 static VALUE NIO_Monitor_readiness(VALUE self)

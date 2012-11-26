@@ -24,6 +24,9 @@ else
     org.nio4r.Nio4r.new.load(JRuby.runtime, false)
     NIO::ENGINE = 'java'
   else
+    require 'nio/ext/selector'
+    require 'nio/ext/monitor'
+
     NIO::ENGINE = 'libev'
   end
 end
