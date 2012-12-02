@@ -19,15 +19,21 @@ module NIO
     def register(io, interests)
       raise ArgumentError, "this IO is already registered with selector" if @selectables[io]
       
-      @selectables[io] = Monitor.new(io, interests, self)
+      m = @selectables[io] = Monitor.new(io, interests, self)
+      reregister(m)
+      m
     end
     
     def deregister(io)
       monitor = @selectables.delete io
-      if monitor
-        monitor.close(false)
+      if(monitor)
+        native_deregister(monitor)
       end
       monitor
+    end
+    
+    def reregister(monitor)
+      native_reregister(monitor)
     end
   end
 end

@@ -31,10 +31,7 @@ struct NIO_callback_data
 
 struct NIO_Monitor
 {
-    VALUE self;
-    int interests, revents;
     struct ev_io ev_io;
-    struct NIO_Selector *selector;
 };
 
 #ifdef GetReadFile
@@ -48,8 +45,5 @@ struct NIO_Monitor
 #endif /* !HAVE_RB_IO_T */
 
 #endif /* GetReadFile */
-
-/* Thunk between libev callbacks in NIO::Monitors and NIO::Selectors */
-void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
 
 #endif /* NIO4R_H */

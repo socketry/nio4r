@@ -31,13 +31,20 @@ static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VA
 static VALUE NIO_Selector_unlock(VALUE lock);
 static VALUE NIO_Selector_select_synchronized(VALUE *args);
 static VALUE NIO_Selector_closed_synchronized(VALUE self);
+static VALUE NIO_Selector_native_reregister(VALUE self, VALUE monitor);
+static VALUE NIO_Selector_native_deregister(VALUE self, VALUE monitor);
 
 static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
 static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
+static void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
+
+
+/* Convert back and forth from libev revents to Ruby Symbols */
+static int interests_to_mask(VALUE interests);
+static VALUE mask_to_interests(int mask);
 
 /* ID values for instance variables and methods */
-static ID ivar_selectables_id;
 static ID ivar_lock_id;
 static ID ivar_lock_holder_id;
 
@@ -59,9 +66,11 @@ void Init_NIO_Selector()
     rb_define_method(cNIO_Selector, "close", NIO_Selector_close, 0);
     rb_define_method(cNIO_Selector, "closed?", NIO_Selector_closed, 0);
 
+    rb_define_method(cNIO_Selector, "native_reregister", NIO_Selector_native_reregister, 1);
+    rb_define_method(cNIO_Selector, "native_deregister", NIO_Selector_native_deregister, 1);
+
     cNIO_Monitor = rb_define_class_under(mNIO, "Monitor",  rb_cObject);
     
-    ivar_selectables_id = rb_intern("@selectables");
     ivar_lock_id        = rb_intern("@lock");
     ivar_lock_holder_id = rb_intern("@lock_holder");
 }
@@ -316,6 +325,43 @@ static VALUE NIO_Selector_closed_synchronized(VALUE self)
     return selector->closed ? Qtrue : Qfalse;
 }
 
+/* Sets/resets the interest set for an extant Monitor */
+static VALUE NIO_Selector_native_reregister(VALUE self, VALUE monitor) {
+    struct NIO_Selector *selector;
+    struct NIO_Monitor  *s_monitor;
+    int interests = interests_to_mask(rb_funcall(monitor, rb_intern("interests"), 0, 0));
+    
+    #if HAVE_RB_IO_T
+        rb_io_t *fptr;
+    #else
+        OpenFile *fptr;
+    #endif
+
+
+    Data_Get_Struct(monitor, struct NIO_Monitor, s_monitor);
+    Data_Get_Struct(self, struct NIO_Selector, selector);
+
+    GetOpenFile(rb_convert_type(rb_funcall(monitor, rb_intern("io"), 0, 0), T_FILE, "IO", "to_io"), fptr);
+    ev_io_init(&s_monitor->ev_io, NIO_Selector_monitor_callback, FPTR_TO_FD(fptr), interests);
+
+    //ev_io.data will always be Qnil or a pointer to the enclosing monitor object
+    s_monitor->ev_io.data = (void *)monitor;
+    ev_io_start(selector->ev_loop, &s_monitor->ev_io);
+
+    return Qnil;
+}
+
+static VALUE NIO_Selector_native_deregister(VALUE self, VALUE monitor) {
+    struct NIO_Selector *selector;
+    struct NIO_Monitor  *s_monitor;
+
+    Data_Get_Struct(monitor, struct NIO_Monitor, s_monitor);
+    Data_Get_Struct(self, struct NIO_Selector, selector);
+
+    ev_io_stop(selector->ev_loop, &s_monitor->ev_io);
+    return Qnil;
+}
+
 /* Called whenever a timeout fires on the event loop */
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents)
 {
@@ -335,20 +381,53 @@ static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *
 }
 
 /* libev callback fired whenever a monitor gets an event */
-void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents)
+static void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents)
 {
-    struct NIO_Monitor *monitor_data = (struct NIO_Monitor *)io->data;
-    struct NIO_Selector *selector = monitor_data->selector;
-    VALUE monitor = monitor_data->self;
+    VALUE monitor = (VALUE)io->data;
+    VALUE selector = rb_funcall(monitor, rb_intern("selector"), 0);
+    
+    // struct NIO_Monitor *monitor_data = (struct NIO_Monitor *)io->data;
+    struct NIO_Selector *s_selector;
+    Data_Get_Struct(selector, struct NIO_Selector, s_selector);
 
     assert(selector != 0);
-    selector->ready_count++;
-    monitor_data->revents = revents;
+    s_selector->ready_count++;
+    rb_funcall(monitor, rb_intern("readiness="), 1, mask_to_interests(revents));
 
     if(rb_block_given_p()) {
         rb_yield(monitor);
     } else {
-        assert(selector->ready_array != Qnil);
-        rb_ary_push(selector->ready_array, monitor);
+        assert(s_selector->ready_array != Qnil);
+        rb_ary_push(s_selector->ready_array, monitor);
+    }
+}
+
+/* Converts the interests Symbol into appropriate libev mask */
+static int interests_to_mask(VALUE interests)
+{
+    ID interests_id = SYM2ID(interests);
+    
+    if(interests_id == rb_intern("r")) {
+        return EV_READ;
+    } else if(interests_id == rb_intern("w")) {
+        return EV_WRITE;
+    } else if(interests_id == rb_intern("rw")) {
+        return EV_READ | EV_WRITE;
+    } else {
+        rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)",
+            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0, 0)));
+    }
+}
+
+static VALUE mask_to_interests(int mask)
+{
+    if((mask & (EV_READ | EV_WRITE)) == (EV_READ | EV_WRITE)) {
+        return ID2SYM(rb_intern("rw"));
+    } else if(mask & EV_READ) {
+        return ID2SYM(rb_intern("r"));
+    } else if(mask & EV_WRITE) {
+        return ID2SYM(rb_intern("w"));
+    } else {
+        return Qnil;
     }
 }
