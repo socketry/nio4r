@@ -32,3 +32,5 @@ else
     NIO::ENGINE = 'libev'
   end
 end
+
+NIO::Selector.threadsafe!

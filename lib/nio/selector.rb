@@ -1,9 +1,11 @@
+require 'monitor'
+
 module NIO
   # Selectors monitor IO objects for events of interest
   class Selector
     def initialize
       @selectables = {};
-      @lock = Mutex.new
+      @lock = ::Monitor.new
       super
     end
     
@@ -42,9 +44,31 @@ module NIO
     def registered?(io)
       @selectables.has_key?(io)
     end
+    
+    def select(timeout = nil, &block)
+      raise ArgumentError, "time interval must be positive" if(timeout && timeout < 0)
+      native_select(timeout, &block)
+    end
 
     def empty?
       @selectables.empty?
+    end
+    
+    def self.lock_methods(*methods)
+      methods.each do |m|
+        mname = :"#{m}_without_lock"
+        define_method :"#{m}_with_lock" do |*args, &block|
+          # @lock.synchronize do
+            send mname, *args, &block
+          # end
+        end
+        alias_method :"#{m}_without_lock", m
+        alias_method m, :"#{m}_with_lock"
+      end
+    end
+    
+    def self.threadsafe!
+      lock_methods :select, :register, :reregister, :deregister, :registered?, :close, :closed?, :empty?
     end
   end
 end

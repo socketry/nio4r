@@ -10,7 +10,6 @@
 #include <assert.h>
 
 static VALUE mNIO = Qnil;
-static VALUE cNIO_Monitor  = Qnil;
 static VALUE cNIO_Selector = Qnil;
 
 /* Allocator/deallocator */
@@ -20,36 +19,22 @@ static void NIO_Selector_shutdown(struct NIO_Selector *selector);
 static void NIO_Selector_free(struct NIO_Selector *loop);
 
 /* Methods */
-static VALUE NIO_Selector_initialize(VALUE self);
-static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self);
+static VALUE NIO_Selector_native_select(VALUE self, VALUE timeout);
+static VALUE NIO_Selector_native_reregister(VALUE self, VALUE monitor);
+static VALUE NIO_Selector_native_deregister(VALUE self, VALUE monitor);
 static VALUE NIO_Selector_wakeup(VALUE self);
 static VALUE NIO_Selector_close(VALUE self);
 static VALUE NIO_Selector_closed(VALUE self);
 
 /* Internal functions */
-static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VALUE *args);
-static VALUE NIO_Selector_unlock(VALUE lock);
-static VALUE NIO_Selector_select_synchronized(VALUE *args);
-static VALUE NIO_Selector_closed_synchronized(VALUE self);
-static VALUE NIO_Selector_native_reregister(VALUE self, VALUE monitor);
-static VALUE NIO_Selector_native_deregister(VALUE self, VALUE monitor);
-
 static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
 static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
 static void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
 
-
 /* Convert back and forth from libev revents to Ruby Symbols */
 static int interests_to_mask(VALUE interests);
 static VALUE mask_to_interests(int mask);
-
-/* ID values for instance variables and methods */
-static ID ivar_lock_id;
-static ID ivar_lock_holder_id;
-
-/* Default number of slots in the buffer for selected monitors */
-#define INITIAL_READY_BUFFER 32
 
 /* Ruby 1.8 needs us to busy wait and run the green threads scheduler every 10ms */
 #define BUSYWAIT_INTERVAL 0.01
@@ -61,18 +46,13 @@ void Init_NIO_Selector()
     cNIO_Selector = rb_define_class_under(mNIO, "Selector", rb_cObject);
     rb_define_alloc_func(cNIO_Selector, NIO_Selector_allocate);
 
-    rb_define_method(cNIO_Selector, "select", NIO_Selector_select, -1);
+    rb_define_method(cNIO_Selector, "native_select", NIO_Selector_native_select, 1);
     rb_define_method(cNIO_Selector, "wakeup", NIO_Selector_wakeup, 0);
     rb_define_method(cNIO_Selector, "close", NIO_Selector_close, 0);
     rb_define_method(cNIO_Selector, "closed?", NIO_Selector_closed, 0);
 
     rb_define_method(cNIO_Selector, "native_reregister", NIO_Selector_native_reregister, 1);
     rb_define_method(cNIO_Selector, "native_deregister", NIO_Selector_native_deregister, 1);
-
-    cNIO_Monitor = rb_define_class_under(mNIO, "Monitor",  rb_cObject);
-    
-    ivar_lock_id        = rb_intern("@lock");
-    ivar_lock_holder_id = rb_intern("@lock_holder");
 }
 
 /* Create the libev event loop and incoming event buffer */
@@ -146,69 +126,19 @@ static void NIO_Selector_free(struct NIO_Selector *selector)
     xfree(selector);
 }
 
-/* Synchronize around a reentrant selector lock */
-static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VALUE *args)
-{
-    VALUE current_thread, lock_holder, lock;
-
-    current_thread = rb_thread_current();
-    lock_holder = rb_ivar_get(self, ivar_lock_holder_id);
-
-    if(lock_holder != rb_thread_current()) {
-        lock = rb_ivar_get(self, ivar_lock_id);
-        rb_funcall(lock, rb_intern("lock"), 0, 0);
-        rb_ivar_set(self, ivar_lock_holder_id, rb_thread_current());
-
-        /* We've acquired the lock, so ensure we unlock it */
-        return rb_ensure(func, (VALUE)args, NIO_Selector_unlock, self);
-    } else {
-        /* We already hold the selector lock, so no need to unlock it */
-        func(args);
-    }
-}
-
-/* Unlock the selector mutex */
-static VALUE NIO_Selector_unlock(VALUE self)
-{
-    VALUE lock;
-
-    rb_ivar_set(self, ivar_lock_holder_id, Qnil);
-
-    lock = rb_ivar_get(self, ivar_lock_id);
-    rb_funcall(lock, rb_intern("unlock"), 0, 0);
-}
-
-/* Select from all registered IO objects */
-static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self)
-{
-    VALUE timeout, array;
-    VALUE args[2];
-
-    rb_scan_args(argc, argv, "01", &timeout);
-
-    if(timeout != Qnil && NUM2DBL(timeout) < 0) {
-        rb_raise(rb_eArgError, "time interval must be positive");
-    }
-
-    args[0] = self;
-    args[1] = timeout;
-
-    return NIO_Selector_synchronize(self, NIO_Selector_select_synchronized, args);
-}
-
-/* Internal implementation of select with the selector lock held */
-static VALUE NIO_Selector_select_synchronized(VALUE *args)
+/* Internal implementation of select */
+static VALUE NIO_Selector_native_select(VALUE self, VALUE timeout)
 {
     int i, ready;
     VALUE ready_array;
     struct NIO_Selector *selector;
 
-    Data_Get_Struct(args[0], struct NIO_Selector, selector);
+    Data_Get_Struct(self, struct NIO_Selector, selector);
     if(!rb_block_given_p()) {
         selector->ready_array = rb_ary_new();
     }
 
-    ready = NIO_Selector_run(selector, args[1]);
+    ready = NIO_Selector_run(selector, timeout);
     if(ready > 0) {
         if(rb_block_given_p()) {
             return INT2NUM(ready);
@@ -315,11 +245,7 @@ static VALUE NIO_Selector_close(VALUE self)
 /* Is the selector closed? */
 static VALUE NIO_Selector_closed(VALUE self)
 {
-    return NIO_Selector_synchronize(self, NIO_Selector_closed_synchronized, self);
-}
-
-static VALUE NIO_Selector_closed_synchronized(VALUE self)
-{    struct NIO_Selector *selector;
+    struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
     return selector->closed ? Qtrue : Qfalse;
