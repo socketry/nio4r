@@ -3,7 +3,7 @@ module NIO
   class Monitor
     attr_reader :io, :interests, :selector
     attr_accessor :value, :readiness
-
+    
     # :nodoc
     def initialize(io, interests, selector)
       unless io.is_a?(IO)
@@ -15,11 +15,10 @@ module NIO
 
         raise TypeError, "can't convert #{io.class} into IO" unless io.is_a? IO
       end
-
+      
       @io, @interests, @selector = io, interests, selector
-      @closed = false
     end
-
+    
     # Is the IO object readable?
     def readable?
       readiness == :r || readiness == :rw
@@ -30,14 +29,16 @@ module NIO
       readiness == :w || readiness == :rw
     end
     alias_method :writeable?, :writable?
-
+    
     # Is this monitor closed?
-    def closed?; @closed; end
-
-    # Deactivate this monitor
-    def close(deregister = true)
-      @closed = true
-      @selector.deregister(io) if deregister
+    def closed?
+      !selector.registered?(io)
     end
+    
+    # Deactivate this monitor
+    def close
+      selector.deregister(io)
+    end
+    
   end
 end

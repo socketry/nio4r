@@ -11,9 +11,12 @@ module NIO
   def self.engine; ENGINE end
 end
 
+
+require 'nio/monitor'
+require 'nio/selector'
+
 if ENV["NIO4R_PURE"]
-  require 'nio/monitor'
-  require 'nio/selector'
+  require 'nio/pure/selector'
   NIO::ENGINE = 'select'
 else
   require 'nio4r_ext'
@@ -24,8 +27,7 @@ else
     org.nio4r.Nio4r.new.load(JRuby.runtime, false)
     NIO::ENGINE = 'java'
   else
-    require 'nio/ext/selector'
-    require 'nio/ext/monitor'
+    require 'nio/libev/selector'
 
     NIO::ENGINE = 'libev'
   end
