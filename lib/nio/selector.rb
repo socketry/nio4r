@@ -23,7 +23,7 @@ module NIO
       raise ArgumentError, "this IO is already registered with the selector" if @selectables[io]
       
       m = @selectables[io] = Monitor.new(io, interests, self)
-      reregister(m)
+      native_register(m)
       m
     end
     

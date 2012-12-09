@@ -22,6 +22,7 @@ static void NIO_Selector_free(struct NIO_Selector *loop);
 static VALUE NIO_Selector_native_select(VALUE self, VALUE timeout);
 static VALUE NIO_Selector_native_reregister(VALUE self, VALUE monitor);
 static VALUE NIO_Selector_native_deregister(VALUE self, VALUE monitor);
+static VALUE NIO_Selector_native_register(VALUE self, VALUE monitor);
 static VALUE NIO_Selector_wakeup(VALUE self);
 static VALUE NIO_Selector_close(VALUE self);
 static VALUE NIO_Selector_closed(VALUE self);
@@ -51,6 +52,7 @@ void Init_NIO_Selector()
     rb_define_method(cNIO_Selector, "close", NIO_Selector_close, 0);
     rb_define_method(cNIO_Selector, "closed?", NIO_Selector_closed, 0);
 
+    rb_define_method(cNIO_Selector, "native_register",   NIO_Selector_native_register,   1);
     rb_define_method(cNIO_Selector, "native_reregister", NIO_Selector_native_reregister, 1);
     rb_define_method(cNIO_Selector, "native_deregister", NIO_Selector_native_deregister, 1);
 }
@@ -251,30 +253,45 @@ static VALUE NIO_Selector_closed(VALUE self)
     return selector->closed ? Qtrue : Qfalse;
 }
 
+/* Initializes the monitor */
+static VALUE NIO_Selector_native_register(VALUE self, VALUE monitor) {
+    struct NIO_Selector *selector;
+    struct NIO_Monitor  *s_monitor;
+
+    Data_Get_Struct(monitor, struct NIO_Monitor, s_monitor);
+    Data_Get_Struct(self, struct NIO_Selector, selector);
+
+    ev_init(&s_monitor->ev_io, NIO_Selector_monitor_callback);
+    return NIO_Selector_native_reregister(self, monitor);
+}
+
 /* Sets/resets the interest set for an extant Monitor */
 static VALUE NIO_Selector_native_reregister(VALUE self, VALUE monitor) {
     struct NIO_Selector *selector;
     struct NIO_Monitor  *s_monitor;
     int interests = interests_to_mask(rb_funcall(monitor, rb_intern("interests"), 0, 0));
-    
+
     #if HAVE_RB_IO_T
         rb_io_t *fptr;
     #else
         OpenFile *fptr;
     #endif
 
-
     Data_Get_Struct(monitor, struct NIO_Monitor, s_monitor);
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
     GetOpenFile(rb_convert_type(rb_funcall(monitor, rb_intern("io"), 0, 0), T_FILE, "IO", "to_io"), fptr);
-    ev_io_init(&s_monitor->ev_io, NIO_Selector_monitor_callback, FPTR_TO_FD(fptr), interests);
+    
+    if(ev_is_active(&s_monitor->ev_io)) {
+        ev_io_stop(selector->ev_loop, &s_monitor->ev_io);
+    }
+    ev_io_set(&s_monitor->ev_io, FPTR_TO_FD(fptr), interests);
 
     //ev_io.data will always be Qnil or a pointer to the enclosing monitor object
     s_monitor->ev_io.data = (void *)monitor;
     ev_io_start(selector->ev_loop, &s_monitor->ev_io);
 
-    return Qnil;
+    return monitor;
 }
 
 static VALUE NIO_Selector_native_deregister(VALUE self, VALUE monitor) {
