@@ -231,7 +231,7 @@ public class Nio4r implements Library {
         @JRubyMethod
         public synchronized IRubyObject select(ThreadContext context, IRubyObject timeout, Block block) {
             Ruby runtime = context.getRuntime();
-            int ready = doSelect(runtime, timeout);
+            int ready = doSelect(runtime, context, timeout);
 
             /* Timeout or wakeup */
             if(ready <= 0)
@@ -263,21 +263,26 @@ public class Nio4r implements Library {
         }
 
         /* Run the selector */
-        private int doSelect(Ruby runtime, IRubyObject timeout) {
+        private int doSelect(Ruby runtime, ThreadContext context, IRubyObject timeout) {
+            int result;
+
             cancelKeys();
             try {
+                context.getThread().beforeBlockingCall();
                 if(timeout.isNil()) {
-                    return this.selector.select();
+                    result = this.selector.select();
                 } else {
                     double t = RubyNumeric.num2dbl(timeout);
                     if(t == 0) {
-                        return this.selector.selectNow();
+                        result = this.selector.selectNow();
                     } else if(t < 0) {
                         throw runtime.newArgumentError("time interval must be positive");
                     } else {
-                        return this.selector.select((long)(t * 1000));
+                        result = this.selector.select((long)(t * 1000));
                     }
                 }
+                context.getThread().afterBlockingCall();
+                return result;
             } catch(IOException ie) {
                 throw runtime.newIOError(ie.getLocalizedMessage());
             }
