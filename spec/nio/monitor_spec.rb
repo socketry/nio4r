@@ -7,12 +7,12 @@ describe NIO::Monitor do
   let(:selector) { NIO::Selector.new }
 
   subject    { selector.register(reader, :r) }
-  let(:peer) { selector.register(writer, :rw) }
+  let(:peer) { selector.register(writer, :w) }
   after      { selector.close }
 
   it "knows its interests" do
     subject.interests.should == :r
-    peer.interests.should == :rw
+    peer.interests.should == :w
   end
 
   it "knows its IO object" do

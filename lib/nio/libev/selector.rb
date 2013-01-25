@@ -1,5 +1,7 @@
 module NIO
-  class Selector
+  module Libev
+    class Selector
     
+    end
   end
 end

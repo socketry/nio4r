@@ -1,44 +1,29 @@
 module NIO
   # Monitors watch IO objects for specific events
   class Monitor
-    attr_reader :io, :interests, :selector
-    attr_accessor :value, :readiness
+    attr_reader :io, :selector #, :interests
+    attr_accessor :value #, :key
     
     # :nodoc
     def initialize(io, interests, selector)
-      unless io.is_a?(IO)
-        if IO.respond_to? :try_convert
-          io = IO.try_convert(io)
-        elsif io.respond_to? :to_io
-          io = io.to_io
-        end
+      @io, @selector = io, selector
+      super(io, interests, selector)
+    end
 
-        raise TypeError, "can't convert #{io.class} into IO" unless io.is_a? IO
-      end
-      
-      @io, @interests, @selector = io, interests, selector
+    # Is this monitor closed?
+    def closed?
+      not selector[io] == self
     end
     
     # Is the IO object readable?
     def readable?
       readiness == :r || readiness == :rw
     end
-
+  
     # Is the IO object writable?
     def writable?
       readiness == :w || readiness == :rw
     end
     alias_method :writeable?, :writable?
-    
-    # Is this monitor closed?
-    def closed?
-      !selector.registered?(io)
-    end
-    
-    # Deactivate this monitor
-    def close
-      selector.deregister(io)
-    end
-    
   end
 end

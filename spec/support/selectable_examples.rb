@@ -46,10 +46,12 @@ shared_context "an NIO bidirectional stream" do
   let(:stream)   { pair.first }
   let(:peer)     { pair.last }
 
-  it "selects readable and writable" do
-    monitor = selector.register(readable_subject, :rw)
-    selector.select(0) do |m|
-      m.readiness.should == :rw
+  [:r, :w, :rw].each do |interest|
+    it "selects #{interest}" do
+      monitor = selector.register(readable_subject, interest)
+      selector.select(10) do |m|
+        m.readiness.should == interest
+      end
     end
   end
   
