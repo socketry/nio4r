@@ -9,8 +9,10 @@
 #include <fcntl.h>
 #include <assert.h>
 
-static VALUE mNIO = Qnil;
-static VALUE cNIO_Selector = Qnil;
+static VALUE mNIO                = Qnil;
+static VALUE cNIO_Selector       = Qnil;
+static VALUE mNIO_Libev          = Qnil;
+static VALUE mNIO_Libev_Selector = Qnil;
 
 /* Allocator/deallocator */
 static VALUE NIO_Selector_allocate(VALUE klass);
@@ -19,13 +21,13 @@ static void NIO_Selector_shutdown(struct NIO_Selector *selector);
 static void NIO_Selector_free(struct NIO_Selector *loop);
 
 /* Methods */
-static VALUE NIO_Selector_native_select(VALUE self, VALUE timeout);
-static VALUE NIO_Selector_native_reregister(VALUE self, VALUE monitor);
-static VALUE NIO_Selector_native_deregister(VALUE self, VALUE monitor);
-static VALUE NIO_Selector_native_register(VALUE self, VALUE monitor);
-static VALUE NIO_Selector_wakeup(VALUE self);
-static VALUE NIO_Selector_close(VALUE self);
-static VALUE NIO_Selector_closed(VALUE self);
+static VALUE NIO_Libev_Selector_select(VALUE self, VALUE timeout);
+static VALUE NIO_Libev_Selector_register(VALUE self, VALUE monitor);
+static VALUE NIO_Libev_Selector_reregister(VALUE self, VALUE monitor);
+static VALUE NIO_Libev_Selector_deregister(VALUE self, VALUE monitor);
+static VALUE NIO_Libev_Selector_wakeup(VALUE self);
+static VALUE NIO_Libev_Selector_close(VALUE self);
+static VALUE NIO_Libev_Selector_closed(VALUE self);
 
 /* Internal functions */
 static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout);
@@ -44,17 +46,20 @@ static VALUE mask_to_interests(int mask);
 void Init_NIO_Selector()
 {
     mNIO = rb_define_module("NIO");
-    cNIO_Selector = rb_define_class_under(mNIO, "Selector", rb_cObject);
+    mNIO_Libev = rb_define_module_under(mNIO, "Libev");
+    cNIO_Selector = rb_const_get(mNIO, rb_intern("Selector"));
+    mNIO_Libev_Selector = rb_define_module_under(mNIO_Libev, "Selector");
+
     rb_define_alloc_func(cNIO_Selector, NIO_Selector_allocate);
 
-    rb_define_method(cNIO_Selector, "native_select", NIO_Selector_native_select, 1);
-    rb_define_method(cNIO_Selector, "wakeup", NIO_Selector_wakeup, 0);
-    rb_define_method(cNIO_Selector, "close", NIO_Selector_close, 0);
-    rb_define_method(cNIO_Selector, "closed?", NIO_Selector_closed, 0);
+    rb_define_method(mNIO_Libev_Selector, "select", NIO_Libev_Selector_select, 1);
+    rb_define_method(mNIO_Libev_Selector, "wakeup", NIO_Libev_Selector_wakeup, 0);
+    rb_define_method(mNIO_Libev_Selector, "close", NIO_Libev_Selector_close, 0);
+    rb_define_method(mNIO_Libev_Selector, "closed?", NIO_Libev_Selector_closed, 0);
 
-    rb_define_method(cNIO_Selector, "native_register",   NIO_Selector_native_register,   1);
-    rb_define_method(cNIO_Selector, "native_reregister", NIO_Selector_native_reregister, 1);
-    rb_define_method(cNIO_Selector, "native_deregister", NIO_Selector_native_deregister, 1);
+    rb_define_method(mNIO_Libev_Selector, "register", NIO_Libev_Selector_register,   1);
+    // rb_define_method(cNIO_Selector, "native_reregister", NIO_Selector_native_reregister, 1);
+    rb_define_method(mNIO_Libev_Selector, "deregister", NIO_Libev_Selector_deregister, 1);
 }
 
 /* Create the libev event loop and incoming event buffer */
@@ -129,7 +134,7 @@ static void NIO_Selector_free(struct NIO_Selector *selector)
 }
 
 /* Internal implementation of select */
-static VALUE NIO_Selector_native_select(VALUE self, VALUE timeout)
+static VALUE NIO_Libev_Selector_select(VALUE self, VALUE timeout)
 {
     int i, ready;
     VALUE ready_array;
@@ -220,7 +225,7 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
 }
 
 /* Wake the selector up from another thread */
-static VALUE NIO_Selector_wakeup(VALUE self)
+static VALUE NIO_Libev_Selector_wakeup(VALUE self)
 {
     struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
@@ -234,7 +239,7 @@ static VALUE NIO_Selector_wakeup(VALUE self)
 }
 
 /* Close the selector and free system resources */
-static VALUE NIO_Selector_close(VALUE self)
+static VALUE NIO_Libev_Selector_close(VALUE self)
 {
     struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
@@ -245,7 +250,7 @@ static VALUE NIO_Selector_close(VALUE self)
 }
 
 /* Is the selector closed? */
-static VALUE NIO_Selector_closed(VALUE self)
+static VALUE NIO_Libev_Selector_closed(VALUE self)
 {
     struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
@@ -254,7 +259,7 @@ static VALUE NIO_Selector_closed(VALUE self)
 }
 
 /* Initializes the monitor */
-static VALUE NIO_Selector_native_register(VALUE self, VALUE monitor) {
+static VALUE NIO_Libev_Selector_register(VALUE self, VALUE monitor) {
     struct NIO_Selector *selector;
     struct NIO_Monitor  *s_monitor;
 
@@ -262,11 +267,11 @@ static VALUE NIO_Selector_native_register(VALUE self, VALUE monitor) {
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
     ev_init(&s_monitor->ev_io, NIO_Selector_monitor_callback);
-    return NIO_Selector_native_reregister(self, monitor);
+    return NIO_Libev_Selector_reregister(self, monitor);
 }
 
 /* Sets/resets the interest set for an extant Monitor */
-static VALUE NIO_Selector_native_reregister(VALUE self, VALUE monitor) {
+static VALUE NIO_Libev_Selector_reregister(VALUE self, VALUE monitor) {
     struct NIO_Selector *selector;
     struct NIO_Monitor  *s_monitor;
     int interests = interests_to_mask(rb_funcall(monitor, rb_intern("interests"), 0, 0));
@@ -294,7 +299,7 @@ static VALUE NIO_Selector_native_reregister(VALUE self, VALUE monitor) {
     return monitor;
 }
 
-static VALUE NIO_Selector_native_deregister(VALUE self, VALUE monitor) {
+static VALUE NIO_Libev_Selector_deregister(VALUE self, VALUE monitor) {
     struct NIO_Selector *selector;
     struct NIO_Monitor  *s_monitor;
 
@@ -302,7 +307,7 @@ static VALUE NIO_Selector_native_deregister(VALUE self, VALUE monitor) {
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
     ev_io_stop(selector->ev_loop, &s_monitor->ev_io);
-    return Qnil;
+    return monitor;
 }
 
 /* Called whenever a timeout fires on the event loop */

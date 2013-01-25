@@ -34,6 +34,7 @@ else
   else
     require 'nio4r_ext'
     require 'nio/libev/selector'
+    require 'nio/libev/monitor'
   
     NIO::ENGINE = 'libev'
     sub_module = NIO::Libev
