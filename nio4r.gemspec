@@ -16,7 +16,6 @@ Gem::Specification.new do |gem|
   gem.version       = NIO::VERSION
 
   if defined? JRUBY_VERSION
-    gem.files << "lib/nio4r_ext.jar"
     gem.platform = "java"
   else
     gem.extensions = ["ext/nio4r/extconf.rb"]

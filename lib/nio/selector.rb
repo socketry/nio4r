@@ -3,13 +3,6 @@ require 'monitor'
 module NIO
   # Selectors monitor IO objects for events of interest
   class Selector
-#    def initialize
-#      @selectables = {};
-#      @lock = ::Monitor.new
-#      super
-#    end
-    
-    
     # Register interest in an IO object with the selector for the given types
     # of events. Valid event types for interest are:
     # * :r - is the IO readable?
@@ -44,19 +37,31 @@ module NIO
     
     def self.lock_methods(*methods)
       methods.each do |m|
-        mname = :"#{m}_without_lock"
-        define_method :"#{m}_with_lock" do |*args, &block|
-          # @lock.synchronize do
-            send mname, *args, &block
-          # end
+        if(method_defined? m)
+          nolock = :"#{m}_without_lock"
+          alias_method nolock, m
+          define_method m do |*args, &block|
+            @lock.synchronize do
+              send nolock, *args, &block
+            end
+          end
+        else #This case the method is on a superclass/module
+          define_method m do |*args, &block|
+            @lock.synchronize do
+              super(*args, &block)
+            end
+          end
         end
-        alias_method :"#{m}_without_lock", m
-        alias_method m, :"#{m}_with_lock"
+      end
+      
+      def initialize(*args)
+        @lock = ::Monitor.new
+        super
       end
     end
     
     def self.threadsafe!
-      lock_methods :select, :register, :reregister, :deregister, :registered?, :close, :closed?, :empty?
+      lock_methods :select, :register, :deregister, :registered?, :close, :closed?, :empty?, :[] #:reregister, 
     end
     
     protected

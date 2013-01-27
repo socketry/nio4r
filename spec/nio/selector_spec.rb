@@ -114,13 +114,25 @@ describe NIO::Selector do
       writer << "ohai"
       unready, _ = IO.pipe
 
-      reader_monitor   = subject.register(reader, :r)
+      reader_monitor  = subject.register(reader, :r)
       unready_monitor = subject.register(unready, :r)
 
       selected = subject.select(0)
       selected.size.should == 1
-      selected.should include(reader_monitor)
-      selected.should_not include(unready_monitor)
+      selected.should include reader_monitor
+      selected.should_not include unready_monitor
+    end
+
+    it "selects closed IO objects" do
+      monitor = subject.register(reader, :r)
+      subject.select(0).should be_nil
+
+      thread = Thread.new { subject.select }
+      Thread.pass while thread.status && thread.status != "sleep"
+
+      writer.close
+      selected = thread.value
+      selected.should include monitor
     end
 
     it "iterates across selected objects with a block" do
@@ -140,9 +152,9 @@ describe NIO::Selector do
       result = subject.select { |monitor| readables << monitor }
       result.should == 2
 
-      readables.should include(monitor1)
-      readables.should include(monitor2)
-      readables.should_not include(monitor3)
+      readables.should include monitor1
+      readables.should include monitor2
+      readables.should_not include monitor3
     end
   end
 

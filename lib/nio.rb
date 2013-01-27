@@ -38,8 +38,8 @@ else
   
     NIO::ENGINE = 'libev'
     sub_module = NIO::Libev
-  end  
-  #NIO::Selector.threadsafe!
+  end
+  NIO::Selector.threadsafe!
 end
 
 NIO::Selector.send(:include, sub_module::Selector)
