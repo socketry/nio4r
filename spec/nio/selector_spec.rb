@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'benchmark'
 
 # Timeouts should be at least this precise (in seconds) to pass the tests
 # Typical precision should be better than this, but if it's worse it will fail
@@ -155,6 +156,22 @@ describe NIO::Selector do
       readables.should include monitor1
       readables.should include monitor2
       readables.should_not include monitor3
+    end
+  end
+  
+  #Selector#select is concurrent with other calls on Java
+  context "thread safety", :unless => NIO::ENGINE == 'java' do
+    [:close, :closed?, :empty?].each do |m|
+      it "blocks on #{m} while selecting" do
+        selector = subject
+        #Make a long running select in another thread
+        Thread.new do
+          selector.select(0.1)
+        end
+        sleep(0.01) #Give the other thread a little time to enter the select
+        time = Benchmark.measure { selector.send m }
+        time.real.should > 0.05
+      end
     end
   end
 

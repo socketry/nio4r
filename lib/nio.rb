@@ -12,9 +12,11 @@ module NIO
 end
 
 if ENV["NIO4R_PURE"]
-  require 'nio/monitor'
-  require 'nio/selector'
+  require 'nio/pure/monitor'
+  require 'nio/pure/selector'
+
   NIO::ENGINE = 'select'
+  modyool = NIO::Pure
 else
   require 'nio4r_ext'
 
@@ -25,5 +27,14 @@ else
     NIO::ENGINE = 'java'
   else
     NIO::ENGINE = 'libev'
+    modyool = NIO::Libev
   end
+end
+
+#Shared code for locking
+unless NIO::ENGINE == 'java'
+  require 'nio/selector'
+
+  NIO::Selector.send :include, modyool::Selector
+  NIO::Selector.threadsafe!
 end
