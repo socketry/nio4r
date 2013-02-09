@@ -12,6 +12,7 @@
 static VALUE mNIO = Qnil;
 static VALUE cNIO_Monitor  = Qnil;
 static VALUE cNIO_Selector = Qnil;
+static VALUE mNIO_Libev_Selector = Qnil;
 
 /* Allocator/deallocator */
 static VALUE NIO_Selector_allocate(VALUE klass);
@@ -20,25 +21,17 @@ static void NIO_Selector_shutdown(struct NIO_Selector *selector);
 static void NIO_Selector_free(struct NIO_Selector *loop);
 
 /* Methods */
-static VALUE NIO_Selector_initialize(VALUE self);
-static VALUE NIO_Selector_register(VALUE self, VALUE selectable, VALUE interest);
-static VALUE NIO_Selector_deregister(VALUE self, VALUE io);
-static VALUE NIO_Selector_is_registered(VALUE self, VALUE io);
-static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self);
-static VALUE NIO_Selector_wakeup(VALUE self);
-static VALUE NIO_Selector_close(VALUE self);
-static VALUE NIO_Selector_closed(VALUE self);
-static VALUE NIO_Selector_is_empty(VALUE self);
+static VALUE NIO_Libev_Selector_initialize(VALUE self);
+static VALUE NIO_Libev_Selector_register(VALUE self, VALUE selectable, VALUE interest);
+static VALUE NIO_Libev_Selector_deregister(VALUE self, VALUE io);
+static VALUE NIO_Libev_Selector_is_registered(VALUE self, VALUE io);
+static VALUE NIO_Libev_Selector_select(int argc, VALUE *argv, VALUE self);
+static VALUE NIO_Libev_Selector_wakeup(VALUE self);
+static VALUE NIO_Libev_Selector_close(VALUE self);
+static VALUE NIO_Libev_Selector_closed(VALUE self);
+static VALUE NIO_Libev_Selector_is_empty(VALUE self);
 
 /* Internal functions */
-static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VALUE *args);
-static VALUE NIO_Selector_unlock(VALUE lock);
-static VALUE NIO_Selector_register_synchronized(VALUE *args);
-static VALUE NIO_Selector_deregister_synchronized(VALUE *args);
-static VALUE NIO_Selector_select_synchronized(VALUE *args);
-static VALUE NIO_Selector_close_synchronized(VALUE self);
-static VALUE NIO_Selector_closed_synchronized(VALUE self);
-
 static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
 static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
@@ -52,19 +45,22 @@ static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *
 /* Selectors wait for events */
 void Init_NIO_Selector()
 {
-    mNIO = rb_define_module("NIO");
-    cNIO_Selector = rb_define_class_under(mNIO, "Selector", rb_cObject);
+    mNIO             = rb_define_module("NIO");
+    cNIO_Selector    = rb_define_class_under(mNIO, "Selector", rb_cObject);
+    VALUE mNIO_Libev = rb_define_module_under(mNIO,"Libev");
+    mNIO_Libev_Selector = rb_define_module_under(mNIO_Libev, "Selector");
+
     rb_define_alloc_func(cNIO_Selector, NIO_Selector_allocate);
 
-    rb_define_method(cNIO_Selector, "initialize", NIO_Selector_initialize, 0);
-    rb_define_method(cNIO_Selector, "register", NIO_Selector_register, 2);
-    rb_define_method(cNIO_Selector, "deregister", NIO_Selector_deregister, 1);
-    rb_define_method(cNIO_Selector, "registered?", NIO_Selector_is_registered, 1);
-    rb_define_method(cNIO_Selector, "select", NIO_Selector_select, -1);
-    rb_define_method(cNIO_Selector, "wakeup", NIO_Selector_wakeup, 0);
-    rb_define_method(cNIO_Selector, "close", NIO_Selector_close, 0);
-    rb_define_method(cNIO_Selector, "closed?", NIO_Selector_closed, 0);
-    rb_define_method(cNIO_Selector, "empty?", NIO_Selector_is_empty, 0);
+    rb_define_method(mNIO_Libev_Selector, "initialize", NIO_Libev_Selector_initialize, 0);
+    rb_define_method(mNIO_Libev_Selector, "register", NIO_Libev_Selector_register, 2);
+    rb_define_method(mNIO_Libev_Selector, "deregister", NIO_Libev_Selector_deregister, 1);
+    rb_define_method(mNIO_Libev_Selector, "registered?", NIO_Libev_Selector_is_registered, 1);
+    rb_define_method(mNIO_Libev_Selector, "select", NIO_Libev_Selector_select, -1);
+    rb_define_method(mNIO_Libev_Selector, "wakeup", NIO_Libev_Selector_wakeup, 0);
+    rb_define_method(mNIO_Libev_Selector, "close", NIO_Libev_Selector_close, 0);
+    rb_define_method(mNIO_Libev_Selector, "closed?", NIO_Libev_Selector_closed, 0);
+    rb_define_method(mNIO_Libev_Selector, "empty?", NIO_Libev_Selector_is_empty, 0);
 
     cNIO_Monitor = rb_define_class_under(mNIO, "Monitor",  rb_cObject);
 }
@@ -141,66 +137,18 @@ static void NIO_Selector_free(struct NIO_Selector *selector)
 
 /* Create a new selector. This is more or less the pure Ruby version
    translated into an MRI cext */
-static VALUE NIO_Selector_initialize(VALUE self)
+static VALUE NIO_Libev_Selector_initialize(VALUE self)
 {
-    VALUE lock;
-
     rb_ivar_set(self, rb_intern("selectables"), rb_hash_new());
-
-    lock = rb_class_new_instance(0, 0, rb_const_get(rb_cObject, rb_intern("Mutex")));
-    rb_ivar_set(self, rb_intern("lock"), lock);
 
     return Qnil;
 }
 
-/* Synchronize around a reentrant selector lock */
-static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VALUE *args)
-{
-    VALUE current_thread, lock_holder, lock;
-
-    current_thread = rb_thread_current();
-    lock_holder = rb_ivar_get(self, rb_intern("lock_holder"));
-
-    if(lock_holder != rb_thread_current()) {
-        lock = rb_ivar_get(self, rb_intern("lock"));
-        rb_funcall(lock, rb_intern("lock"), 0, 0);
-        rb_ivar_set(self, rb_intern("lock_holder"), rb_thread_current());
-
-        /* We've acquired the lock, so ensure we unlock it */
-        return rb_ensure(func, (VALUE)args, NIO_Selector_unlock, self);
-    } else {
-        /* We already hold the selector lock, so no need to unlock it */
-        func(args);
-    }
-}
-
-/* Unlock the selector mutex */
-static VALUE NIO_Selector_unlock(VALUE self)
-{
-    VALUE lock;
-
-    rb_ivar_set(self, rb_intern("lock_holder"), Qnil);
-
-    lock = rb_ivar_get(self, rb_intern("lock"));
-    rb_funcall(lock, rb_intern("unlock"), 0, 0);
-}
-
-/* Register an IO object with the selector for the given interests */
-static VALUE NIO_Selector_register(VALUE self, VALUE io, VALUE interests)
-{
-    VALUE args[3] = {self, io, interests};
-    return NIO_Selector_synchronize(self, NIO_Selector_register_synchronized, args);
-}
-
 /* Internal implementation of register after acquiring mutex */
-static VALUE NIO_Selector_register_synchronized(VALUE *args)
+static VALUE NIO_Libev_Selector_register(VALUE self, VALUE io, VALUE interests)
 {
-    VALUE self, io, interests, selectables, monitor;
+    VALUE selectables, monitor;
     VALUE monitor_args[3];
-
-    self = args[0];
-    io = args[1];
-    interests = args[2];
 
     selectables = rb_ivar_get(self, rb_intern("selectables"));
     monitor = rb_hash_lookup(selectables, io);
@@ -219,21 +167,11 @@ static VALUE NIO_Selector_register_synchronized(VALUE *args)
     return monitor;
 }
 
-/* Deregister an IO object from the selector */
-static VALUE NIO_Selector_deregister(VALUE self, VALUE io)
-{
-    VALUE args[2] = {self, io};
-    return NIO_Selector_synchronize(self, NIO_Selector_deregister_synchronized, args);
-}
-
 /* Internal implementation of register after acquiring mutex */
-static VALUE NIO_Selector_deregister_synchronized(VALUE *args)
+static VALUE NIO_Libev_Selector_deregister(VALUE self, VALUE io)
 {
-    VALUE self, io, interests, selectables, monitor;
+    VALUE interests, selectables, monitor;
     VALUE monitor_args[3];
-
-    self = args[0];
-    io = args[1];
 
     selectables = rb_ivar_get(self, rb_intern("selectables"));
     monitor = rb_hash_delete(selectables, io);
@@ -246,7 +184,7 @@ static VALUE NIO_Selector_deregister_synchronized(VALUE *args)
 }
 
 /* Is the given IO object registered with the selector */
-static VALUE NIO_Selector_is_registered(VALUE self, VALUE io)
+static VALUE NIO_Libev_Selector_is_registered(VALUE self, VALUE io)
 {
     VALUE selectables = rb_ivar_get(self, rb_intern("selectables"));
 
@@ -255,36 +193,23 @@ static VALUE NIO_Selector_is_registered(VALUE self, VALUE io)
 }
 
 /* Select from all registered IO objects */
-static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self)
+static VALUE NIO_Libev_Selector_select(int argc, VALUE *argv, VALUE self)
 {
-    VALUE timeout, array;
-    VALUE args[2];
+    int i, ready;
+    VALUE ready_array, timeout;
+    struct NIO_Selector *selector;
 
     rb_scan_args(argc, argv, "01", &timeout);
-
     if(timeout != Qnil && NUM2DBL(timeout) < 0) {
         rb_raise(rb_eArgError, "time interval must be positive");
     }
 
-    args[0] = self;
-    args[1] = timeout;
-
-    return NIO_Selector_synchronize(self, NIO_Selector_select_synchronized, args);
-}
-
-/* Internal implementation of select with the selector lock held */
-static VALUE NIO_Selector_select_synchronized(VALUE *args)
-{
-    int i, ready;
-    VALUE ready_array;
-    struct NIO_Selector *selector;
-
-    Data_Get_Struct(args[0], struct NIO_Selector, selector);
+    Data_Get_Struct(self, struct NIO_Selector, selector);
     if(!rb_block_given_p()) {
         selector->ready_array = rb_ary_new();
     }
 
-    ready = NIO_Selector_run(selector, args[1]);
+    ready = NIO_Selector_run(selector, timeout);
     if(ready > 0) {
         if(rb_block_given_p()) {
             return INT2NUM(ready);
@@ -364,7 +289,7 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
 }
 
 /* Wake the selector up from another thread */
-static VALUE NIO_Selector_wakeup(VALUE self)
+static VALUE NIO_Libev_Selector_wakeup(VALUE self)
 {
     struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
@@ -378,12 +303,7 @@ static VALUE NIO_Selector_wakeup(VALUE self)
 }
 
 /* Close the selector and free system resources */
-static VALUE NIO_Selector_close(VALUE self)
-{
-    return NIO_Selector_synchronize(self, NIO_Selector_close_synchronized, self);
-}
-
-static VALUE NIO_Selector_close_synchronized(VALUE self)
+static VALUE NIO_Libev_Selector_close(VALUE self)
 {
     struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
@@ -394,12 +314,7 @@ static VALUE NIO_Selector_close_synchronized(VALUE self)
 }
 
 /* Is the selector closed? */
-static VALUE NIO_Selector_closed(VALUE self)
-{
-    return NIO_Selector_synchronize(self, NIO_Selector_closed_synchronized, self);
-}
-
-static VALUE NIO_Selector_closed_synchronized(VALUE self)
+static VALUE NIO_Libev_Selector_closed(VALUE self)
 {    struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
@@ -407,7 +322,7 @@ static VALUE NIO_Selector_closed_synchronized(VALUE self)
 }
 
 /* True if there are monitors on the loop */
-static VALUE NIO_Selector_is_empty(VALUE self)
+static VALUE NIO_Libev_Selector_is_empty(VALUE self)
 {
     VALUE selectables = rb_ivar_get(self, rb_intern("selectables"));
 
