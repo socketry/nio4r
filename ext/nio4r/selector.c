@@ -214,7 +214,7 @@ static VALUE NIO_Selector_register_synchronized(VALUE *args)
     monitor_args[2] = self;
 
     monitor = rb_class_new_instance(3, monitor_args, cNIO_Monitor);
-    rb_hash_aset(selectables, io, monitor);
+    rb_hash_aset(selectables, rb_funcall(monitor, rb_intern("io"), 0), monitor);
 
     return monitor;
 }

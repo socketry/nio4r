@@ -172,7 +172,7 @@ public class Nio4r implements Library {
             }
 
             RubyClass monitorClass = runtime.getModule("NIO").getClass("Monitor");
-            Monitor monitor = (Monitor)monitorClass.newInstance(context, io, interests, this, null);
+            Monitor monitor = (Monitor)monitorClass.newInstance(context, monitor.callMethod(context, "io"), interests, this, null);
             monitor.setSelectionKey(key);
 
             return monitor;
