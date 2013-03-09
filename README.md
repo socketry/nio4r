@@ -121,7 +121,7 @@ selector.deregister(reader)
 
 Monitors provide methods which let you introspect on why a particular IO
 object was selected. These methods are not thread safe unless you are holding
-the selector lock (i.e. if you're in a block pased to #select). Only use them
+the selector lock (i.e. if you're in a block passed to #select). Only use them
 if you aren't concerned with thread safety, or you're within a #select
 block:
 
