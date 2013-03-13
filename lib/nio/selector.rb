@@ -61,14 +61,7 @@ module NIO
           if io == @wakeup
             # Clear all wakeup signals we've received by reading them
             # Wakeups should have level triggered behavior
-            begin
-              @wakeup.read_nonblock(1024)
-
-              # Loop until we've drained all incoming events
-              redo
-            rescue Errno::EWOULDBLOCK
-            end
-
+            @wakeup.read(@wakeup.stat.size)
             return
           else
             monitor = @selectables[io]
@@ -107,7 +100,7 @@ module NIO
     # level-triggered behavior.
     def wakeup
       # Send the selector a signal in the form of writing data to a pipe
-      @waker << "\0"
+      @waker.write "\0"
       nil
     end
 
