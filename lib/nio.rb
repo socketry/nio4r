@@ -11,7 +11,7 @@ module NIO
   def self.engine; ENGINE end
 end
 
-if ENV["NIO4R_PURE"]
+if ENV["NIO4R_PURE"] || ENV["OS"] =~ /Windows/i
   require 'nio/monitor'
   require 'nio/selector'
   NIO::ENGINE = 'select'
