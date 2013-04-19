@@ -18,7 +18,9 @@ module NIO
     # * :rw - is the IO either readable or writeable?
     def register(io, interest)
       @lock.synchronize do
-        raise ArgumentError, "this IO is already registered with the selector" if @selectables[io]
+        if monitor = @selectables[io]
+          raise ArgumentError, "this IO is already registered with the selector as #{monitor.interests.inspect}"
+        end
 
         monitor = Monitor.new(io, interest, self)
         @selectables[io] = monitor
