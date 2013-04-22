@@ -170,7 +170,7 @@ static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VA
         return rb_ensure(func, (VALUE)args, NIO_Selector_unlock, self);
     } else {
         /* We already hold the selector lock, so no need to unlock it */
-        func(args);
+        return func(args);
     }
 }
 
@@ -183,6 +183,8 @@ static VALUE NIO_Selector_unlock(VALUE self)
 
     lock = rb_ivar_get(self, rb_intern("lock"));
     rb_funcall(lock, rb_intern("unlock"), 0, 0);
+
+    return Qnil;
 }
 
 /* Register an IO object with the selector for the given interests */
