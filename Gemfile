@@ -1,4 +1,4 @@
-source :rubygems
+source "https://rubygems.org"
 
 gem 'jruby-openssl' if defined? JRUBY_VERSION
 
