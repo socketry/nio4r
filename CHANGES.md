@@ -1,3 +1,7 @@
+0.4.4
+-----
+* Fix return values for Selector_synchronize and Selector_unlock
+
 0.4.3
 -----
 * REALLY have thread synchronization when closing selectors ;)
