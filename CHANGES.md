@@ -1,3 +1,7 @@
+0.4.5
+-----
+* Fix botched gem release
+
 0.4.4
 -----
 * Fix return values for Selector_synchronize and Selector_unlock
