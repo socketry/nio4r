@@ -1,3 +1,7 @@
+0.4.6 (2013-05-27)
+------------------
+* Fix for JRuby on Windows
+
 0.4.5
 -----
 * Fix botched gem release
