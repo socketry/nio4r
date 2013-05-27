@@ -6,7 +6,7 @@ Gem::Specification.new do |gem|
   gem.email         = ["tony.arcieri@gmail.com"]
   gem.description   = "New IO for Ruby"
   gem.summary       = "NIO provides a high performance selector API for monitoring IO objects"
-  gem.homepage      = "https://github.com/tarcieri/nio4r"
+  gem.homepage      = "https://github.com/celluloid/nio4r"
 
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.files         = `git ls-files`.split("\n")
