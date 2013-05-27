@@ -3,11 +3,11 @@ New IO for Ruby
 [![Gem
 Version](https://badge.fury.io/rb/nio4r.png)](http://rubygems.org/gems/nio4r)
 [![Build
-Status](https://secure.travis-ci.org/tarcieri/nio4r.png?branch=master)](http://travis-ci.org/tarcieri/nio4r)
+Status](https://secure.travis-ci.org/celluloid/nio4r.png?branch=master)](http://travis-ci.org/celluloid/nio4r)
 [![Code
-Climate](https://codeclimate.com/github/tarcieri/nio4r.png)](https://codeclimate.com/github/tarcieri/nio4r)
+Climate](https://codeclimate.com/github/celluloid/nio4r.png)](https://codeclimate.com/github/celluloid/nio4r)
 [![Coverage
-Status](https://coveralls.io/repos/tarcieri/nio4r/badge.png?branch=master)](https://coveralls.io/r/tarcieri/nio4r)
+Status](https://coveralls.io/repos/celluloid/nio4r/badge.png?branch=master)](https://coveralls.io/r/celluloid/nio4r)
 
 When it comes to managing many IO objects on Ruby, there aren't a whole lot of
 options. The most powerful API Ruby itself gives you is Kernel.select, and
