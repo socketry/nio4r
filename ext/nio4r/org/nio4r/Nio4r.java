@@ -130,7 +130,7 @@ public class Nio4r implements Library {
             Ruby runtime = context.getRuntime();
             return this.selector.isOpen() ? runtime.getFalse() : runtime.getTrue();
         }
-        
+
         @JRubyMethod(name = "empty?")
         public IRubyObject isEmpty(ThreadContext context) {
             Ruby runtime = context.getRuntime();

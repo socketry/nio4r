@@ -52,5 +52,4 @@ shared_context "an NIO bidirectional stream" do
       m.readiness.should == :rw
     end
   end
-  
 end
