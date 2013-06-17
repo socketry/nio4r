@@ -142,6 +142,10 @@ public class Nio4r implements Library {
             Ruby runtime = context.getRuntime();
             Channel rawChannel = RubyIO.convertToIO(context, io).getChannel();
 
+            if(!this.selector.isOpen()) {
+                throw context.getRuntime().newIOError("selector is closed");
+            }
+
             if(!(rawChannel instanceof SelectableChannel)) {
                 throw runtime.newArgumentError("not a selectable IO object");
             }

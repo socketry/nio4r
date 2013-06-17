@@ -19,6 +19,11 @@ describe NIO::Selector do
     it "raises TypeError if asked to register non-IO objects" do
       expect { subject.register(42, :r) }.to raise_exception TypeError
     end
+
+    it "raises when asked to register after closing" do
+      subject.close
+      expect { subject.register(reader, :r) }.to raise_exception IOError
+    end
   end
 
   it "knows which IO objects are registered" do
