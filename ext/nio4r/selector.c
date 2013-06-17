@@ -199,10 +199,16 @@ static VALUE NIO_Selector_register_synchronized(VALUE *args)
 {
     VALUE self, io, interests, selectables, monitor;
     VALUE monitor_args[3];
+    struct NIO_Selector *selector;
 
     self = args[0];
     io = args[1];
     interests = args[2];
+
+    Data_Get_Struct(self, struct NIO_Selector, selector);
+    if(selector->closed) {
+        rb_raise(rb_eIOError, "selector is closed");
+    }
 
     selectables = rb_ivar_get(self, rb_intern("selectables"));
     monitor = rb_hash_lookup(selectables, io);

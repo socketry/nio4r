@@ -130,7 +130,7 @@ public class Nio4r implements Library {
             Ruby runtime = context.getRuntime();
             return this.selector.isOpen() ? runtime.getFalse() : runtime.getTrue();
         }
-        
+
         @JRubyMethod(name = "empty?")
         public IRubyObject isEmpty(ThreadContext context) {
             Ruby runtime = context.getRuntime();
@@ -141,6 +141,10 @@ public class Nio4r implements Library {
         public IRubyObject register(ThreadContext context, IRubyObject io, IRubyObject interests) {
             Ruby runtime = context.getRuntime();
             Channel rawChannel = RubyIO.convertToIO(context, io).getChannel();
+
+            if(!this.selector.isOpen()) {
+                throw context.getRuntime().newIOError("selector is closed");
+            }
 
             if(!(rawChannel instanceof SelectableChannel)) {
                 throw runtime.newArgumentError("not a selectable IO object");
