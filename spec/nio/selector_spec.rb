@@ -34,12 +34,12 @@ describe NIO::Selector do
     subject.should_not be_registered(reader)
     monitor.should be_closed
   end
-  
+
   it "reports if it is empty" do
     subject.should be_empty
-    
+
     monitor = subject.register(reader, :r)
-    
+
     subject.should_not be_empty
   end
 

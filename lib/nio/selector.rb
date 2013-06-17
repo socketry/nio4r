@@ -56,7 +56,7 @@ module NIO
 
         ready_readers, ready_writers = Kernel.select readers, writers, [], timeout
         return unless ready_readers # timeout or wakeup
-        
+
         selected_monitors = Set.new
 
         ready_readers.each do |io|
@@ -71,7 +71,7 @@ module NIO
             selected_monitors << monitor
           end
         end
-        
+
         ready_writers.each do |io|
           monitor = @selectables[io]
           monitor.readiness = case monitor.readiness
@@ -82,7 +82,7 @@ module NIO
           end
           selected_monitors << monitor
         end
-        
+
         if block_given?
           selected_monitors.each do |m|
             yield m
@@ -119,7 +119,7 @@ module NIO
 
     # Is this selector closed?
     def closed?; @closed end
-    
+
     def empty?
       @selectables.empty?
     end

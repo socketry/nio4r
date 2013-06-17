@@ -3,7 +3,7 @@ require 'spec_helper'
 describe TCPSocket do
   port_offset = 0
   let(:tcp_port) { 12345 + (port_offset += 1) }
-  
+
   let :readable_subject do
     server = TCPServer.new("localhost", tcp_port)
     sock = TCPSocket.open("localhost", tcp_port)
@@ -67,7 +67,7 @@ describe TCPSocket do
   it_behaves_like "an NIO selectable"
   it_behaves_like "an NIO selectable stream"
   it_behaves_like "an NIO bidirectional stream"
-  
+
   context :connect do
     it "selects writable when connected" do
       selector = NIO::Selector.new
