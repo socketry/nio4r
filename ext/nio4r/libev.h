@@ -2,7 +2,8 @@
 
 #ifdef _WIN32
 #define EV_SELECT_IS_WINSOCKET 1
-#define FD_SETSIZE 512
+#define EV_USE_MONOTONIC 0
+#define EV_USE_REALTIME 0
 #endif
 
 #include "../libev/ev.h"
