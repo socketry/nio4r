@@ -27,7 +27,7 @@ module NIO
         end
 
         monitor = Monitor.new(io, interest, self)
-        @selectables[io] = monitor
+        @selectables[monitor.io] = monitor
 
         monitor
       end
