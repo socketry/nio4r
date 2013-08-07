@@ -1,3 +1,9 @@
+0.5.0 (2013-08-06)
+------------------
+* Fix segv when attempting to register to a closed selector
+* Fix Windows support on Ruby 2.0.0
+* Upgrade to libev 4.15
+
 0.4.6 (2013-05-27)
 ------------------
 * Fix for JRuby on Windows
