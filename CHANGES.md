@@ -1,3 +1,7 @@
+HEAD
+----
+* Drop 1.8 support
+
 0.5.0 (2013-08-06)
 ------------------
 * Fix segv when attempting to register to a closed selector
