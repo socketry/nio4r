@@ -168,10 +168,10 @@ public class Nio4r implements Library {
             } else {
                 try {
                     key = channel.register(this.selector, interestOps);
-                } catch(java.lang.IllegalArgumentException ia) {
-                    throw runtime.newArgumentError("mode not supported for this object: " + interests);
-                } catch(java.nio.channels.ClosedChannelException cce) {
-                    throw context.runtime.newIOError(cce.getLocalizedMessage());
+                } catch(java.lang.IllegalArgumentException ex) {
+                    throw runtime.newArgumentError("mode '" + interests + "' not supported for this object: " + ex.getLocalizedMessage() + " (" + ex.getClass() + ")");
+                } catch(java.nio.channels.ClosedChannelException ex) {
+                    throw context.runtime.newIOError(ex.getLocalizedMessage());
                 }
             }
 
