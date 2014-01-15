@@ -137,12 +137,18 @@ if you aren't concerned with thread safety, or you're within a #select
 block:
 
 - ***#interests***: what this monitor is interested in (:r, :w, or :rw)
-- ***#readiness***: what the monitored IO object is ready for according to the last select operation
+- ***#readiness***: what I/O operations the monitored object is ready for
 - ***#readable?***: was the IO readable last time it was selected?
 - ***#writable?***: was the IO writable last time it was selected?
 
 Monitors also support a ***#value*** and ***#value=*** method for storing a
 handle to an arbitrary object of your choice (e.g. a proc)
+
+### Flow Control
+
+For information on how to compose nio4r selectors inside of event loops,
+please read the [Flow Control Guide on the
+Wiki](https://github.com/celluloid/nio4r/wiki/Basic-Flow-Control)
 
 Concurrency
 -----------
