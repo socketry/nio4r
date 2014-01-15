@@ -5,7 +5,7 @@
 [![Code Climate](https://codeclimate.com/github/celluloid/nio4r.png)](https://codeclimate.com/github/celluloid/nio4r)
 [![Coverage Status](https://coveralls.io/repos/celluloid/nio4r/badge.png?branch=master)](https://coveralls.io/r/celluloid/nio4r)
 
-nio4r: New IO for Ruby
+nio4r: New IO for Ruby.
 
 nio4r provides an abstract, cross-platform stateful I/O selector API for Ruby.
 I/O selectors are the heart of "reactor"-based event loops, and monitor
@@ -26,6 +26,9 @@ Its goals are:
 * Keep the API small to maximize both portability and performance across many
   different OSes and Ruby VMs
 * Provide inherently thread-safe facilities for working with IO objects
+
+[Celluloid::IO](https://github.com/celluloid/celluloid-io) uses nio4r to
+monitor multiple IO objects from a single Celluloid actor.
 
 Supported Platforms
 -------------------
