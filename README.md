@@ -1,28 +1,30 @@
-New IO for Ruby
+![nio4r](https://raw.github.com/celluloid/nio4r/master/logo.png)
 ===============
-[![Gem
-Version](https://badge.fury.io/rb/nio4r.png)](http://rubygems.org/gems/nio4r)
-[![Build
-Status](https://secure.travis-ci.org/celluloid/nio4r.png?branch=master)](http://travis-ci.org/celluloid/nio4r)
-[![Code
-Climate](https://codeclimate.com/github/celluloid/nio4r.png)](https://codeclimate.com/github/celluloid/nio4r)
-[![Coverage
-Status](https://coveralls.io/repos/celluloid/nio4r/badge.png?branch=master)](https://coveralls.io/r/celluloid/nio4r)
+[![Gem Version](https://badge.fury.io/rb/nio4r.png)](http://rubygems.org/gems/nio4r)
+[![Build Status](https://secure.travis-ci.org/celluloid/nio4r.png?branch=master)](http://travis-ci.org/celluloid/nio4r)
+[![Code Climate](https://codeclimate.com/github/celluloid/nio4r.png)](https://codeclimate.com/github/celluloid/nio4r)
+[![Coverage Status](https://coveralls.io/repos/celluloid/nio4r/badge.png?branch=master)](https://coveralls.io/r/celluloid/nio4r)
 
-When it comes to managing many IO objects on Ruby, there aren't a whole lot of
-options. The most powerful API Ruby itself gives you is Kernel.select, and
-select is hurting when it comes to performance and in terms of having a nice
-API.
+nio4r: New IO for Ruby
 
-Once upon a time Java was a similar mess. They got out of it by adding the
-Java NIO API. Java NIO provides a high performance selector API for monitoring
-large numbers of file descriptors.
+nio4r provides an abstract, cross-platform stateful I/O selector API for Ruby.
+I/O selectors are the heart of "reactor"-based event loops, and monitor
+multiple I/O objects for various types of readiness, e.g. ready for reading or
+writing.
 
-This library aims to incorporate the ideas of Java NIO in Ruby. These are:
+The most similar API provided by Ruby today is Kernel.select, however the
+select API requires you to pass in arrays of all of the I/O objects you're
+interested in every time. nio4r provides a more object-oriented API that lets
+you register I/O objects with a selector then handle them when they're selected
+for various types of events.
 
-* Expose high level interfaces for doing high performance IO, but keep the
-  codebase small to encourage multiple implementations on different platforms
-* Be as portable as possible, in this case across several Ruby VMs
+nio4r is modeled after the Java NIO API, but simplified for ease-of-use.
+
+Its goals are:
+
+* Expose high-level interfaces for stateful IO selectors
+* Keep the API small to maximize both portability and performance across many
+  different OSes and Ruby VMs
 * Provide inherently thread-safe facilities for working with IO objects
 
 Supported Platforms
@@ -30,15 +32,14 @@ Supported Platforms
 
 nio4r is known to work on the following Ruby implementations:
 
-* MRI/YARV 1.8.7, 1.9.2, 1.9.3
-* REE (2011.12)
-* JRuby 1.6.x (and likely earlier versions too)
-* Rubinius 1.x/2.0
+* MRI/YARV 1.9.3, 2.0.0, 2.1.0
+* JRuby 1.7.x
+* Rubinius 2.x
 * A pure Ruby implementation based on Kernel.select is also provided
 
 Platform notes:
 
-* MRI/YARV and Rubinius implement nio4j with a C extension based on libev,
+* MRI/YARV and Rubinius implement nio4r with a C extension based on libev,
   which provides a high performance binding to native IO APIs
 * JRuby uses a Java extension based on the high performance Java NIO subsystem
 * A pure Ruby implementation is also provided for Ruby implementations which
@@ -177,8 +178,8 @@ however this is not the case today.
 License
 -------
 
-Copyright (c) 2011-12 Tony Arcieri. Distributed under the MIT License. See
+Copyright (c) 2014 Tony Arcieri. Distributed under the MIT License. See
 LICENSE.txt for further details.
 
-Includes libev. Copyright (C)2007-09 Marc Alexander Lehmann. Distributed under
-the BSD license. See ext/libev/LICENSE for details.
+Includes libev 4.15. Copyright (C)2007-09 Marc Alexander Lehmann. Distributed
+under the BSD license. See ext/libev/LICENSE for details.
