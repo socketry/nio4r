@@ -1,5 +1,7 @@
-HEAD
-----
+1.0.0 (2014-01-14)
+------------------
+* Have Selector#register obtain the actual IO from a Monitor object
+  because Monitor#initialize might convert it.
 * Drop 1.8 support
 
 0.5.0 (2013-08-06)
