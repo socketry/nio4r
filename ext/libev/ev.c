@@ -3425,6 +3425,11 @@ rb_thread_unsafe_dangerous_crazy_blocking_region_end(...);
 #######################################################################
 */
 
+/*
+  simulate to rb_thread_call_without_gvl using rb_theread_blocking_region.
+  https://github.com/brianmario/mysql2/blob/master/ext/mysql2/client.h#L8
+*/
+
 #ifndef HAVE_RB_THREAD_CALL_WITHOUT_GVL
 #ifdef HAVE_RB_THREAD_BLOCKING_REGION
 
