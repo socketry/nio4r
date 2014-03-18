@@ -3242,7 +3242,7 @@ time_update (EV_P_ ev_tstamp max_block)
 }
 
 /* ########## NIO4R PATCHERY HO! ########## */
-#if defined(HAVE_RB_THREAD_BLOCKING_REGION)
+#if defined(HAVE_RB_THREAD_BLOCKING_REGION) || defined(HAVE_RB_THREAD_CALL_WITHOUT_GVL)
 struct ev_poll_args {
   struct ev_loop *loop;
   ev_tstamp waittime;
@@ -3262,7 +3262,7 @@ int
 ev_run (EV_P_ int flags)
 {
 /* ########## NIO4R PATCHERY HO! ########## */
-#if defined(HAVE_RB_THREAD_BLOCKING_REGION)
+#if defined(HAVE_RB_THREAD_BLOCKING_REGION) || defined(HAVE_RB_THREAD_CALL_WITHOUT_GVL)
     struct ev_poll_args poll_args;
 #endif
 /* ######################################## */
@@ -3425,10 +3425,19 @@ rb_thread_unsafe_dangerous_crazy_blocking_region_end(...);
 #######################################################################
 */
 
-#if defined(HAVE_RB_THREAD_BLOCKING_REGION)
+#ifndef HAVE_RB_THREAD_CALL_WITHOUT_GVL
+#ifdef HAVE_RB_THREAD_BLOCKING_REGION
+
+#define rb_thread_call_without_gvl(func, data1, ubf, data2) \
+  rb_thread_blocking_region((rb_blocking_function_t *)func, data1, ubf, data2)
+
+#endif
+#endif
+
+#if defined(HAVE_RB_THREAD_BLOCKING_REGION) || defined(HAVE_RB_THREAD_CALL_WITHOUT_GVL)
         poll_args.loop = loop;
         poll_args.waittime = waittime;
-        rb_thread_blocking_region(ev_backend_poll, (void *)&poll_args, RUBY_UBF_IO, 0);
+        rb_thread_call_without_gvl(ev_backend_poll, (void *)&poll_args, RUBY_UBF_IO, 0);
 #else
         backend_poll (EV_A_ waittime);
 #endif

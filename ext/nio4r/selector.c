@@ -312,7 +312,7 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
     int result;
     selector->selecting = 1;
 
-#if defined(HAVE_RB_THREAD_BLOCKING_REGION) || defined(HAVE_RB_THREAD_ALONE)
+#if defined(HAVE_RB_THREAD_BLOCKING_REGION) || defined(HAVE_RB_THREAD_CALL_WITHOUT_GVL) || defined(HAVE_RB_THREAD_ALONE)
     /* Implement the optional timeout (if any) as a ev_timer */
     if(timeout != Qnil) {
         /* It seems libev is not a fan of timers being zero, so fudge a little */
@@ -326,7 +326,7 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
     ev_tstamp started_at = ev_now(selector->ev_loop);
 #endif
 
-#if defined(HAVE_RB_THREAD_BLOCKING_REGION)
+#if defined(HAVE_RB_THREAD_BLOCKING_REGION) || defined(HAVE_RB_THREAD_CALL_WITHOUT_GVL)
     /* libev is patched to release the GIL when it makes its system call */
     ev_loop(selector->ev_loop, EVLOOP_ONESHOT);
 #elif defined(HAVE_RB_THREAD_ALONE)
@@ -337,7 +337,7 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
     if(0) {
 #endif /* defined(HAVE_RB_THREAD_BLOCKING_REGION) */
 
-#if !defined(HAVE_RB_THREAD_BLOCKING_REGION)
+#if !defined(HAVE_RB_THREAD_BLOCKING_REGION) && !defined(HAVE_RB_THREAD_CALL_WITHOUT_GVL)
         TRAP_BEG;
         ev_loop(selector->ev_loop, EVLOOP_ONESHOT);
         TRAP_END;
