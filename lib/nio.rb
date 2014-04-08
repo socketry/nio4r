@@ -11,7 +11,7 @@ module NIO
   def self.engine; ENGINE end
 end
 
-if ENV["NIO4R_PURE"] || (ENV["OS"] =~ /Windows/i && !defined?(JRUBY_VERSION))
+if ENV["NIO4R_PURE"] || (Gem.win_platform? && !defined?(JRUBY_VERSION))
   require 'nio/monitor'
   require 'nio/selector'
   NIO::ENGINE = 'select'
