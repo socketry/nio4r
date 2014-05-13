@@ -146,6 +146,7 @@ static VALUE NIO_Selector_initialize(VALUE self)
     VALUE lock;
 
     rb_ivar_set(self, rb_intern("selectables"), rb_hash_new());
+    rb_ivar_set(self, rb_intern("lock_holder"), Qnil);
 
     lock = rb_class_new_instance(0, 0, rb_const_get(rb_cObject, rb_intern("Mutex")));
     rb_ivar_set(self, rb_intern("lock"), lock);
