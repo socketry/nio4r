@@ -11,21 +11,21 @@ describe NIO::Monitor do
   after      { selector.close }
 
   it "knows its interests" do
-    subject.interests.should == :r
-    peer.interests.should == :rw
+    expect(subject.interests).to eq(:r)
+    expect(peer.interests).to eq(:rw)
   end
 
   it "knows its IO object" do
-    subject.io.should == reader
+    expect(subject.io).to eq(reader)
   end
 
   it "knows its selector" do
-    subject.selector.should == selector
+    expect(subject.selector).to eq(selector)
   end
 
   it "stores arbitrary values" do
     subject.value = 42
-    subject.value.should == 42
+    expect(subject.value).to eq(42)
   end
 
   it "knows what operations IO objects are ready for" do
@@ -33,29 +33,29 @@ describe NIO::Monitor do
     reader_monitor, writer_monitor = subject, peer
 
     selected = selector.select(0)
-    selected.should_not include(reader_monitor)
-    selected.should include(writer_monitor)
+    expect(selected).not_to include(reader_monitor)
+    expect(selected).to include(writer_monitor)
 
-    writer_monitor.readiness.should == :w
-    writer_monitor.should_not be_readable
-    writer_monitor.should be_writable
+    expect(writer_monitor.readiness).to eq(:w)
+    expect(writer_monitor).not_to be_readable
+    expect(writer_monitor).to be_writable
 
     writer << "loldata"
 
     selected = selector.select(0)
-    selected.should include(reader_monitor)
+    expect(selected).to include(reader_monitor)
 
-    reader_monitor.readiness.should == :r
-    reader_monitor.should be_readable
-    reader_monitor.should_not be_writable
+    expect(reader_monitor.readiness).to eq(:r)
+    expect(reader_monitor).to be_readable
+    expect(reader_monitor).not_to be_writable
   end
 
   it "closes" do
-    subject.should_not be_closed
-    selector.registered?(reader).should be_true
+    expect(subject).not_to be_closed
+    expect(selector.registered?(reader)).to be_truthy
 
     subject.close
-    subject.should be_closed
-    selector.registered?(reader).should be_false
+    expect(subject).to be_closed
+    expect(selector.registered?(reader)).to be_falsey
   end
 end

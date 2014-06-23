@@ -111,7 +111,7 @@ describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
     begin
       _, writers = select [], [ssl_client], [], 0
       count = ssl_client.write_nonblock "X" * 1024
-      count.should_not == 0
+      expect(count).not_to eq(0)
     rescue IO::WaitReadable, IO::WaitWritable
       pending "SSL will report writable but not accept writes"
       raise if(writers.include? ssl_client)

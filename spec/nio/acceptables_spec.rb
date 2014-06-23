@@ -9,8 +9,8 @@ describe "NIO acceptables" do
       ready_monitor   = selector.register(acceptable_subject, :r)
 
       ready_monitors = selector.select
-      ready_monitors.should include ready_monitor
-      ready_monitors.should_not include waiting_monitor
+      expect(ready_monitors).to include ready_monitor
+      expect(ready_monitors).not_to include waiting_monitor
     end
   end
 

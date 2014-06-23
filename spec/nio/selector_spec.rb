@@ -13,7 +13,7 @@ describe NIO::Selector do
   context "register" do
     it "registers IO objects" do
       monitor = subject.register(reader, :r)
-      monitor.should_not be_closed
+      expect(monitor).not_to be_closed
     end
 
     it "raises TypeError if asked to register non-IO objects" do
@@ -28,24 +28,24 @@ describe NIO::Selector do
 
   it "knows which IO objects are registered" do
     subject.register(reader, :r)
-    subject.should be_registered(reader)
-    subject.should_not be_registered(writer)
+    expect(subject).to be_registered(reader)
+    expect(subject).not_to be_registered(writer)
   end
 
   it "deregisters IO objects" do
     subject.register(reader, :r)
 
     monitor = subject.deregister(reader)
-    subject.should_not be_registered(reader)
-    monitor.should be_closed
+    expect(subject).not_to be_registered(reader)
+    expect(monitor).to be_closed
   end
 
   it "reports if it is empty" do
-    subject.should be_empty
+    expect(subject).to be_empty
 
     monitor = subject.register(reader, :r)
 
-    subject.should_not be_empty
+    expect(subject).not_to be_empty
   end
 
   # This spec might seem a bit silly, but this actually something the
@@ -54,14 +54,14 @@ describe NIO::Selector do
     monitor = subject.register(reader, :r)
     writer << "ohai"
 
-    subject.select.should include monitor
-    reader.read(4).should == "ohai"
+    expect(subject.select).to include monitor
+    expect(reader.read(4)).to eq("ohai")
     subject.deregister(reader)
 
     new_monitor = subject.register(reader, :r)
     writer << "thar"
-    subject.select.should include new_monitor
-    reader.read(4).should == "thar"
+    expect(subject.select).to include new_monitor
+    expect(reader.read(4)).to eq("thar")
   end
 
   context "timeouts" do
@@ -73,13 +73,13 @@ describe NIO::Selector do
 
       timeout = 0.5
       started_at = Time.now
-      subject.select(timeout).should include monitor
-      (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(0)
+      expect(subject.select(timeout)).to include monitor
+      expect(Time.now - started_at).to be_within(TIMEOUT_PRECISION).of(0)
       reader.read_nonblock(payload.size)
 
       started_at = Time.now
-      subject.select(timeout).should be_nil
-      (Time.now - started_at).should be_within(TIMEOUT_PRECISION).of(timeout)
+      expect(subject.select(timeout)).to be_nil
+      expect(Time.now - started_at).to be_within(TIMEOUT_PRECISION).of(timeout)
     end
 
     it "raises ArgumentError if given a negative timeout" do
@@ -95,7 +95,7 @@ describe NIO::Selector do
 
       thread = Thread.new do
         started_at = Time.now
-        subject.select.should be_nil
+        expect(subject.select).to be_nil
         Time.now - started_at
       end
 
@@ -103,12 +103,12 @@ describe NIO::Selector do
       sleep timeout
       subject.wakeup
 
-      thread.value.should be_within(TIMEOUT_PRECISION).of(timeout)
+      expect(thread.value).to be_within(TIMEOUT_PRECISION).of(timeout)
     end
 
     it "raises IOError if asked to wake up a closed selector" do
       subject.close
-      subject.should be_closed
+      expect(subject).to be_closed
 
       expect { subject.wakeup }.to raise_exception IOError
     end
@@ -123,21 +123,21 @@ describe NIO::Selector do
       unready_monitor = subject.register(unready, :r)
 
       selected = subject.select(0)
-      selected.size.should == 1
-      selected.should include reader_monitor
-      selected.should_not include unready_monitor
+      expect(selected.size).to eq(1)
+      expect(selected).to include reader_monitor
+      expect(selected).not_to include unready_monitor
     end
 
     it "selects closed IO objects" do
       monitor = subject.register(reader, :r)
-      subject.select(0).should be_nil
+      expect(subject.select(0)).to be_nil
 
       thread = Thread.new { subject.select }
       Thread.pass while thread.status && thread.status != "sleep"
 
       writer.close
       selected = thread.value
-      selected.should include monitor
+      expect(selected).to include monitor
     end
 
     it "iterates across selected objects with a block" do
@@ -155,16 +155,16 @@ describe NIO::Selector do
 
       readables = []
       result = subject.select { |monitor| readables << monitor }
-      result.should == 2
+      expect(result).to eq(2)
 
-      readables.should include monitor1
-      readables.should include monitor2
-      readables.should_not include monitor3
+      expect(readables).to include monitor1
+      expect(readables).to include monitor2
+      expect(readables).not_to include monitor3
     end
   end
 
   it "closes" do
     subject.close
-    subject.should be_closed
+    expect(subject).to be_closed
   end
 end
