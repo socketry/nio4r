@@ -7,7 +7,11 @@
 #define NIO4R_H
 
 #include "ruby.h"
-#include "rubyio.h"
+#if HAVE_RUBY_IO_H
+# include "ruby/io.h"
+#else
+# include "rubyio.h"
+#endif
 #include "libev.h"
 
 struct NIO_Selector
