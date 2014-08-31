@@ -1,3 +1,5 @@
+require 'set'
+
 module NIO
   # Selectors monitor IO objects for events of interest
   class Selector
