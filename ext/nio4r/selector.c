@@ -4,7 +4,9 @@
  */
 
 #include "nio4r.h"
-#include "rubysig.h"
+#ifdef HAVE_RUBYSIG_H
+# include "rubysig.h"
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 #include <assert.h>
@@ -36,8 +38,8 @@ static VALUE NIO_Selector_unlock(VALUE lock);
 static VALUE NIO_Selector_register_synchronized(VALUE *args);
 static VALUE NIO_Selector_deregister_synchronized(VALUE *args);
 static VALUE NIO_Selector_select_synchronized(VALUE *args);
-static VALUE NIO_Selector_close_synchronized(VALUE self);
-static VALUE NIO_Selector_closed_synchronized(VALUE self);
+static VALUE NIO_Selector_close_synchronized(VALUE *args);
+static VALUE NIO_Selector_closed_synchronized(VALUE *args);
 
 static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout);
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
@@ -163,10 +165,10 @@ static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VA
     current_thread = rb_thread_current();
     lock_holder = rb_ivar_get(self, rb_intern("lock_holder"));
 
-    if(lock_holder != rb_thread_current()) {
+    if(lock_holder != current_thread) {
         lock = rb_ivar_get(self, rb_intern("lock"));
         rb_funcall(lock, rb_intern("lock"), 0, 0);
-        rb_ivar_set(self, rb_intern("lock_holder"), rb_thread_current());
+        rb_ivar_set(self, rb_intern("lock_holder"), current_thread);
 
         /* We've acquired the lock, so ensure we unlock it */
         return rb_ensure(func, (VALUE)args, NIO_Selector_unlock, self);
@@ -239,8 +241,7 @@ static VALUE NIO_Selector_deregister(VALUE self, VALUE io)
 /* Internal implementation of register after acquiring mutex */
 static VALUE NIO_Selector_deregister_synchronized(VALUE *args)
 {
-    VALUE self, io, interests, selectables, monitor;
-    VALUE monitor_args[3];
+    VALUE self, io, selectables, monitor;
 
     self = args[0];
     io = args[1];
@@ -267,7 +268,7 @@ static VALUE NIO_Selector_is_registered(VALUE self, VALUE io)
 /* Select from all registered IO objects */
 static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self)
 {
-    VALUE timeout, array;
+    VALUE timeout;
     VALUE args[2];
 
     rb_scan_args(argc, argv, "01", &timeout);
@@ -285,7 +286,7 @@ static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self)
 /* Internal implementation of select with the selector lock held */
 static VALUE NIO_Selector_select_synchronized(VALUE *args)
 {
-    int i, ready;
+    int ready;
     VALUE ready_array;
     struct NIO_Selector *selector;
 
@@ -390,12 +391,14 @@ static VALUE NIO_Selector_wakeup(VALUE self)
 /* Close the selector and free system resources */
 static VALUE NIO_Selector_close(VALUE self)
 {
-    return NIO_Selector_synchronize(self, NIO_Selector_close_synchronized, self);
+    VALUE args[1] = {self};
+    return NIO_Selector_synchronize(self, NIO_Selector_close_synchronized, args);
 }
 
-static VALUE NIO_Selector_close_synchronized(VALUE self)
+static VALUE NIO_Selector_close_synchronized(VALUE *args)
 {
     struct NIO_Selector *selector;
+    VALUE self = args[0];
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
     NIO_Selector_shutdown(selector);
@@ -406,11 +409,14 @@ static VALUE NIO_Selector_close_synchronized(VALUE self)
 /* Is the selector closed? */
 static VALUE NIO_Selector_closed(VALUE self)
 {
-    return NIO_Selector_synchronize(self, NIO_Selector_closed_synchronized, self);
+    VALUE args[1] = {self};
+    return NIO_Selector_synchronize(self, NIO_Selector_closed_synchronized, args);
 }
 
-static VALUE NIO_Selector_closed_synchronized(VALUE self)
-{    struct NIO_Selector *selector;
+static VALUE NIO_Selector_closed_synchronized(VALUE *args)
+{
+    struct NIO_Selector *selector;
+    VALUE self = args[0];
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
     return selector->closed ? Qtrue : Qfalse;

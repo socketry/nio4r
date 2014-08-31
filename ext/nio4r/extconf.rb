@@ -32,6 +32,10 @@ if have_header('sys/resource.h')
   $defs << '-DHAVE_SYS_RESOURCE_H'
 end
 
+if RUBY_VERSION.to_f < 1.9
+  $defs << '-DHAVE_RUBYSIG_H'
+end
+
 dir_config 'nio4r_ext'
 create_makefile 'nio4r_ext'
 

@@ -26,9 +26,6 @@ static VALUE NIO_Monitor_value(VALUE self);
 static VALUE NIO_Monitor_set_value(VALUE self, VALUE obj);
 static VALUE NIO_Monitor_readiness(VALUE self);
 
-/* Internal functions */
-static void NIO_Monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
-
 #if HAVE_RB_IO_T
   rb_io_t *fptr;
 #else
