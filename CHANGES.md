@@ -1,3 +1,12 @@
+1.0.1 (2014-09-01)
+------------------
+* Fix C compiler warnings
+* Eliminate Ruby warnings about @lock_holder
+* Windows improvements
+* Better support for Ruby 2.1
+* Automatically require 'set'
+* Update to RSpec 3
+
 1.0.0 (2014-01-14)
 ------------------
 * Have Selector#register obtain the actual IO from a Monitor object
