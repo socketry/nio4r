@@ -51,6 +51,8 @@ module NIO
 
     # Select which monitors are ready
     def select(timeout = nil)
+      selected_monitors = Set.new
+
       @lock.synchronize do
         readers, writers = [@wakeup], []
 
@@ -63,7 +65,6 @@ module NIO
         ready_readers, ready_writers = Kernel.select readers, writers, [], timeout
         return unless ready_readers # timeout or wakeup
 
-        selected_monitors = Set.new
 
         ready_readers.each do |io|
           if io == @wakeup
@@ -88,15 +89,15 @@ module NIO
           end
           selected_monitors << monitor
         end
+      end
 
-        if block_given?
-          selected_monitors.each do |m|
-            yield m
-          end
-          selected_monitors.size
-        else
-          selected_monitors
+      if block_given?
+        selected_monitors.each do |m|
+          yield m
         end
+        selected_monitors.size
+      else
+        selected_monitors
       end
     end
 
