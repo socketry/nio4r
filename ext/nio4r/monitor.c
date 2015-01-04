@@ -127,10 +127,13 @@ static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
     selector = rb_ivar_get(self, rb_intern("selector"));
 
     if(selector != Qnil) {
-        ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
+        /* if ev_loop is 0, it means that the loop has been stopped already (see NIO_Selector_shutdown)*/
+        if(monitor->selector->ev_loop != 0) {
+          ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
+        }
         monitor->selector = 0;
         rb_ivar_set(self, rb_intern("selector"), Qnil);
-
+    
         /* Default value is true */
         if(deregister == Qtrue || deregister == Qnil) {
             rb_funcall(selector, rb_intern("deregister"), 1, rb_ivar_get(self, rb_intern("io")));
