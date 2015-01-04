@@ -58,4 +58,12 @@ describe NIO::Monitor do
     expect(subject).to be_closed
     expect(selector.registered?(reader)).to be_falsey
   end
+
+  it "closes even if the selector has been shutdown" do
+    expect(subject).not_to be_closed
+    selector.close # forces shutdown
+    expect(subject).not_to be_closed
+    subject.close
+    expect(subject).to be_closed
+  end
 end
