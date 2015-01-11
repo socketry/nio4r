@@ -14,7 +14,7 @@ ABOUT
    featureful. And also smaller. Yay.
 
    Some of the specialties of libev not commonly found elsewhere are:
-
+   
    - extensive and detailed, readable documentation (not doxygen garbage).
    - fully supports fork, can detect fork in various ways and automatically
      re-arms kernel mechanisms that do not support fork.
