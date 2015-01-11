@@ -1,3 +1,8 @@
+1.1.0 (2015-01-10)
+------------------
+* Update to libev 4.19
+* Do not call ev_io_stop on monitors if the loop is already closed
+
 1.0.1 (2014-09-01)
 ------------------
 * Fix C compiler warnings
