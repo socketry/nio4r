@@ -7,7 +7,13 @@
 #ifdef HAVE_RUBYSIG_H
 # include "rubysig.h"
 #endif
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#else
+#include <io.h>
+#endif
+
 #include <fcntl.h>
 #include <assert.h>
 
