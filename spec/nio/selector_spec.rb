@@ -95,7 +95,7 @@ describe NIO::Selector do
 
       thread = Thread.new do
         started_at = Time.now
-        expect(subject.select).to be_nil
+        expect(subject.select).to eq(false)
         Time.now - started_at
       end
 
@@ -160,6 +160,44 @@ describe NIO::Selector do
       expect(readables).to include monitor1
       expect(readables).to include monitor2
       expect(readables).not_to include monitor3
+    end
+
+    describe "return value" do
+      let(:timeout) { nil }
+      let(:wakeup) { false }
+
+      before do
+        readable, writer = IO.pipe
+        subject.register(readable, :r)
+      end
+
+      context "for wakeups" do
+        specify "with no timeout" do
+          thread = Thread.new { subject.select() }
+          thread.join(0.1)
+          subject.wakeup
+          expect(thread.value).to eq(wakeup)
+        end
+
+        specify "with timeout of > 0" do
+          thread = Thread.new { subject.select(10) }
+          thread.join(0.1)
+          subject.wakeup
+          expect(thread.value).to eq(wakeup)
+        end
+      end
+
+      context "for timeouts" do
+        specify "with timeout of 0" do
+          thread = Thread.new { subject.select(0) }
+          expect(thread.value).to eq(timeout)
+        end
+
+        specify "with timeout of > 0" do
+          thread = Thread.new { subject.select(0.1) }
+          expect(thread.value).to eq(timeout)
+        end
+      end
     end
   end
 
