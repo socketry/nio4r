@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe "IO.pipe" do
+RSpec.describe "IO.pipe" do
   let(:pair) { IO.pipe }
 
   let :unreadable_subject do

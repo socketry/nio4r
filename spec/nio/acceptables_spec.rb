@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe "NIO acceptables" do
+RSpec.describe "NIO acceptables" do
   shared_context "an NIO acceptable" do
     let(:selector) { NIO::Selector.new }
 

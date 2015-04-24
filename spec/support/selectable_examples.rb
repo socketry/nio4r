@@ -1,4 +1,4 @@
-shared_context "an NIO selectable" do
+RSpec.shared_context "an NIO selectable" do
   let(:selector) { NIO::Selector.new }
 
   it "selects readable objects" do
@@ -26,7 +26,7 @@ shared_context "an NIO selectable" do
   end
 end
 
-shared_context "an NIO selectable stream" do
+RSpec.shared_context "an NIO selectable stream" do
   let(:selector) { NIO::Selector.new }
   let(:stream)   { pair.first }
   let(:peer)     { pair.last }
@@ -44,7 +44,7 @@ shared_context "an NIO selectable stream" do
   end
 end
 
-shared_context "an NIO bidirectional stream" do
+RSpec.shared_context "an NIO bidirectional stream" do
   let(:selector) { NIO::Selector.new }
   let(:stream)   { pair.first }
   let(:peer)     { pair.last }

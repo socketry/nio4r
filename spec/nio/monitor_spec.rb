@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe NIO::Monitor do
+RSpec.describe NIO::Monitor do
   let(:pipes) { IO.pipe }
   let(:reader) { pipes.first }
   let(:writer) { pipes.last }
