@@ -1,4 +1,4 @@
-require 'spec_helper'
+require "spec_helper"
 
 RSpec.describe NIO::Monitor do
   let(:pipes) { IO.pipe }

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require "spec_helper"
 
 # Timeouts should be at least this precise (in seconds) to pass the tests
 # Typical precision should be better than this, but if it's worse it will fail

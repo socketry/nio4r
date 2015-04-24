@@ -33,13 +33,13 @@ RSpec.shared_context "an NIO selectable stream" do
 
   it "selects readable when the other end closes" do
     # hax: this test is broken for OpenSSL sockets
-    skip 'broken for SSL ;_;' if peer.is_a? OpenSSL::SSL::SSLSocket
+    skip "broken for SSL ;_;" if peer.is_a? OpenSSL::SSL::SSLSocket
 
     monitor = selector.register(stream, :r)
     expect(selector.select(0)).to be_nil
 
     peer.close
-    #Wait and give the TCP session time to close
+    # Wait and give the TCP session time to close
     expect(selector.select(0.1)).to include monitor
   end
 end

@@ -13,7 +13,7 @@ module NIO
           io = io.to_io
         end
 
-        raise TypeError, "can't convert #{io.class} into IO" unless io.is_a? IO
+        fail TypeError, "can't convert #{io.class} into IO" unless io.is_a? IO
       end
 
       @io, @interests, @selector = io, interests, selector
@@ -32,7 +32,9 @@ module NIO
     alias_method :writeable?, :writable?
 
     # Is this monitor closed?
-    def closed?; @closed; end
+    def closed?
+      @closed
+    end
 
     # Deactivate this monitor
     def close(deregister = true)

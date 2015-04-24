@@ -1,21 +1,21 @@
-require 'spec_helper'
+require "spec_helper"
 
 RSpec.describe UDPSocket do
-  let(:udp_port) { 23456 }
+  let(:udp_port) { 23_456 }
 
   let :readable_subject do
     sock = UDPSocket.new
-    sock.bind('localhost', udp_port)
+    sock.bind("localhost", udp_port)
 
     peer = UDPSocket.new
-    peer.send("hi there", 0, 'localhost', udp_port)
+    peer.send("hi there", 0, "localhost", udp_port)
 
     sock
   end
 
   let :unreadable_subject do
     sock = UDPSocket.new
-    sock.bind('localhost', udp_port + 1)
+    sock.bind("localhost", udp_port + 1)
     sock
   end
 

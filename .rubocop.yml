@@ -1,0 +1,58 @@
+#
+# Deliberate style choices
+#
+
+LineLength:
+  Max: 100
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Metrics/MethodLength:
+  CountComments: false
+  Max: 40
+
+Metrics/AbcSize:
+  Max: 40
+
+Metrics/PerceivedComplexity:
+  Max: 15
+
+Metrics/CyclomaticComplexity:
+  Max: 10
+
+Style/GlobalVars:
+  Enabled: false
+
+#
+# Auto-generated overrides
+#
+
+# Offense count: 2
+Lint/HandleExceptions:
+  Enabled: false
+
+# Offense count: 3
+Lint/Loop:
+  Enabled: false
+
+# Offense count: 1
+Lint/NonLocalExitFromIterator:
+  Enabled: false
+
+# Offense count: 7
+Lint/UselessAssignment:
+  Enabled: false
+
+# Offense count: 1
+# Configuration parameters: SupportedStyles, IndentOneStep.
+Style/CaseIndentation:
+  IndentWhenRelativeTo: end
+
+# Offense count: 1
+Style/Documentation:
+  Enabled: false
+
+# Offense count: 2
+Style/RescueModifier:
+  Enabled: false

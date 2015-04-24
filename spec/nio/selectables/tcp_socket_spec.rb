@@ -1,8 +1,8 @@
-require 'spec_helper'
+require "spec_helper"
 
 RSpec.describe TCPSocket do
   port_offset = 0
-  let(:tcp_port) { 12345 + (port_offset += 1) }
+  let(:tcp_port) { 12_345 + (port_offset += 1) }
 
   let :readable_subject do
     server = TCPServer.new("localhost", tcp_port)
@@ -37,7 +37,7 @@ RSpec.describe TCPSocket do
     begin
       sock.write_nonblock "X" * 1024
       _, writers = select [], [sock], [], 0
-    end while writers and writers.include? sock
+    end while writers && writers.include?(sock)
 
     # I think the kernel might manage to drain its buffer a bit even after
     # the socket first goes unwritable. Attempt to sleep past this and then
@@ -71,18 +71,18 @@ RSpec.describe TCPSocket do
   context :connect do
     it "selects writable when connected" do
       selector = NIO::Selector.new
-      server = TCPServer.new('127.0.0.1', tcp_port)
+      server = TCPServer.new("127.0.0.1", tcp_port)
 
       client = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM, 0)
       monitor = selector.register(client, :w)
 
       expect do
-        client.connect_nonblock Socket.sockaddr_in(tcp_port, '127.0.0.1')
+        client.connect_nonblock Socket.sockaddr_in(tcp_port, "127.0.0.1")
       end.to raise_exception Errno::EINPROGRESS
 
       expect(selector.select(0)).to include monitor
       result = client.getsockopt(::Socket::SOL_SOCKET, ::Socket::SO_ERROR)
-      expect(result.unpack('i').first).to be_zero
+      expect(result.unpack("i").first).to be_zero
     end
   end
 end
