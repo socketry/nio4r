@@ -1,4 +1,4 @@
-require 'set'
+require "set"
 
 module NIO
   # Selectors monitor IO objects for events of interest
@@ -20,13 +20,10 @@ module NIO
     # * :rw - is the IO either readable or writeable?
     def register(io, interest)
       @lock.synchronize do
-        if closed?
-          raise IOError, "selector is closed"
-        end
+        fail IOError, "selector is closed" if closed?
 
-        if monitor = @selectables[io]
-          raise ArgumentError, "this IO is already registered with the selector as #{monitor.interests.inspect}"
-        end
+        monitor = @selectables[io]
+        fail ArgumentError, "already registered as #{monitor.interests.inspect}" if monitor
 
         monitor = Monitor.new(io, interest, self)
         @selectables[monitor.io] = monitor
@@ -39,14 +36,14 @@ module NIO
     def deregister(io)
       @lock.synchronize do
         monitor = @selectables.delete io
-        monitor.close(false) if monitor and not monitor.closed?
+        monitor.close(false) if monitor && !monitor.closed?
         monitor
       end
     end
 
     # Is the given IO object registered with the selector?
     def registered?(io)
-      @lock.synchronize { @selectables.has_key? io }
+      @lock.synchronize { @selectables.key? io }
     end
 
     # Select which monitors are ready
@@ -124,7 +121,9 @@ module NIO
     end
 
     # Is this selector closed?
-    def closed?; @closed end
+    def closed?
+      @closed
+    end
 
     def empty?
       @selectables.empty?

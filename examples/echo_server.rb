@@ -1,9 +1,10 @@
 #!/usr/bin/env ruby
 
-$:.push File.expand_path('../../lib', __FILE__)
-require 'nio'
-require 'socket'
+$LOAD_PATH.push File.expand_path("../../lib", __FILE__)
+require "nio"
+require "socket"
 
+# Echo server example written with nio4r
 class EchoServer
   def initialize(host, port)
     @selector = NIO::Selector.new
@@ -16,7 +17,7 @@ class EchoServer
   end
 
   def run
-    while true
+    loop do
       @selector.select { |monitor| monitor.value.call(monitor) }
     end
   end
@@ -42,6 +43,4 @@ class EchoServer
   end
 end
 
-if $0 == __FILE__
-  EchoServer.new("localhost", 1234).run
-end
+EchoServer.new("localhost", 1234).run if $PROGRAM_NAME == __FILE__

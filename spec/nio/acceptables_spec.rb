@@ -1,4 +1,4 @@
-require 'spec_helper'
+require "spec_helper"
 
 RSpec.describe "NIO acceptables" do
   shared_context "an NIO acceptable" do
@@ -15,7 +15,7 @@ RSpec.describe "NIO acceptables" do
   end
 
   describe TCPServer do
-    let(:tcp_port) { 23456 }
+    let(:tcp_port) { 23_456 }
 
     let :acceptable_subject do
       server = TCPServer.new("localhost", tcp_port)

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require "spec_helper"
 
 RSpec.describe "IO.pipe" do
   let(:pair) { IO.pipe }
@@ -18,17 +18,17 @@ RSpec.describe "IO.pipe" do
   let :unwritable_subject do
     reader, pipe = IO.pipe
 
-    #HACK: On OS X 10.8, this str must be larger than PIPE_BUF. Otherwise,
+    # HACK: On OS X 10.8, this str must be larger than PIPE_BUF. Otherwise,
     #      the write is atomic and select() will return writable but write()
     #      will throw EAGAIN if there is too little space to write the string
     # TODO: Use FFI to lookup the platform-specific size of PIPE_BUF
-    str = "JUNK IN THE TUBES" * 10000
+    str = "JUNK IN THE TUBES" * 10_000
     begin
       pipe.write_nonblock str
       _, writers = select [], [pipe], [], 0
     rescue Errno::EPIPE
       break
-    end while writers and writers.include? pipe
+    end while writers && writers.include?(pipe)
 
     pipe
   end
