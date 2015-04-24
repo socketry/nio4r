@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe UDPSocket do
+RSpec.describe UDPSocket do
   let(:udp_port) { 23456 }
 
   let :readable_subject do

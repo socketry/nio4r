@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'openssl'
 
-describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
+RSpec.describe OpenSSL::SSL::SSLSocket, :if => RUBY_VERSION >= "1.9.0" do
   let(:tcp_port) { 34567 }
 
   let(:ssl_key) { OpenSSL::PKey::RSA.new(1024) }

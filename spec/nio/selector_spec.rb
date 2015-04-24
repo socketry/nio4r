@@ -5,7 +5,7 @@ require 'spec_helper'
 # the tests
 TIMEOUT_PRECISION = 0.1
 
-describe NIO::Selector do
+RSpec.describe NIO::Selector do
   let(:pair)   { IO.pipe }
   let(:reader) { pair.first }
   let(:writer) { pair.last }
