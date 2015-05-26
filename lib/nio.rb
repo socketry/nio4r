@@ -13,10 +13,10 @@ module NIO
   end
 end
 
-if ENV["NIO4R_PURE"] || (Gem.win_platform? && !defined?(JRUBY_VERSION))
+if ENV["NIO4R_PURE"] == "true" || (Gem.win_platform? && !defined?(JRUBY_VERSION))
   require "nio/monitor"
   require "nio/selector"
-  NIO::ENGINE = "select"
+  NIO::ENGINE = "ruby"
 else
   require "nio4r_ext"
 

@@ -1,11 +1,14 @@
 rvm:
-  - 1.9.3
   - 2.0.0
   - 2.1.1
   - ruby-head
   - jruby
   - jruby-head
   - rbx-2
+
+env:
+  - NIO4R_PURE=false
+  - NIO4R_PURE=true
 
 matrix:
   allow_failures:
