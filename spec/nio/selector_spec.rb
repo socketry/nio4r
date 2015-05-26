@@ -117,7 +117,7 @@ RSpec.describe NIO::Selector do
   context "select" do
     it "selects IO objects" do
       writer << "ohai"
-      unready, _ = IO.pipe
+      unready = IO.pipe.first
 
       reader_monitor  = subject.register(reader, :r)
       unready_monitor = subject.register(unready, :r)
@@ -147,7 +147,7 @@ RSpec.describe NIO::Selector do
       readable2, writer = IO.pipe
       writer << "ohai"
 
-      unreadable, _ = IO.pipe
+      unreadable = IO.pipe.first
 
       monitor1 = subject.register(readable1, :r)
       monitor2 = subject.register(readable2, :r)

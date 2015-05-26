@@ -30,7 +30,8 @@ RSpec.describe NIO::Monitor do
 
   it "knows what operations IO objects are ready for" do
     # For whatever odd reason this breaks unless we eagerly evaluate subject
-    reader_monitor, writer_monitor = subject, peer
+    reader_monitor = subject
+    writer_monitor = peer
 
     selected = selector.select(0)
     expect(selected).not_to include(reader_monitor)
