@@ -49,7 +49,8 @@ module NIO
     # Select which monitors are ready
     def select(timeout = nil)
       @lock.synchronize do
-        readers, writers = [@wakeup], []
+        readers = [@wakeup]
+        writers = []
 
         @selectables.each do |io, monitor|
           readers << io if monitor.interests == :r || monitor.interests == :rw

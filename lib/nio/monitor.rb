@@ -16,8 +16,10 @@ module NIO
         fail TypeError, "can't convert #{io.class} into IO" unless io.is_a? IO
       end
 
-      @io, @interests, @selector = io, interests, selector
-      @closed = false
+      @io        = io
+      @interests = interests
+      @selector  = selector
+      @closed    = false
     end
 
     # Is the IO object readable?
