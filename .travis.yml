@@ -7,6 +7,10 @@ rvm:
   - jruby-head
   - rbx-2
 
+env:
+  - NIO4R_PURE=false
+  - NIO4R_PURE=true
+
 matrix:
   allow_failures:
     - rvm: ruby-head
