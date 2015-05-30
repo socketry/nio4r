@@ -16,6 +16,8 @@ matrix:
     - rvm: ruby-head
     - rvm: jruby-head
     - rvm: rbx-2
+    - rvm: jruby
+      env: NIO4R_PURE=true
 
 notifications:
   irc: "irc.freenode.org#celluloid"
