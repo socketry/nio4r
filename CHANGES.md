@@ -1,3 +1,7 @@
+HEAD (unreleased)
+-----------------
+* Update to libev 4.20
+
 1.1.0 (2015-01-10)
 ------------------
 * Update to libev 4.19
