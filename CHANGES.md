@@ -1,6 +1,9 @@
-HEAD (unreleased)
------------------
+1.1.1 (2015-07-17)
+------------------
 * Update to libev 4.20
+* Fall back to io.h if unistd.h is not found
+* RSpec updates
+* RuboCop
 
 1.1.0 (2015-01-10)
 ------------------
