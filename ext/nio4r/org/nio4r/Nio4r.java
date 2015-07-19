@@ -21,9 +21,12 @@ import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.load.Library;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.runtime.Block;
+import java.util.concurrent.TimeUnit;
 
 public class Nio4r implements Library {
     private Ruby ruby;
+    private static int TIMEOUT = -1;
+    private static int WAKEUP = 0;
 
     public void load(final Ruby ruby, boolean bln) {
         this.ruby = ruby;
@@ -238,8 +241,13 @@ public class Nio4r implements Library {
             int ready = doSelect(runtime, context, timeout);
 
             /* Timeout or wakeup */
-            if(ready <= 0)
+            if(ready <= 0) {
+              if (ready == WAKEUP) {
+                return runtime.getFalse();
+              } else if (ready == TIMEOUT) {
                 return context.nil;
+              }
+            }
 
             RubyArray array = null;
             if(!block.isGiven()) {
@@ -279,10 +287,18 @@ public class Nio4r implements Library {
                     double t = RubyNumeric.num2dbl(timeout);
                     if(t == 0) {
                         result = this.selector.selectNow();
+                        if (result <= 0) result = TIMEOUT; /* no wakeup for instant check */
                     } else if(t < 0) {
                         throw runtime.newArgumentError("time interval must be positive");
                     } else {
-                        result = this.selector.select((long)(t * 1000));
+                        long start = System.nanoTime();
+                        long tms = (long)(t * 1000);
+                        result = this.selector.select(tms);
+
+                        if (result <= 0) {
+                          long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+                          result = elapsed < tms ? WAKEUP : TIMEOUT;
+                        }
                     }
                 }
                 context.getThread().afterBlockingCall();
