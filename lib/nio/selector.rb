@@ -121,6 +121,7 @@ module NIO
       end
     end
 
+    # rubocop:disable TrivialAccessors
     # Is this selector closed?
     def closed?
       @closed

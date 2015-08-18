@@ -235,6 +235,11 @@ public class Nio4r implements Library {
         @JRubyMethod
         public synchronized IRubyObject select(ThreadContext context, IRubyObject timeout, Block block) {
             Ruby runtime = context.getRuntime();
+
+            if(!this.selector.isOpen()) {
+                throw context.getRuntime().newIOError("selector is closed");
+            }
+
             int ready = doSelect(runtime, context, timeout);
 
             /* Timeout or wakeup */

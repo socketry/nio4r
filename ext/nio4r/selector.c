@@ -297,6 +297,11 @@ static VALUE NIO_Selector_select_synchronized(VALUE *args)
     struct NIO_Selector *selector;
 
     Data_Get_Struct(args[0], struct NIO_Selector, selector);
+
+    if(selector->closed) {
+        rb_raise(rb_eIOError, "selector is closed");
+    }
+
     if(!rb_block_given_p()) {
         selector->ready_array = rb_ary_new();
     }
