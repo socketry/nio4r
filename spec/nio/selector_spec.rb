@@ -161,6 +161,12 @@ RSpec.describe NIO::Selector do
       expect(readables).to include monitor2
       expect(readables).not_to include monitor3
     end
+
+    it "raises IOError if asked to select on a closed selector" do
+      subject.close
+
+      expect { subject.select(0) }.to raise_exception IOError
+    end
   end
 
   it "closes" do
