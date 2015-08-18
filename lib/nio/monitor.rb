@@ -33,6 +33,7 @@ module NIO
     end
     alias_method :writeable?, :writable?
 
+    # rubocop:disable TrivialAccessors
     # Is this monitor closed?
     def closed?
       @closed
