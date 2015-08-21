@@ -1,7 +1,7 @@
 module NIO
   # Monitors watch IO objects for specific events
   class Monitor
-    attr_reader :io, :interests, :selector
+    attr_reader :io, :interests, :selector, :closed
     attr_accessor :value, :readiness
 
     # :nodoc
@@ -22,6 +22,15 @@ module NIO
       @closed    = false
     end
 
+    # set the interests set
+    def interests=(interests)
+      if self.closed?
+        fail TypeError, "monitor is already closed" if self.closed?
+      else
+        @interests = interests
+      end
+    end
+
     # Is the IO object readable?
     def readable?
       readiness == :r || readiness == :rw
@@ -31,12 +40,14 @@ module NIO
     def writable?
       readiness == :w || readiness == :rw
     end
+
     alias_method :writeable?, :writable?
 
     # rubocop:disable TrivialAccessors
     # Is this monitor closed?
     def closed?
-      @closed
+      temp = @closed
+      temp
     end
 
     # Deactivate this monitor

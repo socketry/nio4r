@@ -15,6 +15,8 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor);
 
 /* Methods */
 static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE interests);
+static VALUE NIO_Monitor_setInterests(VALUE self, VALUE interests);
+
 static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self);
 static VALUE NIO_Monitor_is_closed(VALUE self);
 static VALUE NIO_Monitor_io(VALUE self);
@@ -40,6 +42,7 @@ void Init_NIO_Monitor()
     rb_define_alloc_func(cNIO_Monitor, NIO_Monitor_allocate);
 
     rb_define_method(cNIO_Monitor, "initialize", NIO_Monitor_initialize, 3);
+    rb_define_method(cNIO_Monitor, "interests=", NIO_Monitor_setInterests, 1);
     rb_define_method(cNIO_Monitor, "close", NIO_Monitor_close, -1);
     rb_define_method(cNIO_Monitor, "closed?", NIO_Monitor_is_closed, 0);
     rb_define_method(cNIO_Monitor, "io", NIO_Monitor_io, 0);
@@ -115,6 +118,47 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
     ev_io_start(selector->ev_loop, &monitor->ev_io);
 
     return Qnil;
+}
+
+//Still under construction
+static VALUE NIO_Monitor_register(VALUE self, VALUE io, VALUE interests){
+    return Qnil;
+}
+
+static VALUE NIO_Monitor_setInterests(VALUE self, VALUE interests){
+    //Check Whether the Monitor is already Closed?
+    if(NIO_Monitor_is_closed(self) == Qfalse){
+        struct NIO_Monitor *monitor;
+        ID interests_id;
+
+        interests_id = SYM2ID(interests);
+        Data_Get_Struct(self, struct NIO_Monitor, monitor);
+
+        if(interests_id == rb_intern("r")) {
+            monitor->interests = EV_READ;
+        } else if(interests_id == rb_intern("w")) {
+            monitor->interests = EV_WRITE;
+        } else if(interests_id == rb_intern("rw")) {
+            monitor->interests = EV_READ | EV_WRITE;
+        } else {
+            rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)",
+                RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0, 0)));
+        }
+        rb_ivar_set(self, rb_intern("interests"), interests);
+        //Changing the values in monitor struct
+        ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
+        //Acknowledging the libev about the change
+
+        ev_io_set(&monitor->ev_io, *(&monitor->ev_io.fd), monitor->interests);
+        //Starting the monitor again
+        ev_io_start(monitor->selector->ev_loop, &monitor->ev_io);
+
+    }
+    else{
+       rb_raise(rb_eTypeError, "Monitor is already closed");//Raise the TypeError if Monitor is closed.
+
+    }
+    return rb_ivar_get(self, rb_intern("interests")); //
 }
 
 static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)

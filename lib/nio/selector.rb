@@ -4,6 +4,9 @@ module NIO
   # Selectors monitor IO objects for events of interest
   class Selector
     # Create a new NIO::Selector
+
+    attr_reader :closed
+
     def initialize
       @selectables = {}
       @lock = Mutex.new
@@ -124,7 +127,8 @@ module NIO
     # rubocop:disable TrivialAccessors
     # Is this selector closed?
     def closed?
-      @closed
+      temp = @closed
+      temp
     end
 
     def empty?

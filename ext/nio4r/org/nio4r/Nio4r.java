@@ -22,6 +22,8 @@ import org.jruby.runtime.load.Library;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.runtime.Block;
 
+
+
 public class Nio4r implements Library {
     private Ruby ruby;
 
@@ -97,6 +99,8 @@ public class Nio4r implements Library {
     public class Selector extends RubyObject {
         private java.nio.channels.Selector selector;
         private HashMap<SelectableChannel,SelectionKey> cancelledKeys;
+
+        //Can use keyset to find registered paths and can use values set to deregister and select(0)
 
         public Selector(final Ruby ruby, RubyClass rubyClass) {
             super(ruby, rubyClass);
@@ -356,6 +360,39 @@ public class Nio4r implements Library {
         public void setSelectionKey(SelectionKey key) {
             this.key = key;
             key.attach(this);
+        }
+
+        @JRubyMethod(name = "interests=")
+        public IRubyObject setInterests(ThreadContext context, IRubyObject interests){
+            if(this.isClosed(context).equals(context.getRuntime().getFalse())){
+                this.interests = interests;
+
+                int interestOps = 0;
+
+                Ruby runtime = context.getRuntime();
+                Channel rawChannel = io.getChannel();
+                SelectableChannel channel = (SelectableChannel)rawChannel;
+
+                if(interests == ruby.newSymbol("r")) {
+                       interestOps = SelectionKey.OP_READ;
+                } else if(interests == ruby.newSymbol("w")) {
+                       interestOps = SelectionKey.OP_WRITE;
+                }else if(interests == ruby.newSymbol("rw")) {
+                         interestOps = SelectionKey.OP_READ|SelectionKey.OP_WRITE;
+                }
+
+                    //channel.keyFor((java.nio.channels.Selector)((Selector)this.selector).selector).interestOps(interestOps);
+
+                if((interestOps & ~(channel.validOps())) == 0)
+                    key.interestOps(interestOps);
+                else
+                    throw context.getRuntime().newArgumentError("interestsOps are not in the Channel's validOps");
+
+                return this.interests;
+
+            }else{
+                throw context.getRuntime().newTypeError("monitor is already closed");
+            }
         }
 
         @JRubyMethod
