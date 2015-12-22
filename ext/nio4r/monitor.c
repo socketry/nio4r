@@ -125,7 +125,7 @@ static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests)
     struct NIO_Monitor *monitor;
     ID interests_id;
 
-    if(NIO_Monitor_is_closed(self) != Qfalse) {
+    if(NIO_Monitor_is_closed(self) == Qtrue) {
         rb_raise(rb_eTypeError, "monitor is already closed");
     }
 
@@ -162,10 +162,11 @@ static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
     selector = rb_ivar_get(self, rb_intern("selector"));
 
     if(selector != Qnil) {
-        /* if ev_loop is 0, it means that the loop has been stopped already (see NIO_Selector_shutdown)*/
+        /* if ev_loop is 0, it means that the loop has been stopped already (see NIO_Selector_shutdown) */
         if(monitor->selector->ev_loop != 0) {
           ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
         }
+
         monitor->selector = 0;
         rb_ivar_set(self, rb_intern("selector"), Qnil);
     
@@ -183,7 +184,7 @@ static VALUE NIO_Monitor_is_closed(VALUE self)
     struct NIO_Monitor *monitor;
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
-    return !monitor->selector;
+    return monitor->selector == 0 ? Qtrue : Qfalse;
 }
 
 static VALUE NIO_Monitor_io(VALUE self)
