@@ -24,11 +24,10 @@ module NIO
 
     # set the interests set
     def interests=(interests)
-      if self.closed?
-        fail TypeError, "monitor is already closed" if self.closed?
-      else
-        @interests = interests
-      end
+      fail TypeError, "monitor is already closed" if closed?
+      fail ArgumentError, "bad interests: #{interests}" unless [:r, :w, :rw].include?(interests)
+
+      @interests = interests
     end
 
     # Is the IO object readable?
