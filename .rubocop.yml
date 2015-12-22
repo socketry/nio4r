@@ -24,6 +24,9 @@ Metrics/CyclomaticComplexity:
 Style/GlobalVars:
   Enabled: false
 
+Style/TrivialAccessors:
+  Enabled: false
+
 #
 # Auto-generated overrides
 #

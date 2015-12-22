@@ -149,7 +149,7 @@ static VALUE NIO_Monitor_setInterests(VALUE self, VALUE interests){
         ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
         //Acknowledging the libev about the change
 
-        ev_io_set(&monitor->ev_io, *(&monitor->ev_io.fd), monitor->interests);
+        ev_io_set(&monitor->ev_io, monitor->ev_io.fd, monitor->interests);
         //Starting the monitor again
         ev_io_start(monitor->selector->ev_loop, &monitor->ev_io);
 
