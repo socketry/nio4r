@@ -2,15 +2,26 @@ require "spec_helper"
 require "socket"
 
 RSpec.describe NIO::Monitor do
-  port_offset = 0
-  let(:tcp_port) { 12_345 + (port_offset += 1) }
+  let(:example_peers) do
+    address   = "127.0.0.1"
+    base_port = 12_345
+    tries     = 10
 
-  # let(:pipes) { IO.pipe }
-  # let(:reader) { pipes.first }
-  # let(:writer) { pipes.last }
+    server = tries.times do |n|
+      begin
+        break TCPServer.new(address, base_port + n)
+      rescue Errno::EADDRINUSE
+        retry
+      end
+    end
 
-  let(:reader) { TCPServer.new("localhost", tcp_port) }
-  let(:writer) { Socket.new(Socket::AF_INET, Socket::SOCK_STREAM, 0) }
+    fail Errno::EADDRINUSE, "couldn't find an open port" unless server
+    client = TCPSocket.new(address, server.addr[1])
+    [server, client]
+  end
+
+  let(:reader) { example_peers.first }
+  let(:writer) { example_peers.last }
 
   let(:selector) { NIO::Selector.new }
 
@@ -18,7 +29,7 @@ RSpec.describe NIO::Monitor do
   let(:peer) { selector.register(writer, :rw) }
   after      { selector.close }
 
-  # in jruby these closes seems like not working properly
+  before     { example_peers } # open server and client automatically
   after      { reader.close }
   after      { writer.close }
 
