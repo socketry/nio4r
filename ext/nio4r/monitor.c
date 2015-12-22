@@ -120,7 +120,8 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
     return Qnil;
 }
 
-static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests){
+static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests)
+{
     struct NIO_Monitor *monitor;
     ID interests_id;
 
