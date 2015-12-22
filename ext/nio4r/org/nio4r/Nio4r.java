@@ -358,6 +358,36 @@ public class Nio4r implements Library {
             key.attach(this);
         }
 
+        @JRubyMethod(name = "interests=")
+        public IRubyObject setInterests(ThreadContext context, IRubyObject interests) {
+            if(this.closed == context.getRuntime().getTrue()) {
+                throw context.getRuntime().newTypeError("monitor is already closed");
+            }
+
+            int interestOps = 0;
+            Ruby runtime = context.getRuntime();
+            Channel rawChannel = io.getChannel();
+            SelectableChannel channel = (SelectableChannel)rawChannel;
+
+            this.interests = interests;
+
+            if(interests == ruby.newSymbol("r")) {
+                interestOps = SelectionKey.OP_READ;
+            } else if(interests == ruby.newSymbol("w")) {
+                interestOps = SelectionKey.OP_WRITE;
+            } else if(interests == ruby.newSymbol("rw")) {
+                interestOps = SelectionKey.OP_READ|SelectionKey.OP_WRITE;
+            }
+
+            if((interestOps & ~(channel.validOps())) == 0) {
+                key.interestOps(interestOps);
+            } else {
+                throw context.getRuntime().newArgumentError("given interests not supported for this IO object");
+            }
+
+            return this.interests;
+        }
+
         @JRubyMethod
         public IRubyObject io(ThreadContext context) {
             return io;

@@ -80,7 +80,7 @@ RSpec.describe TCPSocket do
         client.connect_nonblock Socket.sockaddr_in(tcp_port, "127.0.0.1")
       end.to raise_exception Errno::EINPROGRESS
 
-      expect(selector.select(0)).to include monitor
+      expect(selector.select(0.001)).to include monitor
       result = client.getsockopt(::Socket::SOL_SOCKET, ::Socket::SO_ERROR)
       expect(result.unpack("i").first).to be_zero
     end

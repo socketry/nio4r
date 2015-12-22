@@ -22,6 +22,14 @@ module NIO
       @closed    = false
     end
 
+    # set the interests set
+    def interests=(interests)
+      fail TypeError, "monitor is already closed" if closed?
+      fail ArgumentError, "bad interests: #{interests}" unless [:r, :w, :rw].include?(interests)
+
+      @interests = interests
+    end
+
     # Is the IO object readable?
     def readable?
       readiness == :r || readiness == :rw
@@ -33,7 +41,6 @@ module NIO
     end
     alias_method :writeable?, :writable?
 
-    # rubocop:disable TrivialAccessors
     # Is this monitor closed?
     def closed?
       @closed

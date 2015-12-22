@@ -78,11 +78,10 @@ module NIO
 
         ready_writers.each do |io|
           monitor = @selectables[io]
-          monitor.readiness = case monitor.readiness
-          when :r
-            :rw
+          if monitor.readiness == :r
+            monitor.readiness = :rw
           else
-            :w
+            monitor.readiness = :w
           end
           selected_monitors << monitor
         end
@@ -121,7 +120,6 @@ module NIO
       end
     end
 
-    # rubocop:disable TrivialAccessors
     # Is this selector closed?
     def closed?
       @closed
