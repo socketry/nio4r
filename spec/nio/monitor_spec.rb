@@ -57,23 +57,19 @@ RSpec.describe NIO::Monitor do
     expect(subject.value).to eq(42)
   end
 
-  pending "knows what operations IO objects are ready for" do
+  it "knows what operations IO objects are ready for" do
     # For whatever odd reason this breaks unless we eagerly evaluate subject
     reader_monitor = subject
     writer_monitor = peer
 
     selected = selector.select(0)
-    expect(selected).not_to include(reader_monitor)
     expect(selected).to include(writer_monitor)
 
-    expect(writer_monitor.readiness).to eq(:rw)
-    # expect(writer_monitor).not_to be_readable
+    expect(writer_monitor.readiness).to eq(:w)
+    expect(writer_monitor).not_to be_readable
     expect(writer_monitor).to be_writable
 
-    reader_monitor.interests = :rw
-
-    # Using TCPSocket and Server to Write takes time but not closes
-    reader.puts "This is a test"
+    writer << "testing 1 2 3"
 
     selected = selector.select(0)
     expect(selected).to include(reader_monitor)
@@ -83,7 +79,7 @@ RSpec.describe NIO::Monitor do
     expect(reader_monitor).not_to be_writable
   end
 
-  it "Changes the interest_set on the go uses TCP Socket" do
+  it "changes current interests with #interests=" do
     client = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM, 0)
     monitor = selector.register(client, :r)
     expect(monitor.interests).to eq(:r)
