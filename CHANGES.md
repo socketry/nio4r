@@ -1,3 +1,9 @@
+1.2.0 (2015-12-22)
+------------------
+* Add NIO::Monitor#interests= API for changing interests. Contributed by
+  @UpeksheJay as a Google Summer of Code project.
+* Update to libev 4.22
+
 1.1.1 (2015-07-17)
 ------------------
 * Update to libev 4.20
