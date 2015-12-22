@@ -360,34 +360,32 @@ public class Nio4r implements Library {
 
         @JRubyMethod(name = "interests=")
         public IRubyObject setInterests(ThreadContext context, IRubyObject interests){
-            if(this.isClosed(context).equals(context.getRuntime().getFalse())){
-                this.interests = interests;
-
-                int interestOps = 0;
-
-                Ruby runtime = context.getRuntime();
-                Channel rawChannel = io.getChannel();
-                SelectableChannel channel = (SelectableChannel)rawChannel;
-
-                if(interests == ruby.newSymbol("r")) {
-                    interestOps = SelectionKey.OP_READ;
-                } else if(interests == ruby.newSymbol("w")) {
-                    interestOps = SelectionKey.OP_WRITE;
-                } else if(interests == ruby.newSymbol("rw")) {
-                    interestOps = SelectionKey.OP_READ|SelectionKey.OP_WRITE;
-                }
-
-                if((interestOps & ~(channel.validOps())) == 0) {
-                    key.interestOps(interestOps);
-                } else {
-                    throw context.getRuntime().newArgumentError("interestsOps are not in the Channel's validOps");
-                }
-
-                return this.interests;
-
-            } else {
+            if(this.closed == context.getRuntime().getTrue()) {
                 throw context.getRuntime().newTypeError("monitor is already closed");
             }
+
+            int interestOps = 0;
+            Ruby runtime = context.getRuntime();
+            Channel rawChannel = io.getChannel();
+            SelectableChannel channel = (SelectableChannel)rawChannel;
+
+            this.interests = interests;
+
+            if(interests == ruby.newSymbol("r")) {
+                interestOps = SelectionKey.OP_READ;
+            } else if(interests == ruby.newSymbol("w")) {
+                interestOps = SelectionKey.OP_WRITE;
+            } else if(interests == ruby.newSymbol("rw")) {
+                interestOps = SelectionKey.OP_READ|SelectionKey.OP_WRITE;
+            }
+
+            if((interestOps & ~(channel.validOps())) == 0) {
+                key.interestOps(interestOps);
+            } else {
+                throw context.getRuntime().newArgumentError("interestsOps are not in the Channel's validOps");
+            }
+
+            return this.interests;
         }
 
         @JRubyMethod
