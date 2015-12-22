@@ -359,7 +359,7 @@ public class Nio4r implements Library {
         }
 
         @JRubyMethod(name = "interests=")
-        public IRubyObject setInterests(ThreadContext context, IRubyObject interests){
+        public IRubyObject setInterests(ThreadContext context, IRubyObject interests) {
             if(this.closed == context.getRuntime().getTrue()) {
                 throw context.getRuntime().newTypeError("monitor is already closed");
             }
@@ -382,7 +382,7 @@ public class Nio4r implements Library {
             if((interestOps & ~(channel.validOps())) == 0) {
                 key.interestOps(interestOps);
             } else {
-                throw context.getRuntime().newArgumentError("interestsOps are not in the Channel's validOps");
+                throw context.getRuntime().newArgumentError("given interests not supported for this IO object");
             }
 
             return this.interests;
