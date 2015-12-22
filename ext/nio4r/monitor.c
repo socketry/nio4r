@@ -126,39 +126,34 @@ static VALUE NIO_Monitor_register(VALUE self, VALUE io, VALUE interests){
 }
 
 static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests){
-    //Check Whether the Monitor is already Closed?
-    if(NIO_Monitor_is_closed(self) == Qfalse){
-        struct NIO_Monitor *monitor;
-        ID interests_id;
+    struct NIO_Monitor *monitor;
+    ID interests_id;
 
-        interests_id = SYM2ID(interests);
-        Data_Get_Struct(self, struct NIO_Monitor, monitor);
-
-        if(interests_id == rb_intern("r")) {
-            monitor->interests = EV_READ;
-        } else if(interests_id == rb_intern("w")) {
-            monitor->interests = EV_WRITE;
-        } else if(interests_id == rb_intern("rw")) {
-            monitor->interests = EV_READ | EV_WRITE;
-        } else {
-            rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)",
-                RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0, 0)));
-        }
-        rb_ivar_set(self, rb_intern("interests"), interests);
-        //Changing the values in monitor struct
-        ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
-        //Acknowledging the libev about the change
-
-        ev_io_set(&monitor->ev_io, monitor->ev_io.fd, monitor->interests);
-        //Starting the monitor again
-        ev_io_start(monitor->selector->ev_loop, &monitor->ev_io);
-
+    if(NIO_Monitor_is_closed(self) != Qfalse) {
+        rb_raise(rb_eTypeError, "monitor is already closed");
     }
-    else{
-       rb_raise(rb_eTypeError, "Monitor is already closed");//Raise the TypeError if Monitor is closed.
 
+    interests_id = SYM2ID(interests);
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+
+    if(interests_id == rb_intern("r")) {
+        monitor->interests = EV_READ;
+    } else if(interests_id == rb_intern("w")) {
+        monitor->interests = EV_WRITE;
+    } else if(interests_id == rb_intern("rw")) {
+        monitor->interests = EV_READ | EV_WRITE;
+    } else {
+        rb_raise(rb_eArgError, "invalid interest type %s (must be :r, :w, or :rw)",
+            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0, 0)));
     }
-    return rb_ivar_get(self, rb_intern("interests")); //
+
+    ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
+    ev_io_set(&monitor->ev_io, monitor->ev_io.fd, monitor->interests);
+    ev_io_start(monitor->selector->ev_loop, &monitor->ev_io);
+
+    rb_ivar_set(self, rb_intern("interests"), interests);
+
+    return rb_ivar_get(self, rb_intern("interests"));
 }
 
 static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
