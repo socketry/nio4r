@@ -149,7 +149,7 @@ static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests)
 
     rb_ivar_set(self, rb_intern("interests"), interests);
 
-    return rb_ivar_get(self, rb_intern("interests"));
+    return interests;
 }
 
 static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
