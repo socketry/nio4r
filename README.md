@@ -137,6 +137,7 @@ if you aren't concerned with thread safety, or you're within a #select
 block:
 
 - ***#interests***: what this monitor is interested in (:r, :w, or :rw)
+- ***#interests=***: change the current interests for a monitor (to :r, :w, or :rw)
 - ***#readiness***: what I/O operations the monitored object is ready for
 - ***#readable?***: was the IO readable last time it was selected?
 - ***#writable?***: was the IO writable last time it was selected?
