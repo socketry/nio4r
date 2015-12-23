@@ -4,6 +4,7 @@
 [![Build Status](https://secure.travis-ci.org/celluloid/nio4r.svg?branch=master)](http://travis-ci.org/celluloid/nio4r)
 [![Code Climate](https://codeclimate.com/github/celluloid/nio4r.svg)](https://codeclimate.com/github/celluloid/nio4r)
 [![Coverage Status](https://coveralls.io/repos/celluloid/nio4r/badge.svg?branch=master)](https://coveralls.io/r/celluloid/nio4r)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/celluloid/nio4r/blob/master/LICENSE.txt)
 
 nio4r: New IO for Ruby.
 
