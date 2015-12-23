@@ -1,9 +1,9 @@
 ![nio4r](https://raw.github.com/celluloid/nio4r/master/logo.png)
 ===============
-[![Gem Version](https://badge.fury.io/rb/nio4r.png)](http://rubygems.org/gems/nio4r)
-[![Build Status](https://secure.travis-ci.org/celluloid/nio4r.png?branch=master)](http://travis-ci.org/celluloid/nio4r)
-[![Code Climate](https://codeclimate.com/github/celluloid/nio4r.png)](https://codeclimate.com/github/celluloid/nio4r)
-[![Coverage Status](https://coveralls.io/repos/celluloid/nio4r/badge.png?branch=master)](https://coveralls.io/r/celluloid/nio4r)
+[![Gem Version](https://badge.fury.io/rb/nio4r.svg)](http://rubygems.org/gems/nio4r)
+[![Build Status](https://secure.travis-ci.org/celluloid/nio4r.svg?branch=master)](http://travis-ci.org/celluloid/nio4r)
+[![Code Climate](https://codeclimate.com/github/celluloid/nio4r.svg)](https://codeclimate.com/github/celluloid/nio4r)
+[![Coverage Status](https://coveralls.io/repos/celluloid/nio4r/badge.svg?branch=master)](https://coveralls.io/r/celluloid/nio4r)
 
 nio4r: New IO for Ruby.
 
