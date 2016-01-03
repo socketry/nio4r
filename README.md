@@ -189,7 +189,7 @@ however this is not the case today.
 License
 -------
 
-Copyright (c) 2011-2015 Tony Arcieri. Distributed under the MIT License.
+Copyright (c) 2011-2016 Tony Arcieri. Distributed under the MIT License.
 See LICENSE.txt for further details.
 
 Includes libev 4.22. Copyright (c) 2007-2015 Marc Alexander Lehmann.
