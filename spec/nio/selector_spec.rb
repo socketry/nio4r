@@ -1,4 +1,5 @@
 require "spec_helper"
+require 'timeout'
 
 # Timeouts should be at least this precise (in seconds) to pass the tests
 # Typical precision should be better than this, but if it's worse it will fail
@@ -115,6 +116,16 @@ RSpec.describe NIO::Selector do
   end
 
   context "select" do
+    it "does not block on super small precision intervals" do
+      wait_interval = 1e-4
+
+      expect do
+        Timeout::timeout(2) do
+          subject.select(wait_interval)
+        end
+      end.not_to raise_error
+    end
+
     it "selects IO objects" do
       writer << "ohai"
       unready = IO.pipe.first
