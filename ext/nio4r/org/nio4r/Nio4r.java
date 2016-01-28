@@ -287,7 +287,12 @@ public class Nio4r implements Library {
                     } else if(t < 0) {
                         throw runtime.newArgumentError("time interval must be positive");
                     } else {
-                        result = this.selector.select((long)(t * 1000));
+                        long timeoutMilliSeconds = (long)(t * 1000);
+                        if(timeoutMilliSeconds == 0) {
+                          result = this.selector.selectNow();
+                        } else {
+                          result = this.selector.select(timeoutMilliSeconds);
+                        }
                     }
                 }
                 context.getThread().afterBlockingCall();
