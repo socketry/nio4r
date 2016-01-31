@@ -1,3 +1,8 @@
+1.2.1 (2016-01-31)
+------------------
+* Fix bug in the JRuby backend which cases indefinite blocking when small
+  timeout values are passed to the selector
+
 1.2.0 (2015-12-22)
 ------------------
 * Add NIO::Monitor#interests= API for changing interests. Contributed by
