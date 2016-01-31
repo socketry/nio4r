@@ -1,5 +1,5 @@
 require "spec_helper"
-require 'timeout'
+require "timeout"
 
 # Timeouts should be at least this precise (in seconds) to pass the tests
 # Typical precision should be better than this, but if it's worse it will fail
@@ -120,7 +120,7 @@ RSpec.describe NIO::Selector do
       wait_interval = 1e-4
 
       expect do
-        Timeout::timeout(2) do
+        Timeout.timeout(2) do
           subject.select(wait_interval)
         end
       end.not_to raise_error
