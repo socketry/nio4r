@@ -78,11 +78,7 @@ module NIO
 
         ready_writers.each do |io|
           monitor = @selectables[io]
-          if monitor.readiness == :r
-            monitor.readiness = :rw
-          else
-            monitor.readiness = :w
-          end
+          monitor.readiness = (monitor.readiness == :r) ? :rw : :w
           selected_monitors << monitor
         end
 
