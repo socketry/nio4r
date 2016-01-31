@@ -39,7 +39,7 @@ module NIO
     def writable?
       readiness == :w || readiness == :rw
     end
-    alias_method :writeable?, :writable?
+    alias writeable? writable?
 
     # Is this monitor closed?
     def closed?
