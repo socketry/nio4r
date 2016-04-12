@@ -10,7 +10,7 @@ rvm:
   - jruby
   - jruby-head
   - rbx-2
-  - rbx-3
+  - rbx-3.26
 
 env:
   - NIO4R_PURE=false
@@ -22,7 +22,7 @@ matrix:
     - rvm: ruby-head
     - rvm: jruby-head
     - rvm: rbx-2
-    - rvm: rbx-3
+    - rvm: rbx-3.26
     - rvm: jruby
       env: NIO4R_PURE=true
 
