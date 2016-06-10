@@ -63,7 +63,6 @@ module NIO
         ready_readers, ready_writers = Kernel.select readers, writers, [], timeout
         return unless ready_readers # timeout or wakeup
 
-
         ready_readers.each do |io|
           if io == @wakeup
             # Clear all wakeup signals we've received by reading them
