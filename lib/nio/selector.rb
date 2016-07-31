@@ -101,7 +101,16 @@ module NIO
     # level-triggered behavior.
     def wakeup
       # Send the selector a signal in the form of writing data to a pipe
-      @waker.write "\0"
+      begin
+        @waker.write_nonblock "\0"
+      rescue IO::WaitWritable
+        # This indicates the wakeup pipe is full, which means the other thread
+        # has already received many wakeup calls, but not processed them yet.
+        # The other thread will completely drain this pipe when it wakes up,
+        # so it's ok to ignore this exception if it occurs: we know the other
+        # thread has already been signaled to wake up
+      end
+
       nil
     end
 
