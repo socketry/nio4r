@@ -93,7 +93,9 @@ static VALUE NIO_Selector_allocate(VALUE klass)
         rb_sys_fail("pipe");
     }
 
-    if(fcntl(fds[0], F_SETFL, O_NONBLOCK) < 0) {
+    /* Use non-blocking reads/writes during wakeup, in case the buffer is full */
+    if(fcntl(fds[0], F_SETFL, O_NONBLOCK) < 0 ||
+       fcntl(fds[1], F_SETFL, O_NONBLOCK) < 0) {
         rb_sys_fail("fcntl");
     }
 
