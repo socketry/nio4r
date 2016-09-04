@@ -8,9 +8,11 @@
 
 void Init_NIO_Selector();
 void Init_NIO_Monitor();
+void Init_NIO_ByteBuffer();
 
 void Init_nio4r_ext()
 {
     Init_NIO_Selector();
     Init_NIO_Monitor();
+    Init_NIO_ByteBuffer();
 }
