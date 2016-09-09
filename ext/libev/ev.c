@@ -39,6 +39,7 @@
 
 /* ########## NIO4R PATCHERY HO! ########## */
 #include "ruby.h"
+#include "ruby/thread.h"
 /* ######################################## */
 
 /* this big block deduces configuration from config.h */
