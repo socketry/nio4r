@@ -35,7 +35,7 @@ public class ByteBuffer extends RubyObject {
     public IRubyObject initialize(ThreadContext context, IRubyObject value, IRubyObject offset, IRubyObject length) {
         Ruby ruby = context.getRuntime();
         if (value == ruby.getNil())
-            throw new IllegalArgumentException();
+            throw new context.runtime.newTypeError("not a valid input");
 
         if (value instanceof RubyString) {
             if (offset != ruby.getNil() && length != ruby.getNil()) {
@@ -48,7 +48,7 @@ public class ByteBuffer extends RubyObject {
             int allocationSize = RubyNumeric.num2int(value);
             byteBuffer = java.nio.ByteBuffer.allocate(allocationSize);
         } else {
-            throw new IllegalArgumentException();
+            throw new context.runtime.newRuntimeError("Invalid Arguiments Exception");
         }
         return this;
     }
@@ -87,15 +87,14 @@ public class ByteBuffer extends RubyObject {
         if (c < 1)
             throw new IllegalArgumentException();
         if (c <= byteBuffer.remaining()) {
-            ArrayList<Byte> temp = new ArrayList<Byte>();
-
+            org.jruby.util.ByteList temp = new ByteList(c);
             while (c > 0) {
-                temp.add(byteBuffer.get());
+                temp.append(byteBuffer.get());
                 c = c - 1;
             }
-            return JavaUtil.convertJavaToRuby(context.getRuntime(), new String(toPrimitives(temp)));
+            return context.runtime.newString(temp);
         }
-        return JavaUtil.convertJavaToRuby(context.getRuntime(), ""); //Empty String
+        return RubyString.newEmptyString(context.runtime); //Empty String
     }
 
     private byte[] toPrimitives(ArrayList<Byte> oBytes) {
@@ -151,9 +150,8 @@ public class ByteBuffer extends RubyObject {
 
     @JRubyMethod(name = "remaining")
     public IRubyObject remainingPositions(ThreadContext context) {
-        Ruby ruby = context.getRuntime();
         int count = byteBuffer.remaining();
-        return RubyNumeric.int2fix(ruby, count);
+        return context.getRuntime().newFixnum(count);
     }
 
     @JRubyMethod(name = "remaining?")
@@ -167,7 +165,7 @@ public class ByteBuffer extends RubyObject {
     @JRubyMethod(name = "offset?")
     public IRubyObject getOffset(ThreadContext context) {
         int offset = byteBuffer.arrayOffset();
-        return JavaUtil.convertJavaToRuby(context.getRuntime(), offset);
+        return context.getRuntime().newFixnum(offset);
     }
 
     /**
@@ -179,9 +177,12 @@ public class ByteBuffer extends RubyObject {
      */
     @JRubyMethod(name = "equals?")
     public IRubyObject equals(ThreadContext context, IRubyObject ob) {
-        boolean equal = this.byteBuffer.equals(((ByteBuffer) JavaUtil.convertRubyToJava(ob)).getBuffer());
+        Object o = JavaUtil.convertRubyToJava(ob);
+        if(!(o instanceof ByteBuffer)) return context.getRuntime().getFalse();
+
+        boolean equal = this.byteBuffer.equals(((ByteBuffer) ).getBuffer());
         if (equal)
-            context.getRuntime().getTrue();
+            return context.getRuntime().getTrue();
         return context.getRuntime().getFalse();
     }
 
@@ -249,7 +250,7 @@ public class ByteBuffer extends RubyObject {
     @JRubyMethod(name = "capacity")
     public IRubyObject capacity(ThreadContext context) {
         int cap = byteBuffer.capacity();
-        return JavaUtil.convertJavaToRuby(context.getRuntime(), cap);
+        return context.getRuntime().newFixnum(cap);
     }
 
     @JRubyMethod
@@ -269,7 +270,7 @@ public class ByteBuffer extends RubyObject {
     @JRubyMethod(name = "limit?")
     public IRubyObject limit(ThreadContext context) {
         int lmt = byteBuffer.limit();
-        return JavaUtil.convertJavaToRuby(context.getRuntime(), lmt);
+        return context.getRuntime().newFixnum(lmt);
     }
 
     @JRubyMethod(name = "to_s")

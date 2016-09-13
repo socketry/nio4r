@@ -3,7 +3,7 @@ module NIO
   class ByteBuffer
     def initialize(value, offset = nil, length = nil)
       # value can be either STRING or INTEGER
-      fail "Illegal Argument Exception" if value.nil?
+      fail "not a valid input" if value.nil?
       @position = 0
       @mark = -1
       if value.is_a? Integer
@@ -18,7 +18,7 @@ module NIO
         @offset = offset
         @position = offset
         unless length.nil?
-          fail "Illegal Argument Exception" if offset + length >= value
+          fail "Invalid Arguiments Exception" if offset + length >= value
           @limit = offset + length
         end
       end
