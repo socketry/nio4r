@@ -18,13 +18,16 @@ rvm:
   - 2.2
   - 2.3.1
   - ruby-head
-  - jruby-9.0.5.0 # latest travis-ci preinstalled version
+  - jruby-9.1.5.0 # latest stable
   - jruby-head
   - rbx
 
 env:
-  - NIO4R_PURE=false
-  - NIO4R_PURE=true
+  global:
+    - JRUBY_OPTS="--dev -J-Djruby.launch.inproc=true -J-Xmx1024M"      
+  matrix:
+    - NIO4R_PURE=false
+    - NIO4R_PURE=true
 
 matrix:
   fast_finish: true
