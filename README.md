@@ -6,6 +6,11 @@
 [![Coverage Status](https://coveralls.io/repos/celluloid/nio4r/badge.svg?branch=master)](https://coveralls.io/r/celluloid/nio4r)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/celluloid/nio4r/blob/master/LICENSE.txt)
 
+_NOTE: This is the 2.x **development** branch of nio4r.  For the 1.x **stable**
+branch, please see:_
+
+https://github.com/celluloid/nio4r/tree/1-x-stable
+
 **New I/O for Ruby (nio4r)**: cross-platform asynchronous I/O primitives for
 scalable network clients and servers. Modeled after the Java NIO API, but
 simplified for ease-of-use.
