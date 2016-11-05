@@ -6,6 +6,11 @@
 [![Coverage Status](https://coveralls.io/repos/celluloid/nio4r/badge.svg?branch=master)](https://coveralls.io/r/celluloid/nio4r)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/celluloid/nio4r/blob/master/LICENSE.txt)
 
+_NOTE: This is the 1.x **stable** version of nio4r used by [Rails 5]. For the
+2.x development branch, please see:_
+
+https://github.com/celluloid/nio4r/tree/master
+
 **New I/O for Ruby (nio4r)**: cross-platform asynchronous I/O primitives for
 scalable network clients and servers. Modeled after the Java NIO API, but
 simplified for ease-of-use.
@@ -14,6 +19,8 @@ simplified for ease-of-use.
 I/O selectors are the heart of "reactor"-based event loops, and monitor
 multiple I/O objects for various types of readiness, e.g. ready for reading or
 writing.
+
+[Rails 5]: https://rubygems.org/gems/rails
 
 ## Projects using nio4r
 
