@@ -41,6 +41,14 @@ struct NIO_Monitor
     struct NIO_Selector *selector;
 };
 
+struct NIO_ByteBuffer
+{
+    int size, offset, limit, position, mark;
+    char *buffer;
+    VALUE self;
+};
+
+
 #ifdef GetReadFile
 # define FPTR_TO_FD(fptr) (fileno(GetReadFile(fptr)))
 #else

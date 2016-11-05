@@ -18,6 +18,7 @@ end
 if ENV["NIO4R_PURE"] == "true" || (Gem.win_platform? && !defined?(JRUBY_VERSION))
   require "nio/monitor"
   require "nio/selector"
+  require "nio/bytebuffer"
   NIO::ENGINE = "ruby".freeze
 else
   require "nio4r_ext"

@@ -21,6 +21,7 @@ import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.load.Library;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.runtime.Block;
+import org.nio4r.ByteBuffer;
 
 public class Nio4r implements Library {
     private Ruby ruby;
@@ -45,6 +46,14 @@ public class Nio4r implements Library {
         }, nio);
 
         monitor.defineAnnotatedMethods(Monitor.class);
+
+        RubyClass byteBuffer = ruby.defineClassUnder("ByteBuffer", ruby.getObject(), new ObjectAllocator() {
+            public IRubyObject allocate(Ruby ruby, RubyClass rc) {
+                return new ByteBuffer(ruby, rc);
+            }
+        }, nio);
+
+        byteBuffer.defineAnnotatedMethods(ByteBuffer.class);
     }
 
     public static int symbolToInterestOps(Ruby ruby, SelectableChannel channel, IRubyObject interest) {
