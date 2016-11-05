@@ -7,7 +7,7 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/celluloid/nio4r/blob/master/LICENSE.txt)
 
 **New I/O for Ruby (nio4r)**: cross-platform asynchronous I/O primitives for
-scalable network servers and clients.
+scalable network clients and servers.
 
 **nio4r** provides an abstract, cross-platform stateful I/O selector API for Ruby.
 I/O selectors are the heart of "reactor"-based event loops, and monitor
