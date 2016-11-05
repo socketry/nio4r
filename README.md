@@ -49,6 +49,13 @@ writing.
 
 ## Usage
 
+If you're interested in using nio4r for a project but just getting started,
+check out this blog post which provides some background and examples:
+
+[A gentle introduction to nio4r: low-level portable asynchronous I/O for Ruby][blogpost]
+
+[blogpost]: https://tonyarcieri.com/a-gentle-introduction-to-nio4r
+
 ### Selectors
 
 The NIO::Selector class is the main API provided by nio4r. Use it where you
