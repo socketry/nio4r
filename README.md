@@ -20,7 +20,7 @@ I/O selectors are the heart of "reactor"-based event loops, and monitor
 multiple I/O objects for various types of readiness, e.g. ready for reading or
 writing.
 
-[Rails 5]: https://rubygems.org/gems/rails
+[Rails 5]: https://rubygems.org/gems/actioncable
 
 ## Projects using nio4r
 
