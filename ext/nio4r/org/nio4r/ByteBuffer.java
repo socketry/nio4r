@@ -34,22 +34,26 @@ public class ByteBuffer extends RubyObject {
     @JRubyMethod
     public IRubyObject initialize(ThreadContext context, IRubyObject value, IRubyObject offset, IRubyObject length) {
         Ruby ruby = context.getRuntime();
-        if (value == ruby.getNil())
-            throw new context.runtime.newTypeError("not a valid input");
+
+        if (value == ruby.getNil()) {
+            throw ruby.newTypeError("expected String or Integer for value, got NilClass");
+        }
 
         if (value instanceof RubyString) {
             if (offset != ruby.getNil() && length != ruby.getNil()) {
                 int arrayOffset = RubyNumeric.num2int(offset);
                 int arrayLimit = RubyNumeric.num2int(length);
                 byteBuffer = java.nio.ByteBuffer.wrap(value.asJavaString().getBytes(), arrayOffset, arrayLimit);
-            } else
+            } else {
                 byteBuffer = java.nio.ByteBuffer.wrap(value.asJavaString().getBytes());
+            }
         } else if (value instanceof RubyInteger) {
             int allocationSize = RubyNumeric.num2int(value);
             byteBuffer = java.nio.ByteBuffer.allocate(allocationSize);
         } else {
-            throw new context.runtime.newRuntimeError("Invalid Arguiments Exception");
+            throw ruby.newTypeError("expected String or Integer for value");
         }
+
         return this;
     }
 
@@ -63,8 +67,10 @@ public class ByteBuffer extends RubyObject {
     public IRubyObject put(ThreadContext context, IRubyObject str) {
         String string = str.asJavaString();
 
-        if (byteBuffer == null)
+        if (byteBuffer == null) {
             byteBuffer = java.nio.ByteBuffer.wrap(string.getBytes());
+        }
+
         byteBuffer.put(string.getBytes());
         return this;
     }
@@ -73,10 +79,10 @@ public class ByteBuffer extends RubyObject {
     @JRubyMethod(name = "get")
     public IRubyObject get(ThreadContext context) {
         ArrayList<Byte> temp = new ArrayList<Byte>();
+
         while (byteBuffer.hasRemaining()) {
             temp.add(byteBuffer.get());
         }
-        // String returnString = new String(toPrimitives(temp));
 
         return JavaUtil.convertJavaToRuby(context.getRuntime(), new String(toPrimitives(temp)));
     }
@@ -84,24 +90,32 @@ public class ByteBuffer extends RubyObject {
     @JRubyMethod(name = "read_next")
     public IRubyObject readNext(ThreadContext context, IRubyObject count) {
         int c = RubyNumeric.num2int(count);
-        if (c < 1)
+
+        if (c < 1) {
             throw new IllegalArgumentException();
+        }
+
         if (c <= byteBuffer.remaining()) {
-            org.jruby.util.ByteList temp = new ByteList(c);
+            org.jruby.util.ByteList temp = new org.jruby.util.ByteList(c);
+
             while (c > 0) {
                 temp.append(byteBuffer.get());
                 c = c - 1;
             }
+
             return context.runtime.newString(temp);
         }
-        return RubyString.newEmptyString(context.runtime); //Empty String
+
+        return RubyString.newEmptyString(context.runtime);
     }
 
     private byte[] toPrimitives(ArrayList<Byte> oBytes) {
         byte[] bytes = new byte[oBytes.size()];
+
         for (int i = 0; i < oBytes.size(); i++) {
             bytes[i] = (oBytes.get(i) == null) ? " ".getBytes()[0] : oBytes.get(i);
         }
+
         return bytes;
     }
 
@@ -109,6 +123,7 @@ public class ByteBuffer extends RubyObject {
     public IRubyObject writeTo(ThreadContext context, IRubyObject f) {
         try {
             File file = (File) JavaUtil.unwrapJavaObject(f);
+
             if (!isTheSameFile(file, false)) {
                 currentWritePath = file.getAbsolutePath();
                 if (currentWriteFileChannel != null) currentWriteFileChannel.close();
@@ -117,10 +132,12 @@ public class ByteBuffer extends RubyObject {
                 fileOutputStream = new FileOutputStream(file, true);
                 currentWriteFileChannel = fileOutputStream.getChannel();
             }
+
             currentWriteFileChannel.write(byteBuffer);
         } catch (Exception e) {
-            throw new IllegalArgumentException("File Write Operation Error:  " + e.getLocalizedMessage());
+            throw new IllegalArgumentException("write error: " + e.getLocalizedMessage());
         }
+
         return this;
     }
 
@@ -128,6 +145,7 @@ public class ByteBuffer extends RubyObject {
     public IRubyObject readFrom(ThreadContext context, IRubyObject f) {
         try {
             File file = (File) JavaUtil.unwrapJavaObject(f);
+
             if (!isTheSameFile(file, true)) {
                 inChannel.close();
                 currentReadChannel.close();
@@ -135,16 +153,20 @@ public class ByteBuffer extends RubyObject {
                 currentReadChannel = new FileInputStream(file);
                 inChannel = currentReadChannel.getChannel();
             }
+
             inChannel.read(byteBuffer);
         } catch (Exception e) {
-            throw new IllegalArgumentException("File Read Operation Error:  " + e.getLocalizedMessage());
+            throw new IllegalArgumentException("read error: " + e.getLocalizedMessage());
         }
+
         return this;
     }
 
     private boolean isTheSameFile(File f, boolean read) {
-        if (read)
+        if (read) {
             return (currentReadPath == f.getAbsolutePath());
+        }
+
         return currentWritePath == f.getAbsolutePath();
     }
 
@@ -156,8 +178,9 @@ public class ByteBuffer extends RubyObject {
 
     @JRubyMethod(name = "remaining?")
     public IRubyObject hasRemaining(ThreadContext context) {
-        if (byteBuffer.hasRemaining())
+        if (byteBuffer.hasRemaining()) {
             return context.getRuntime().getTrue();
+        }
 
         return context.getRuntime().getFalse();
     }
@@ -176,14 +199,18 @@ public class ByteBuffer extends RubyObject {
      * @return
      */
     @JRubyMethod(name = "equals?")
-    public IRubyObject equals(ThreadContext context, IRubyObject ob) {
-        Object o = JavaUtil.convertRubyToJava(ob);
-        if(!(o instanceof ByteBuffer)) return context.getRuntime().getFalse();
+    public IRubyObject equals(ThreadContext context, IRubyObject obj) {
+        Object o = JavaUtil.convertRubyToJava(obj);
 
-        boolean equal = this.byteBuffer.equals(((ByteBuffer) ).getBuffer());
-        if (equal)
+        if(!(o instanceof ByteBuffer)) {
+            return context.getRuntime().getFalse();
+        }
+
+        if(this.byteBuffer.equals(((ByteBuffer)o).getBuffer())) {
             return context.getRuntime().getTrue();
-        return context.getRuntime().getFalse();
+        } else {
+            return context.getRuntime().getFalse();
+        }
     }
 
     /**
