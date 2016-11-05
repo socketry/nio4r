@@ -7,7 +7,7 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/celluloid/nio4r/blob/master/LICENSE.txt)
 
 _NOTE: This is the 2.x **development** branch of nio4r.  For the 1.x **stable**
-branch, please see:_
+branch (used by [Rails 5]), please see:_
 
 https://github.com/celluloid/nio4r/tree/1-x-stable
 
@@ -19,6 +19,8 @@ simplified for ease-of-use.
 I/O selectors are the heart of "reactor"-based event loops, and monitor
 multiple I/O objects for various types of readiness, e.g. ready for reading or
 writing.
+
+[Rails 5]: https://rubygems.org/gems/rails
 
 ## Projects using nio4r
 
