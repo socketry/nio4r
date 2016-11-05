@@ -158,7 +158,7 @@ Wiki](https://github.com/celluloid/nio4r/wiki/Basic-Flow-Control)
 
 ## Concurrency
 
-nio4r provides internal locking to ensure that it's safe to use from multiple
+**nio4r** provides internal locking to ensure that it's safe to use from multiple
 concurrent threads. Only one thread can select on a NIO::Selector at a given
 time, and while a thread is selecting other threads are blocked from
 registering or deregistering IO objects. Once a pending select has completed,
@@ -171,22 +171,14 @@ other events that it's not presently selecting on.
 
 ## Non-goals
 
-nio4r is not a full-featured event framework like EventMachine or Cool.io.
+**nio4r** is not a full-featured event framework like [EventMachine] or [Cool.io].
 Instead, nio4r is the sort of thing you might write a library like that on
 top of. nio4r provides a minimal API such that individual Ruby implementers
 may choose to produce optimized versions for their platform, without having
 to maintain a large codebase.
 
-As of the time of writing, the current implementation is (approximately):
-
-* 200 lines of Ruby code
-* 700 lines of "custom" C code (not counting libev)
-* 400 lines of Java code
-
-nio4r is also not a replacement for Kinder Gentler IO (KGIO), a set of
-advanced Ruby IO APIs. At some point in the future nio4r might provide a
-cross-platform implementation that uses KGIO on CRubies, and Java NIO on JRuby,
-however this is not the case today.
+[EventMachine]: https://github.com/eventmachine/eventmachine
+[Cool.io]: https://coolio.github.io/
 
 ## License
 
