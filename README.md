@@ -6,9 +6,10 @@
 [![Coverage Status](https://coveralls.io/repos/celluloid/nio4r/badge.svg?branch=master)](https://coveralls.io/r/celluloid/nio4r)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/celluloid/nio4r/blob/master/LICENSE.txt)
 
-nio4r: New IO for Ruby.
+New I/O for Ruby: cross-platform asynchronous I/O primitives for building scalable
+network servers and clients.
 
-nio4r provides an abstract, cross-platform stateful I/O selector API for Ruby.
+**nio4r** provides an abstract, cross-platform stateful I/O selector API for Ruby.
 I/O selectors are the heart of "reactor"-based event loops, and monitor
 multiple I/O objects for various types of readiness, e.g. ready for reading or
 writing.
