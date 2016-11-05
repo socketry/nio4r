@@ -32,10 +32,12 @@ writing.
 
 ## Supported platforms
 
-* MRI/YARV 1.9.3, 2.0.0, 2.1.0, 2.2.0, 2.3.0
-* JRuby 1.7.x
-* Rubinius 2.x
-* A pure Ruby implementation based on Kernel.select is also provided
+* Ruby 2.0
+* Ruby 2.1
+* Ruby 2.2
+* Ruby 2.3
+* JRuby 9000
+* Pure Ruby using Kernel.select
 
 ## Platform notes
 
