@@ -30,14 +30,14 @@ writing.
   different OSes and Ruby VMs
 * Provide inherently thread-safe facilities for working with IO objects
 
-# Supported platforms
+## Supported platforms
 
 * MRI/YARV 1.9.3, 2.0.0, 2.1.0, 2.2.0, 2.3.0
 * JRuby 1.7.x
 * Rubinius 2.x
 * A pure Ruby implementation based on Kernel.select is also provided
 
-# Platform notes
+## Platform notes
 
 * MRI/YARV and Rubinius implement nio4r with a C extension based on libev,
   which provides a high performance binding to native IO APIs
