@@ -16,6 +16,8 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = NIO::VERSION
 
+  gem.required_ruby_version = ">= 2.2.2"
+
   if defined? JRUBY_VERSION
     gem.files << "lib/nio4r_ext.jar"
     gem.platform = "java"
