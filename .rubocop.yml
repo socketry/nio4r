@@ -2,6 +2,10 @@
 # Deliberate style choices
 #
 
+AllCops:
+  TargetRubyVersion: 2.2
+  DisplayCopNames: true
+
 LineLength:
   Max: 100
 
