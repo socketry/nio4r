@@ -3,7 +3,7 @@ module NIO
   class ByteBuffer
     def initialize(value, offset = nil, length = nil)
       # value can be either STRING or INTEGER
-      fail "not a valid input" if value.nil?
+      raise "not a valid input" if value.nil?
       @position = 0
       @mark = -1
       if value.is_a? Integer
@@ -14,14 +14,16 @@ module NIO
         @size = @byte_array.size
       end
       @limit = @size - 1
-      unless offset.nil?
-        @offset = offset
-        @position = offset
-        unless length.nil?
-          fail "Invalid Arguiments Exception" if offset + length >= value
-          @limit = offset + length
-        end
-      end
+
+      return if offset.nil?
+
+      @offset = offset
+      @position = offset
+
+      return if length.nil?
+
+      raise "Invalid Arguiments Exception" if offset + length >= value
+      @limit = offset + length
     end
 
     # put the provided string to the buffer
@@ -42,7 +44,7 @@ module NIO
 
     # this method is private
     def put_byte(byte)
-      fail "Buffer Overflowed" if @position == @size
+      raise "Buffer Overflowed" if @position == @size
       @byte_array[@position] = byte
       @position += 1
     end
@@ -80,7 +82,7 @@ module NIO
 
     # reset the position to the previously marked position
     def reset
-      fail "Invalid Mark Exception" if @mark < 0
+      raise "Invalid Mark Exception" if @mark < 0
       @position = @mark
       self
     end
@@ -112,7 +114,7 @@ module NIO
     # get the content of the byteBuffer. need to call rewind before calling get.
     # return as a String
     def get
-      return "" if @limit == 0
+      return "" if @limit.zero?
       temp = @byte_array[@position..@limit].pack("c*")
       # next position to be read. it should be always less than or equal to size-1
       @position = [@limit + 1, @size].min
@@ -120,8 +122,8 @@ module NIO
     end
 
     def read_next(count)
-      fail "Illegal Argument" unless count > 0
-      fail "Less number of elements remaining" if count > remaining
+      raise "Illegal Argument" unless count > 0
+      raise "Less number of elements remaining" if count > remaining
       temp = @byte_array[@position..@position + count - 1].pack("c*")
       @position += count
       temp
@@ -144,13 +146,13 @@ module NIO
 
     # Set the position to a different position
     def position(new_position)
-      fail "Illegal Argument Exception" unless new_position <= @limit && new_position >= 0
+      raise "Illegal Argument Exception" unless new_position <= @limit && new_position >= 0
       @position = new_position
       @mark = -1 if @mark > @position
     end
 
     def limit(new_limit)
-      fail "Illegal Argument Exception" if new_limit > @size || new_limit < 0
+      raise "Illegal Argument Exception" if new_limit > @size || new_limit < 0
       @limit = new_limit
       @position = @limit if @position > @limit
       @mark = -1 if @mark > @limit

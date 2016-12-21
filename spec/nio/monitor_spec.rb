@@ -15,7 +15,7 @@ RSpec.describe NIO::Monitor do
       end
     end
 
-    fail Errno::EADDRINUSE, "couldn't find an open port" unless server
+    raise Errno::EADDRINUSE, "couldn't find an open port" unless server
     client = TCPSocket.new(address, server.addr[1])
     [server, client]
   end
