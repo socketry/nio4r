@@ -20,10 +20,10 @@ module NIO
     # * :rw - is the IO either readable or writeable?
     def register(io, interest)
       @lock.synchronize do
-        fail IOError, "selector is closed" if closed?
+        raise IOError, "selector is closed" if closed?
 
         monitor = @selectables[io]
-        fail ArgumentError, "already registered as #{monitor.interests.inspect}" if monitor
+        raise ArgumentError, "already registered as #{monitor.interests.inspect}" if monitor
 
         monitor = Monitor.new(io, interest, self)
         @selectables[monitor.io] = monitor
@@ -78,7 +78,7 @@ module NIO
 
         ready_writers.each do |io|
           monitor = @selectables[io]
-          monitor.readiness = (monitor.readiness == :r) ? :rw : :w
+          monitor.readiness = monitor.readiness == :r ? :rw : :w
           selected_monitors << monitor
         end
       end

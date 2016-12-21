@@ -13,7 +13,7 @@ module NIO
           io = io.to_io
         end
 
-        fail TypeError, "can't convert #{io.class} into IO" unless io.is_a? IO
+        raise TypeError, "can't convert #{io.class} into IO" unless io.is_a? IO
       end
 
       @io        = io
@@ -24,8 +24,8 @@ module NIO
 
     # set the interests set
     def interests=(interests)
-      fail TypeError, "monitor is already closed" if closed?
-      fail ArgumentError, "bad interests: #{interests}" unless [:r, :w, :rw].include?(interests)
+      raise TypeError, "monitor is already closed" if closed?
+      raise ArgumentError, "bad interests: #{interests}" unless [:r, :w, :rw].include?(interests)
 
       @interests = interests
     end
