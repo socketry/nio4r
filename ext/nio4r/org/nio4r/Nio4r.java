@@ -124,6 +124,11 @@ public class Nio4r implements Library {
         }
 
         @JRubyMethod
+        public IRubyObject backend(ThreadContext context) {
+            return ruby.newSymbol("java");
+        }
+
+        @JRubyMethod
         public IRubyObject close(ThreadContext context) {
             try {
                 this.selector.close();

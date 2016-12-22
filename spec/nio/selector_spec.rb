@@ -11,6 +11,12 @@ RSpec.describe NIO::Selector do
   let(:reader) { pair.first }
   let(:writer) { pair.last }
 
+  context "backend" do
+    it "knows its backend" do
+      expect(subject.backend).to be_a Symbol
+    end
+  end
+
   context "register" do
     it "registers IO objects" do
       monitor = subject.register(reader, :r)

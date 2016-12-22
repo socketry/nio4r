@@ -74,9 +74,18 @@ require 'nio'
 selector = NIO::Selector.new
 ```
 
-To monitor IO objects, attach them to the selector with the NIO::Selector#register
-method, monitoring them for read readiness with the :r parameter, write
-readiness with the :w parameter, or both with :rw.
+Selectors use various platform-specific backends in order to select sockets
+that are ready for I/O. You can check which backend is in use with the
+`#backend` method:
+
+```ruby
+>> selector.backend
+ => :epoll
+ ```
+
+To monitor IO objects, attach them to the selector with the `#register`
+method, monitoring them for read readiness with the `:r` parameter, write
+readiness with the `:w` parameter, or both with `:rw.`
 
 ```ruby
 >> reader, writer = IO.pipe
@@ -85,7 +94,7 @@ readiness with the :w parameter, or both with :rw.
  => #<NIO::Monitor:0xfbc>
 ```
 
-After registering an IO object with the selector, you'll get a NIO::Monitor
+After registering an IO object with the selector, you'll get a `NIO::Monitor`
 object which you can use for managing how a particular IO object is being
 monitored. Monitors will store an arbitrary value of your choice, which
 provides an easy way to implement callbacks:
@@ -97,7 +106,7 @@ provides an easy way to implement callbacks:
  => #<Proc:0x1000@(irb):4>
 ```
 
-The main method of importance is NIO::Selector#select, which monitors all
+The main method of importance is `#select`, which monitors all
 registered IO objects and returns an array of monitors that are ready.
 
 ```ruby
@@ -110,9 +119,9 @@ Got some data: Hi there!
  => [#<NIO::Monitor:0xfbc>]
 ```
 
-By default, NIO::Selector#select will block indefinitely until one of the IO
-objects being monitored becomes ready. However, you can also pass a timeout to
-wait in seconds to NIO::Selector#select just like you can with Kernel.select:
+By default, `#select` will block indefinitely until one of the IO objects being
+monitored becomes ready. However, you can also pass a timeout to wait in
+to `#select` just like you can with `Kernel.select`:
 
 ```ruby
 ready = selector.select(15) # Wait 15 seconds
@@ -120,10 +129,10 @@ ready = selector.select(15) # Wait 15 seconds
 
 If a timeout occurs, ready will be nil.
 
-You can avoid allocating an array each time you call NIO::Selector#select by
-passing a block to select. The block will be called for each ready monitor
-object, with that object passed as an argument. The number of ready monitors
-is returned as a Fixnum:
+You can avoid allocating an array each time you call `#select` by passing a
+block to select. The block will be called for each ready monitor object,
+with that object passed as an argument. The number of ready monitors
+is returned as a `Fixnum`:
 
 ```ruby
 >> selector.select { |m| m.value.call }
