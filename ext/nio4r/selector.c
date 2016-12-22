@@ -29,6 +29,7 @@ static void NIO_Selector_free(struct NIO_Selector *loop);
 
 /* Methods */
 static VALUE NIO_Selector_initialize(VALUE self);
+static VALUE NIO_Selector_backend(VALUE self);
 static VALUE NIO_Selector_register(VALUE self, VALUE selectable, VALUE interest);
 static VALUE NIO_Selector_deregister(VALUE self, VALUE io);
 static VALUE NIO_Selector_is_registered(VALUE self, VALUE io);
@@ -65,6 +66,7 @@ void Init_NIO_Selector()
     rb_define_alloc_func(cNIO_Selector, NIO_Selector_allocate);
 
     rb_define_method(cNIO_Selector, "initialize", NIO_Selector_initialize, 0);
+    rb_define_method(cNIO_Selector, "backend", NIO_Selector_backend, 0);
     rb_define_method(cNIO_Selector, "register", NIO_Selector_register, 2);
     rb_define_method(cNIO_Selector, "deregister", NIO_Selector_deregister, 1);
     rb_define_method(cNIO_Selector, "registered?", NIO_Selector_is_registered, 1);
@@ -163,6 +165,30 @@ static VALUE NIO_Selector_initialize(VALUE self)
     rb_ivar_set(self, rb_intern("lock_holder"), Qnil);
 
     return Qnil;
+}
+
+static VALUE NIO_Selector_backend(VALUE self) {
+    struct NIO_Selector *selector;
+
+    Data_Get_Struct(self, struct NIO_Selector, selector);
+    if(selector->closed) {
+        rb_raise(rb_eIOError, "selector is closed");
+    }
+
+    switch (ev_backend(selector->ev_loop)) {
+        case EVBACKEND_EPOLL:
+            return ID2SYM(rb_intern("epoll"));
+        case EVBACKEND_POLL:
+            return ID2SYM(rb_intern("poll"));
+        case EVBACKEND_KQUEUE:
+            return ID2SYM(rb_intern("kqueue"));
+        case EVBACKEND_SELECT:
+            return ID2SYM(rb_intern("select"));
+        case EVBACKEND_PORT:
+            return ID2SYM(rb_intern("port"));
+    }
+
+    return ID2SYM(rb_intern("unknown"));
 }
 
 /* Synchronize around a reentrant selector lock */

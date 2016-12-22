@@ -13,6 +13,20 @@ module NIO
       @closed = false
     end
 
+    # Return a symbol representing the backend I/O multiplexing mechanism used.
+    # Supported backends are:
+    # * :ruby    - pure Ruby (i.e IO.select)
+    # * :java    - Java NIO on JRuby
+    # * :epoll   - libev w\ Linux epoll
+    # * :poll    - libev w\ POSIX poll
+    # * :kqueue  - libev w\ BSD kqueue
+    # * :select  - libev w\ SysV select
+    # * :port    - libev w\ I/O completion ports
+    # * :unknown - libev w\ unknown backend
+    def backend
+      :ruby
+    end
+
     # Register interest in an IO object with the selector for the given types
     # of events. Valid event types for interest are:
     # * :r - is the IO readable?
