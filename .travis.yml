@@ -8,17 +8,10 @@ branches:
   only:
     - master
 
-os:
-  - linux
-  - osx
-
 rvm:
-  - 2.2
-  - 2.3.1
-  - ruby-head
   - jruby-9.1.6.0 # latest stable
-  - jruby-head
-  - rbx
+  - 2.2.2
+  - 2.3.3
 
 env:
   global:
@@ -30,10 +23,6 @@ env:
 matrix:
   fast_finish: true
   allow_failures:
-    - os:  osx # TODO: make tests pass reliably on OS X
-    - rvm: ruby-head
-    - rvm: jruby-head
-    - rvm: rbx
     - rvm: jruby-9.1.6.0
       env: NIO4R_PURE=true
 

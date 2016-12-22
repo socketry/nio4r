@@ -199,5 +199,5 @@ to maintain a large codebase.
 Copyright (c) 2011-2016 Tony Arcieri. Distributed under the MIT License.
 See LICENSE.txt for further details.
 
-Includes libev 4.22. Copyright (c) 2007-2015 Marc Alexander Lehmann.
+Includes libev 4.23. Copyright (c) 2007-2016 Marc Alexander Lehmann.
 Distributed under the BSD license. See ext/libev/LICENSE for details.
