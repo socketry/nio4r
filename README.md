@@ -41,6 +41,7 @@ writing.
 
 * Ruby 2.2
 * Ruby 2.3
+* Ruby 2.4
 * JRuby 9000
 * Pure Ruby using Kernel.select
 
