@@ -1,77 +1,82 @@
 require "spec_helper"
 
 RSpec.describe NIO::ByteBuffer do
-  describe "#Behaviour of ByteBuffer" do
-    subject { bytebuffer }
+  let(:capacity)       { 256 }
+  let(:example_string) { "Testing 1 2 3..." }
 
-    context "allocates a given size buffer" do
-      let(:bytebuffer) { NIO::ByteBuffer.new(256, nil, nil) }
+  subject(:bytebuffer) { described_class.new(capacity, nil, nil) }
 
-      before :each do
-        bytebuffer.clear
-      end
+  describe "#capacity" do
+    it "has the requested capacity" do
+      expect(bytebuffer.capacity).to eql(capacity)
+    end
+  end
 
-      it "Checks the allocation" do
-        expect(bytebuffer.capacity).to eql(256)
-      end
+  describe "#remaining" do
+    it "has the correct number of bytes remaining" do
+      expect(bytebuffer.remaining).to eql(capacity)
+    end
+  end
 
-      it "checks remaining" do
-        expect(bytebuffer.remaining).to eql(256)
-      end
+  describe "#<<" do
+    it "adds strings to the buffer" do
+      bytebuffer << example_string
+      expect(bytebuffer.remaining).to eql(capacity - example_string.length)
+    end
+  end
 
-      it "puts a given string to buffer" do
-        bytebuffer << "Song of Ice & Fire"
-        expect(bytebuffer.remaining).to eql(238)
-      end
+  describe "#read_next" do
+    it "reads the content added" do
+      bytebuffer << "First"
+      bytebuffer << "Second"
+      bytebuffer << "Third"
+      bytebuffer.flip
 
-      it "reads the content added" do
-        bytebuffer << "Test"
-        bytebuffer << "Text"
-        bytebuffer << "Dumb"
-        bytebuffer.flip
-        expect(bytebuffer.read_next(5)).to eql "TestT"
-      end
+      expect(bytebuffer.read_next(10)).to eql "FirstSecon"
+    end
+  end
 
-      it "rewinds the buffer" do
-      end
+  describe "#rewind" do
+    pending "rewinds the buffer"
+  end
 
-      it "compacts the buffer" do
-        skip # TODO: debug problems on Ruby 2.4
-        bytebuffer << "Test"
-        bytebuffer << " Text"
-        bytebuffer << "Dumb"
-        bytebuffer.flip
-        bytebuffer.read_next 5
-        bytebuffer.compact
-        bytebuffer << " RRMARTIN"
-        bytebuffer.flip
-        expect(bytebuffer.get).to eql("TextDumb RRMARTIN")
-      end
+  describe "#compact" do
+    it "compacts the buffer" do
+      skip # TODO: debug problems on Ruby 2.4
+      bytebuffer << "Test"
+      bytebuffer << " Text"
+      bytebuffer << "Dumb"
+      bytebuffer.flip
+      bytebuffer.read_next 5
+      bytebuffer.compact
+      bytebuffer << " RRMARTIN"
+      bytebuffer.flip
+      expect(bytebuffer.get).to eql("TextDumb RRMARTIN")
+    end
+  end
 
-      it "flips the bytebuffer" do
-        bytebuffer << "Test"
-        bytebuffer.flip
-        expect(bytebuffer.get).to eql("Test")
-      end
+  describe "#flip" do
+    it "flips the bytebuffer" do
+      bytebuffer << example_string
+      bytebuffer.flip
+      expect(bytebuffer.get).to eql(example_string)
+    end
+  end
 
-      it "reads the next items" do
-        bytebuffer << "John Snow"
-        bytebuffer.flip
-        bytebuffer.read_next 5
-        expect(bytebuffer.read_next(4)).to eql("Snow")
-      end
+  describe "#clear" do
+    it "clears the buffer" do
+      bytebuffer << example_string
+      bytebuffer.clear
 
-      it "clears the buffer" do
-        bytebuffer << "Game of Thrones"
-        bytebuffer.clear
-        expect(bytebuffer.remaining).to eql(256)
-      end
+      expect(bytebuffer.remaining).to eql(capacity)
+    end
+  end
 
-      it "gets the content of the bytebuffer" do
-        bytebuffer << "Test"
-        bytebuffer.flip
-        expect(bytebuffer.get).to eql("Test")
-      end
+  describe "#get" do
+    it "gets the content of the bytebuffer" do
+      bytebuffer << example_string
+      bytebuffer.flip
+      expect(bytebuffer.get).to eql(example_string)
     end
   end
 end
