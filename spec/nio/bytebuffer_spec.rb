@@ -4,11 +4,11 @@ RSpec.describe NIO::ByteBuffer do
   let(:capacity)       { 256 }
   let(:example_string) { "Testing 1 2 3..." }
 
-  subject(:bytebuffer) { described_class.new(capacity, nil, nil) }
+  subject(:bytebuffer) { described_class.new(capacity) }
 
   describe "#initialize" do
     it "raises TypeError if given a bogus argument" do
-      expect { described_class.new(:what, nil, nil) }.to raise_error(TypeError)
+      expect { described_class.new(:symbols_are_bogus) }.to raise_error(TypeError)
     end
   end
 

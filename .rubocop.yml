@@ -7,7 +7,7 @@ AllCops:
   DisplayCopNames: true
 
 LineLength:
-  Max: 100
+  Max: 128
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes

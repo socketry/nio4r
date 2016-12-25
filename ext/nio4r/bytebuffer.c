@@ -9,7 +9,7 @@ static void NIO_ByteBuffer_mark(struct NIO_ByteBuffer *byteBuffer);
 static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *byteBuffer);
 
 /* Methods */
-static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE value, VALUE offset, VALUE length);
+static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE capacity);
 static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string);
 static VALUE NIO_ByteBuffer_get(VALUE self);
 static VALUE NIO_ByteBuffer_readnext(VALUE self, VALUE amount);
@@ -37,7 +37,7 @@ void Init_NIO_ByteBuffer()
     cNIO_ByteBuffer = rb_define_class_under(mNIO, "ByteBuffer", rb_cObject);
     rb_define_alloc_func(cNIO_ByteBuffer, NIO_ByteBuffer_allocate);
 
-    rb_define_method(cNIO_ByteBuffer, "initialize", NIO_ByteBuffer_initialize, 3);
+    rb_define_method(cNIO_ByteBuffer, "initialize", NIO_ByteBuffer_initialize, 1);
     rb_define_method(cNIO_ByteBuffer, "<<", NIO_ByteBuffer_put, 1);
     rb_define_method(cNIO_ByteBuffer, "get", NIO_ByteBuffer_get, 0);
     rb_define_method(cNIO_ByteBuffer, "read_next", NIO_ByteBuffer_readnext, 1);
@@ -75,61 +75,33 @@ static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *buffer)
     xfree(buffer);
 }
 
-static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE capacity_or_string, VALUE i_offset, VALUE i_length)
+static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE capacity)
 {
     struct NIO_ByteBuffer *byteBuffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, byteBuffer);
 
-    switch (TYPE(capacity_or_string)) {
-      case T_FIXNUM:
-        byteBuffer->size = NUM2INT(capacity_or_string);
-        byteBuffer->buffer = malloc(sizeof(char) * byteBuffer->size);
-        break;
-      case T_STRING:
-        byteBuffer->size = RSTRING_LEN(capacity_or_string);
-        byteBuffer->buffer = StringValuePtr(capacity_or_string);
-        break;
-      default:
-        rb_raise(rb_eTypeError, "expected Integer or String argument, got %s", rb_obj_classname(capacity_or_string));
-        break;
-    }
-
+    byteBuffer->size = NUM2INT(capacity);
+    byteBuffer->buffer = xmalloc(byteBuffer->size);
     byteBuffer->position = 0;
     byteBuffer->offset = 0;
     byteBuffer->limit = byteBuffer->size - 1;
     byteBuffer->self = self;
-
-    if(i_offset != Qnil && TYPE(i_offset) == T_FIXNUM) {
-        byteBuffer->offset = NUM2INT(i_offset);
-        byteBuffer->position = byteBuffer->offset;
-
-        if(i_length != Qnil && TYPE(i_length) == T_FIXNUM) {
-            int length = NUM2INT(i_length);
-
-            if(byteBuffer->offset + length < byteBuffer->size) {
-                byteBuffer->limit = byteBuffer->offset + length;
-            } else {
-                rb_raise(rb_eArgError, "offset and length exceed buffer size");
-            }
-        }
-    }
 
     return self;
 }
 
 static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string)
 {
+    uint i;
     struct NIO_ByteBuffer *byteBuffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, byteBuffer);
 
-    if(TYPE(string) == T_STRING) {
-        char *temp =  StringValuePtr(string);
-        int i = 0;
-        int limit = RSTRING_LEN(string);
+    char *ptr  = StringValuePtr(string);
+    long length = RSTRING_LEN(string);
 
-        for(byteBuffer->position; i < limit; byteBuffer->position++) {
-            byteBuffer->buffer[byteBuffer->position] = temp[i++];
-        }
+    for(i = 0; i < length; i++) {
+        byteBuffer->buffer[byteBuffer->position] = ptr[i];
+        byteBuffer->position++;
     }
 
     return self;
@@ -137,6 +109,7 @@ static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string)
 
 static VALUE NIO_ByteBuffer_get(VALUE self)
 {
+    uint i;
     struct NIO_ByteBuffer *byteBuffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, byteBuffer);
 
@@ -146,11 +119,11 @@ static VALUE NIO_ByteBuffer_get(VALUE self)
         return rb_str_new2("");
     }
 
-    char tempArray[remaining+1];
-    int i = 0;
+    char tempArray[remaining + 1];
 
-    for(byteBuffer->position; byteBuffer->position <= byteBuffer->limit; byteBuffer->position++) {
-        tempArray[i++] = byteBuffer->buffer[byteBuffer->position];
+    for(i = 0; byteBuffer->position <= byteBuffer->limit; i++) {
+        tempArray[i] = byteBuffer->buffer[byteBuffer->position];
+        byteBuffer->position++;
     }
 
     tempArray[remaining] = '\0';
@@ -209,7 +182,6 @@ static VALUE NIO_ByteBuffer_readFrom(VALUE self, VALUE io)
 {
     struct NIO_ByteBuffer *byteBuffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, byteBuffer);
-    int size = byteBuffer->limit + 1 - byteBuffer->position;
 
     #if HAVE_RB_IO_T
         rb_io_t        *fptr;

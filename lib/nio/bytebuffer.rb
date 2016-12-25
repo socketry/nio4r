@@ -1,44 +1,26 @@
 module NIO
   class ByteBuffer
+    attr_reader :size
+
     # Create a new ByteBuffer, either with a specified capacity or populating
     # it from a given string
     #
-    # @param capacity_or_string [Integer, String] number of bytes or data
-    #
-    # @raise [TypeError] a bad type was specified for one of the arguments
-    # @raise [ArgumentError] an invalid argument was supplied
+    # @param capacity [Integer] size of buffer in bytes
     #
     # @return [NIO::ByteBuffer]
-    def initialize(capacity_or_string, offset = nil, length = nil)
-      case capacity_or_string
-      when Integer
-        @size = capacity_or_string
-        @byte_array = Array.new(capacity_or_string)
-      when String
-        @byte_array = str.bytes
-        @size = @byte_array.size
-      else raise TypeError, "expected Integer or String argument, got #{capacity_or_string.class}"
-      end
+    def initialize(capacity)
+      raise TypeError, "expected Integer argument, got #{capacity.class}" unless capacity.is_a?(Integer)
 
-      @position = 0
-      @mark     = -1
-      @limit    = @size - 1
-
-      return unless offset
-
-      @offset   = offset
-      @position = offset
-
-      return unless length
-
-      raise ArgumentError, "offset and length exceed buffer size" if offset + length >= @size
-      @limit = offset + length
+      @size       = capacity
+      @byte_array = Array.new(capacity)
+      @position   = 0
+      @mark       = -1
+      @limit      = @size - 1
     end
 
     # put the provided string to the buffer
     def <<(str)
-      temp_buffer = str.bytes
-      temp_buffer.each { |x| put_byte x }
+      str.bytes.each { |x| put_byte x }
     end
 
     # return the remaining number positions to read/ write
@@ -49,13 +31,6 @@ module NIO
     # has any space remaining
     def remaining?
       remaining > 0
-    end
-
-    # this method is private
-    def put_byte(byte)
-      raise "Buffer Overflowed" if @position == @size
-      @byte_array[@position] = byte
-      @position += 1
     end
 
     # write content in the buffer to file
@@ -181,6 +156,12 @@ module NIO
       temp
     end
 
-    private :put_byte
+    private
+
+    def put_byte(byte)
+      raise "Buffer Overflowed" if @position == @size
+      @byte_array[@position] = byte
+      @position += 1
+    end
   end
 end

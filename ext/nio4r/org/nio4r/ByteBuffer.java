@@ -16,7 +16,6 @@ import java.util.ArrayList;
 created by Upekshej
  */
 public class ByteBuffer extends RubyObject {
-
     private java.nio.ByteBuffer byteBuffer;
     private String currentWritePath = "";
     private String currentReadPath = "";
@@ -32,52 +31,28 @@ public class ByteBuffer extends RubyObject {
     }
 
     @JRubyMethod
-    public IRubyObject initialize(ThreadContext context, IRubyObject capacity_or_string, IRubyObject offset, IRubyObject length) {
+    public IRubyObject initialize(ThreadContext context, IRubyObject capacity) {
         Ruby ruby = context.getRuntime();
 
-        if (capacity_or_string instanceof RubyString) {
-            if (offset != ruby.getNil() && length != ruby.getNil()) {
-                int arrayOffset = RubyNumeric.num2int(offset);
-                int arrayLimit = RubyNumeric.num2int(length);
-                byteBuffer = java.nio.ByteBuffer.wrap(capacity_or_string.asJavaString().getBytes(), arrayOffset, arrayLimit);
-            } else {
-                byteBuffer = java.nio.ByteBuffer.wrap(capacity_or_string.asJavaString().getBytes());
-            }
-        } else if (capacity_or_string instanceof RubyInteger) {
-            int allocationSize = RubyNumeric.num2int(capacity_or_string);
-            byteBuffer = java.nio.ByteBuffer.allocate(allocationSize);
-        } else {
-            throw ruby.newTypeError("expected Integer or String argument, got " + capacity_or_string.getType().toString());
-        }
+        this.byteBuffer = java.nio.ByteBuffer.allocate(RubyNumeric.num2int(capacity));
 
         return this;
     }
 
-    /**
-     * Currently assuming only strings will come..
-     *
-     * @param context
-     * @return
-     */
     @JRubyMethod(name = "<<")
     public IRubyObject put(ThreadContext context, IRubyObject str) {
         String string = str.asJavaString();
 
-        if (byteBuffer == null) {
-            byteBuffer = java.nio.ByteBuffer.wrap(string.getBytes());
-        }
-
-        byteBuffer.put(string.getBytes());
+        this.byteBuffer.put(string.getBytes());
         return this;
     }
 
-    //https://www.ruby-forum.com/topic/3731325
     @JRubyMethod(name = "get")
     public IRubyObject get(ThreadContext context) {
         ArrayList<Byte> temp = new ArrayList<Byte>();
 
-        while (byteBuffer.hasRemaining()) {
-            temp.add(byteBuffer.get());
+        while (this.byteBuffer.hasRemaining()) {
+            temp.add(this.byteBuffer.get());
         }
 
         return JavaUtil.convertJavaToRuby(context.getRuntime(), new String(toPrimitives(temp)));
@@ -91,12 +66,12 @@ public class ByteBuffer extends RubyObject {
             throw new IllegalArgumentException();
         }
 
-        if (c <= byteBuffer.remaining()) {
+        if (c <= this.byteBuffer.remaining()) {
             org.jruby.util.ByteList temp = new org.jruby.util.ByteList(c);
 
             while (c > 0) {
-                temp.append(byteBuffer.get());
-                c = c - 1;
+                temp.append(this.byteBuffer.get());
+                c--;
             }
 
             return context.runtime.newString(temp);
@@ -129,7 +104,7 @@ public class ByteBuffer extends RubyObject {
                 currentWriteFileChannel = fileOutputStream.getChannel();
             }
 
-            currentWriteFileChannel.write(byteBuffer);
+            currentWriteFileChannel.write(this.byteBuffer);
         } catch (Exception e) {
             throw new IllegalArgumentException("write error: " + e.getLocalizedMessage());
         }
@@ -150,7 +125,7 @@ public class ByteBuffer extends RubyObject {
                 inChannel = currentReadChannel.getChannel();
             }
 
-            inChannel.read(byteBuffer);
+            inChannel.read(this.byteBuffer);
         } catch (Exception e) {
             throw new IllegalArgumentException("read error: " + e.getLocalizedMessage());
         }
@@ -168,13 +143,13 @@ public class ByteBuffer extends RubyObject {
 
     @JRubyMethod(name = "remaining")
     public IRubyObject remainingPositions(ThreadContext context) {
-        int count = byteBuffer.remaining();
+        int count = this.byteBuffer.remaining();
         return context.getRuntime().newFixnum(count);
     }
 
     @JRubyMethod(name = "remaining?")
     public IRubyObject hasRemaining(ThreadContext context) {
-        if (byteBuffer.hasRemaining()) {
+        if (this.byteBuffer.hasRemaining()) {
             return context.getRuntime().getTrue();
         }
 
@@ -183,7 +158,7 @@ public class ByteBuffer extends RubyObject {
 
     @JRubyMethod(name = "offset?")
     public IRubyObject getOffset(ThreadContext context) {
-        int offset = byteBuffer.arrayOffset();
+        int offset = this.byteBuffer.arrayOffset();
         return context.getRuntime().newFixnum(offset);
     }
 
@@ -221,7 +196,7 @@ public class ByteBuffer extends RubyObject {
      */
     @JRubyMethod
     public IRubyObject flip(ThreadContext context) {
-        byteBuffer.flip();
+        this.byteBuffer.flip();
         return this;
     }
 
@@ -236,19 +211,19 @@ public class ByteBuffer extends RubyObject {
      */
     @JRubyMethod
     public IRubyObject rewind(ThreadContext context) {
-        byteBuffer.rewind();
+        this.byteBuffer.rewind();
         return this;
     }
 
     @JRubyMethod
     public IRubyObject reset(ThreadContext context) {
-        byteBuffer.reset();
+        this.byteBuffer.reset();
         return this;
     }
 
     @JRubyMethod
     public IRubyObject mark(ThreadContext context) {
-        byteBuffer.mark();
+        this.byteBuffer.mark();
         return this;
     }
 
@@ -260,7 +235,7 @@ public class ByteBuffer extends RubyObject {
      */
     @JRubyMethod
     public IRubyObject clear(ThreadContext context) {
-        byteBuffer.clear();
+        this.byteBuffer.clear();
         return this;
     }
 
@@ -272,27 +247,27 @@ public class ByteBuffer extends RubyObject {
 
     @JRubyMethod(name = "capacity")
     public IRubyObject capacity(ThreadContext context) {
-        int cap = byteBuffer.capacity();
+        int cap = this.byteBuffer.capacity();
         return context.getRuntime().newFixnum(cap);
     }
 
     @JRubyMethod
     public IRubyObject position(ThreadContext context, IRubyObject newPosition) {
         int position = RubyNumeric.num2int(newPosition);
-        byteBuffer.position(position);
+        this.byteBuffer.position(position);
         return this;
     }
 
     @JRubyMethod(name = "limit")
     public IRubyObject limit(ThreadContext context, IRubyObject newLimit) {
         int limit = RubyNumeric.num2int(newLimit);
-        byteBuffer.limit(limit);
+        this.byteBuffer.limit(limit);
         return this;
     }
 
     @JRubyMethod(name = "limit?")
     public IRubyObject limit(ThreadContext context) {
-        int lmt = byteBuffer.limit();
+        int lmt = this.byteBuffer.limit();
         return context.getRuntime().newFixnum(lmt);
     }
 
@@ -302,6 +277,6 @@ public class ByteBuffer extends RubyObject {
     }
 
     public java.nio.ByteBuffer getBuffer() {
-        return byteBuffer;
+        return this.byteBuffer;
     }
 }
