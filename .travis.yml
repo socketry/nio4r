@@ -12,6 +12,7 @@ rvm:
   - jruby-9.1.6.0 # latest stable
   - 2.2.2
   - 2.3.3
+  - 2.4.0
 
 env:
   global:
