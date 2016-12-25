@@ -32,26 +32,22 @@ public class ByteBuffer extends RubyObject {
     }
 
     @JRubyMethod
-    public IRubyObject initialize(ThreadContext context, IRubyObject value, IRubyObject offset, IRubyObject length) {
+    public IRubyObject initialize(ThreadContext context, IRubyObject capacity_or_string, IRubyObject offset, IRubyObject length) {
         Ruby ruby = context.getRuntime();
 
-        if (value == ruby.getNil()) {
-            throw ruby.newTypeError("expected String or Integer for value, got NilClass");
-        }
-
-        if (value instanceof RubyString) {
+        if (capacity_or_string instanceof RubyString) {
             if (offset != ruby.getNil() && length != ruby.getNil()) {
                 int arrayOffset = RubyNumeric.num2int(offset);
                 int arrayLimit = RubyNumeric.num2int(length);
-                byteBuffer = java.nio.ByteBuffer.wrap(value.asJavaString().getBytes(), arrayOffset, arrayLimit);
+                byteBuffer = java.nio.ByteBuffer.wrap(capacity_or_string.asJavaString().getBytes(), arrayOffset, arrayLimit);
             } else {
-                byteBuffer = java.nio.ByteBuffer.wrap(value.asJavaString().getBytes());
+                byteBuffer = java.nio.ByteBuffer.wrap(capacity_or_string.asJavaString().getBytes());
             }
-        } else if (value instanceof RubyInteger) {
-            int allocationSize = RubyNumeric.num2int(value);
+        } else if (capacity_or_string instanceof RubyInteger) {
+            int allocationSize = RubyNumeric.num2int(capacity_or_string);
             byteBuffer = java.nio.ByteBuffer.allocate(allocationSize);
         } else {
-            throw ruby.newTypeError("expected String or Integer for value");
+            throw ruby.newTypeError("expected Integer or String argument, got " + capacity_or_string.getType().toString());
         }
 
         return this;

@@ -12,6 +12,9 @@ LineLength:
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
+Metrics/ClassLength:
+  Max: 150
+
 Metrics/MethodLength:
   CountComments: false
   Max: 40

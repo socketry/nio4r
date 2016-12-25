@@ -6,6 +6,12 @@ RSpec.describe NIO::ByteBuffer do
 
   subject(:bytebuffer) { described_class.new(capacity, nil, nil) }
 
+  describe "#initialize" do
+    it "raises TypeError if given a bogus argument" do
+      expect { described_class.new(:what, nil, nil) }.to raise_error(TypeError)
+    end
+  end
+
   describe "#capacity" do
     it "has the requested capacity" do
       expect(bytebuffer.capacity).to eql(capacity)

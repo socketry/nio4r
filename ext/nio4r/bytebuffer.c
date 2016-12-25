@@ -75,27 +75,22 @@ static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *buffer)
     xfree(buffer);
 }
 
-static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE value, VALUE i_offset, VALUE i_length)
+static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE capacity_or_string, VALUE i_offset, VALUE i_length)
 {
-    //Value can be either.
-    //NUM -> Size of the buffer
-    //STRING -> Data to be stored on the buffer
     struct NIO_ByteBuffer *byteBuffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, byteBuffer);
 
-    switch (TYPE(value)) {
+    switch (TYPE(capacity_or_string)) {
       case T_FIXNUM:
-        byteBuffer->size = NUM2INT(value);
+        byteBuffer->size = NUM2INT(capacity_or_string);
         byteBuffer->buffer = malloc(sizeof(char) * byteBuffer->size);
         break;
       case T_STRING:
-        byteBuffer->size = RSTRING_LEN(value);
-        byteBuffer->buffer = StringValuePtr(value);
-        //buffer = RSTRING_PTR(str);
+        byteBuffer->size = RSTRING_LEN(capacity_or_string);
+        byteBuffer->buffer = StringValuePtr(capacity_or_string);
         break;
       default:
-        /* raise exception */
-        rb_raise(rb_eTypeError, "not a valid input");
+        rb_raise(rb_eTypeError, "expected Integer or String argument, got %s", rb_obj_classname(capacity_or_string));
         break;
     }
 
@@ -114,13 +109,9 @@ static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE value, VALUE i_offset, 
             if(byteBuffer->offset + length < byteBuffer->size) {
                 byteBuffer->limit = byteBuffer->offset + length;
             } else {
-                rb_raise(rb_eRuntimeError, "Invalid Arguiments Exception");
+                rb_raise(rb_eArgError, "offset and length exceed buffer size");
             }
         }
-    }
-
-    if(byteBuffer->size == 0) {
-        rb_raise(rb_eRuntimeError, "Invalid Arguiments Exception");
     }
 
     return self;

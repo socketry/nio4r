@@ -1,28 +1,37 @@
 module NIO
-  # rubocop:disable ClassLength
   class ByteBuffer
-    def initialize(value, offset = nil, length = nil)
-      # value can be either STRING or INTEGER
-      raise "not a valid input" if value.nil?
-      @position = 0
-      @mark = -1
-      if value.is_a? Integer
-        @size = value
-        @byte_array = Array.new(value)
-      elsif value.is_a? String
+    # Create a new ByteBuffer, either with a specified capacity or populating
+    # it from a given string
+    #
+    # @param capacity_or_string [Integer, String] number of bytes or data
+    #
+    # @raise [TypeError] a bad type was specified for one of the arguments
+    # @raise [ArgumentError] an invalid argument was supplied
+    #
+    # @return [NIO::ByteBuffer]
+    def initialize(capacity_or_string, offset = nil, length = nil)
+      case capacity_or_string
+      when Integer
+        @size = capacity_or_string
+        @byte_array = Array.new(capacity_or_string)
+      when String
         @byte_array = str.bytes
         @size = @byte_array.size
+      else raise TypeError, "expected Integer or String argument, got #{capacity_or_string.class}"
       end
-      @limit = @size - 1
 
-      return if offset.nil?
+      @position = 0
+      @mark     = -1
+      @limit    = @size - 1
 
-      @offset = offset
+      return unless offset
+
+      @offset   = offset
       @position = offset
 
-      return if length.nil?
+      return unless length
 
-      raise "Invalid Arguiments Exception" if offset + length >= value
+      raise ArgumentError, "offset and length exceed buffer size" if offset + length >= @size
       @limit = offset + length
     end
 
