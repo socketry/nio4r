@@ -2,6 +2,7 @@ package org.nio4r;
 
 import org.jruby.*;
 import org.jruby.anno.JRubyMethod;
+import org.jruby.exceptions.RaiseException;
 import org.jruby.javasupport.JavaUtil;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -10,6 +11,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
+import java.nio.BufferOverflowException;
 import java.util.ArrayList;
 
 /*
@@ -30,6 +32,14 @@ public class ByteBuffer extends RubyObject {
         super(ruby, rubyClass);
     }
 
+    public static RaiseException newOverflowError(ThreadContext context, String message) {
+        RubyClass overflowErrorClass = context.runtime.getModule("NIO")
+                                                      .getClass("ByteBuffer")
+                                                      .getClass("OverflowError");
+
+        return context.runtime.newRaiseException(overflowErrorClass, message);
+    }
+
     @JRubyMethod
     public IRubyObject initialize(ThreadContext context, IRubyObject capacity) {
         Ruby ruby = context.getRuntime();
@@ -43,7 +53,12 @@ public class ByteBuffer extends RubyObject {
     public IRubyObject put(ThreadContext context, IRubyObject str) {
         String string = str.asJavaString();
 
-        this.byteBuffer.put(string.getBytes());
+        try {
+            this.byteBuffer.put(string.getBytes());
+        } catch(BufferOverflowException e) {
+            throw ByteBuffer.newOverflowError(context, "buffer is full");
+        }
+
         return this;
     }
 

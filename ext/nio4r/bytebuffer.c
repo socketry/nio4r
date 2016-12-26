@@ -2,6 +2,7 @@
 
 static VALUE mNIO = Qnil;
 static VALUE cNIO_ByteBuffer = Qnil;
+static VALUE cNIO_ByteBuffer_OverflowError = Qnil;
 
 /* Allocator/deallocator */
 static VALUE NIO_ByteBuffer_allocate(VALUE klass);
@@ -36,6 +37,8 @@ void Init_NIO_ByteBuffer()
     mNIO = rb_define_module("NIO");
     cNIO_ByteBuffer = rb_define_class_under(mNIO, "ByteBuffer", rb_cObject);
     rb_define_alloc_func(cNIO_ByteBuffer, NIO_ByteBuffer_allocate);
+
+    cNIO_ByteBuffer_OverflowError = rb_define_class_under(cNIO_ByteBuffer, "OverflowError", rb_eIOError);
 
     rb_define_method(cNIO_ByteBuffer, "initialize", NIO_ByteBuffer_initialize, 1);
     rb_define_method(cNIO_ByteBuffer, "<<", NIO_ByteBuffer_put, 1);
@@ -96,8 +99,12 @@ static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string)
     struct NIO_ByteBuffer *byteBuffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, byteBuffer);
 
-    char *ptr  = StringValuePtr(string);
+    char *ptr   = StringValuePtr(string);
     long length = RSTRING_LEN(string);
+
+    if(length > byteBuffer->size - byteBuffer->position) {
+        rb_raise(cNIO_ByteBuffer_OverflowError, "buffer is full");
+    }
 
     for(i = 0; i < length; i++) {
         byteBuffer->buffer[byteBuffer->position] = ptr[i];
@@ -162,9 +169,9 @@ static VALUE NIO_ByteBuffer_writeTo(VALUE self, VALUE io)
     int size = byteBuffer->limit + 1 - byteBuffer->position;
 
     #if HAVE_RB_IO_T
-        rb_io_t        *fptr;
+        rb_io_t *fptr;
     #else
-        OpenFile       *fptr;
+        OpenFile *fptr;
     #endif
 
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
@@ -184,9 +191,9 @@ static VALUE NIO_ByteBuffer_readFrom(VALUE self, VALUE io)
     Data_Get_Struct(self, struct NIO_ByteBuffer, byteBuffer);
 
     #if HAVE_RB_IO_T
-        rb_io_t        *fptr;
+        rb_io_t *fptr;
     #else
-        OpenFile       *fptr;
+        OpenFile *fptr;
     #endif
 
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);

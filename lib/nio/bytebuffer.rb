@@ -2,6 +2,9 @@ module NIO
   class ByteBuffer
     attr_reader :size
 
+    # Insufficient capacity in buffer
+    OverflowError = Class.new(IOError)
+
     # Create a new ByteBuffer, either with a specified capacity or populating
     # it from a given string
     #
@@ -159,7 +162,7 @@ module NIO
     private
 
     def put_byte(byte)
-      raise "Buffer Overflowed" if @position == @size
+      raise OverflowError, "buffer is full" if @position == @size
       @byte_array[@position] = byte
       @position += 1
     end

@@ -54,6 +54,8 @@ public class Nio4r implements Library {
         }, nio);
 
         byteBuffer.defineAnnotatedMethods(ByteBuffer.class);
+
+        ruby.defineClassUnder("OverflowError", ruby.getIOError(), ruby.getIOError().getAllocator(), byteBuffer);
     }
 
     public static int symbolToInterestOps(Ruby ruby, SelectableChannel channel, IRubyObject interest) {

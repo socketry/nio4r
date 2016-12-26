@@ -24,10 +24,24 @@ RSpec.describe NIO::ByteBuffer do
     end
   end
 
+  describe "#get" do
+    it "gets the content of the bytebuffer" do
+      bytebuffer << example_string
+      bytebuffer.flip
+      expect(bytebuffer.get).to eql(example_string)
+    end
+  end
+
   describe "#<<" do
     it "adds strings to the buffer" do
       bytebuffer << example_string
       expect(bytebuffer.remaining).to eql(capacity - example_string.length)
+    end
+
+    it "raises NIO::ByteBuffer::OverflowError if the buffer is full" do
+      bytebuffer << "X" * (capacity - 1)
+      expect { bytebuffer << "X" }.not_to raise_error
+      expect { bytebuffer << "X" }.to raise_error(NIO::ByteBuffer::OverflowError)
     end
   end
 
@@ -75,14 +89,6 @@ RSpec.describe NIO::ByteBuffer do
       bytebuffer.clear
 
       expect(bytebuffer.remaining).to eql(capacity)
-    end
-  end
-
-  describe "#get" do
-    it "gets the content of the bytebuffer" do
-      bytebuffer << example_string
-      bytebuffer.flip
-      expect(bytebuffer.get).to eql(example_string)
     end
   end
 end
