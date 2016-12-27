@@ -43,9 +43,8 @@ struct NIO_Monitor
 
 struct NIO_ByteBuffer
 {
-    int size, offset, limit, position, mark;
     char *buffer;
-    VALUE self;
+    int position, limit, capacity, mark;
 };
 
 
