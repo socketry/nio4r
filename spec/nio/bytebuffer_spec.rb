@@ -26,6 +26,24 @@ RSpec.describe NIO::ByteBuffer do
     end
   end
 
+  describe "#position=" do
+    let(:example_position) { 42 }
+
+    it "sets the buffer's position to a valid value" do
+      expect(bytebuffer.position).to be_zero
+      bytebuffer.position = example_position
+      expect(bytebuffer.position).to eq example_position
+    end
+
+    it "raises ArgumentError if the specified position is less than zero" do
+      expect { bytebuffer.position = -1 }.to raise_error(ArgumentError)
+    end
+
+    it "raises ArgumentError if the specified position exceeds the limit" do
+      expect { bytebuffer.position = capacity + 1 }.to raise_error(ArgumentError)
+    end
+  end
+
   describe "#limit" do
     it "defaults to the buffer's capacity" do
       expect(bytebuffer.limit).to eq capacity

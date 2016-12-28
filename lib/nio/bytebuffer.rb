@@ -36,11 +36,27 @@ module NIO
       self
     end
 
+    # Set the position to the given value. New position must be less than limit.
+    # Preserves mark if it's less than the new position, otherwise clears it.
+    #
+    # @param new_position [Integer] position in the buffer
+    #
+    # @raise [ArgumentError] new position was invalid
+    def position=(new_position)
+      raise ArgumentError, "negative position given" if new_position < 0
+      raise ArgumentError, "specified position exceeds capacity" if new_position > @capacity
+
+      @position = new_position
+      @mark = nil if @mark && @mark > @position
+
+      new_position
+    end
+
     # Set the limit to the given value. New limit must be less than capacity.
     # Preserves limit and mark if they're less than the new limit, otherwise
     # sets position to the new limit and clears the mark.
     #
-    # @param limit [Integer] position in the buffer
+    # @param new_limit [Integer] position in the buffer
     #
     # @raise [ArgumentError] new limit was invalid
     def limit=(new_limit)

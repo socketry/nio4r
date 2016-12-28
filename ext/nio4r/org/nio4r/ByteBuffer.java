@@ -58,9 +58,29 @@ public class ByteBuffer extends RubyObject {
         return this;
     }
 
-    @JRubyMethod
-    public IRubyObject position(ThreadContext context) {
+    @JRubyMethod(name = "position")
+    public IRubyObject getPosition(ThreadContext context) {
         return context.getRuntime().newFixnum(this.byteBuffer.position());
+    }
+
+    @JRubyMethod(name = "position=")
+    public IRubyObject setPosition(ThreadContext context, IRubyObject newPosition) {
+        int pos = RubyNumeric.num2int(newPosition);
+
+        if(pos < 0) {
+            throw context.runtime.newArgumentError("negative position given");
+        }
+
+        if(pos > this.byteBuffer.limit()) {
+            throw context.runtime.newArgumentError("specified position exceeds limit");
+        }
+
+        try {
+            this.byteBuffer.position(pos);
+            return newPosition;
+        } catch(IllegalArgumentException e) {
+            throw context.runtime.newArgumentError(e.getLocalizedMessage());
+        }
     }
 
     @JRubyMethod(name = "limit")
@@ -82,7 +102,7 @@ public class ByteBuffer extends RubyObject {
 
         try {
             this.byteBuffer.limit(lim);
-            return this;
+            return newLimit;
         } catch(IllegalArgumentException e) {
             throw context.runtime.newArgumentError(e.getLocalizedMessage());
         }
