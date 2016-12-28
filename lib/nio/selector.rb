@@ -33,6 +33,8 @@ module NIO
     # * :w - is the IO writeable?
     # * :rw - is the IO either readable or writeable?
     def register(io, interest)
+      io = IO.try_convert(io)
+
       @lock.synchronize do
         raise IOError, "selector is closed" if closed?
 
@@ -49,7 +51,7 @@ module NIO
     # Deregister the given IO object from the selector
     def deregister(io)
       @lock.synchronize do
-        monitor = @selectables.delete io
+        monitor = @selectables.delete IO.try_convert(io)
         monitor.close(false) if monitor && !monitor.closed?
         monitor
       end

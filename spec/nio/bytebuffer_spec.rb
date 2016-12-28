@@ -11,6 +11,15 @@ RSpec.describe NIO::ByteBuffer do
     end
   end
 
+  describe "#clear" do
+    it "clears the buffer" do
+      bytebuffer << example_string
+      bytebuffer.clear
+
+      expect(bytebuffer.remaining).to eql(capacity)
+    end
+  end
+
   describe "#position" do
     it "defaults to zero" do
       expect(bytebuffer.position).to be_zero
@@ -110,12 +119,70 @@ RSpec.describe NIO::ByteBuffer do
     pending "rewinds the buffer"
   end
 
-  describe "#clear" do
-    it "clears the buffer" do
-      bytebuffer << example_string
-      bytebuffer.clear
+  context "I/O" do
+    let(:addr)   { "127.0.0.1" }
+    let(:port)   { 54_321 }
+    let(:server) { TCPServer.new(addr, port) }
+    let(:client) { TCPSocket.new(addr, port) }
+    let(:peer)   { server_thread.value }
 
-      expect(bytebuffer.remaining).to eql(capacity)
+    let(:server_thread) do
+      server
+
+      thread = Thread.new { server.accept }
+      Thread.pass while thread.status && thread.status != "sleep"
+
+      thread
+    end
+
+    before do
+      server_thread
+      client
+    end
+
+    after do
+      server_thread.kill if server_thread.alive?
+
+      server.close rescue nil
+      client.close rescue nil
+      peer.close   rescue nil
+    end
+
+    describe "#read_from" do
+      it "reads data into the buffer" do
+        client.write(example_string)
+        expect(bytebuffer.read_from(peer)).to eq example_string.length
+        bytebuffer.flip
+
+        expect(bytebuffer.get(example_string.length)).to eq example_string
+      end
+
+      it "raises NIO::ByteBuffer::OverflowError if the buffer is already full" do
+        client.write(example_string)
+        bytebuffer << "X" * capacity
+        expect { bytebuffer.read_from(peer) }.to raise_error(NIO::ByteBuffer::OverflowError)
+      end
+
+      it "returns 0 if no data is available" do
+        expect(bytebuffer.read_from(peer)).to eq 0
+      end
+    end
+
+    describe "#write_to" do
+      it "writes data from the buffer" do
+        bytebuffer << example_string
+        bytebuffer.flip
+
+        expect(bytebuffer.write_to(client)).to eq example_string.length
+        client.close
+
+        expect(peer.read(example_string.length)).to eq example_string
+      end
+
+      it "raises NIO::ByteBuffer::UnderflowError if the buffer is out of data" do
+        bytebuffer.flip
+        expect { bytebuffer.write_to(peer) }.to raise_error(NIO::ByteBuffer::UnderflowError)
+      end
     end
   end
 end

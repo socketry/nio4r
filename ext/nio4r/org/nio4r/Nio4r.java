@@ -8,6 +8,7 @@ import java.nio.channels.Channel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
+
 import org.jruby.Ruby;
 import org.jruby.RubyModule;
 import org.jruby.RubyClass;

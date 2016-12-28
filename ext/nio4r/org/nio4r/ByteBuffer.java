@@ -1,37 +1,29 @@
 package org.nio4r;
 
-import org.jruby.*;
-import org.jruby.anno.JRubyMethod;
-import org.jruby.exceptions.RaiseException;
-import org.jruby.javasupport.JavaUtil;
-import org.jruby.runtime.ThreadContext;
-import org.jruby.runtime.builtin.IRubyObject;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.nio.channels.FileChannel;
+import java.io.IOException;
+import java.nio.channels.Channel;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
-import java.util.ArrayList;
+
+import org.jruby.Ruby;
+import org.jruby.RubyClass;
+import org.jruby.RubyIO;
+import org.jruby.RubyNumeric;
+import org.jruby.RubyObject;
+import org.jruby.RubyString;
+import org.jruby.anno.JRubyMethod;
+import org.jruby.exceptions.RaiseException;
+import org.jruby.runtime.ThreadContext;
+import org.jruby.runtime.builtin.IRubyObject;
 
 /*
 created by Upekshej
  */
 public class ByteBuffer extends RubyObject {
     private java.nio.ByteBuffer byteBuffer;
-    private String currentWritePath = "";
-    private String currentReadPath = "";
-
-    private FileChannel currentWriteFileChannel;
-    private FileOutputStream fileOutputStream;
-
-    private FileInputStream currentReadChannel;
-    private FileChannel inChannel;
-
-    public ByteBuffer(final Ruby ruby, RubyClass rubyClass) {
-        super(ruby, rubyClass);
-    }
 
     public static RaiseException newOverflowError(ThreadContext context, String message) {
         RubyClass klass = context.runtime.getModule("NIO").getClass("ByteBuffer").getClass("OverflowError");
@@ -41,6 +33,10 @@ public class ByteBuffer extends RubyObject {
     public static RaiseException newUnderflowError(ThreadContext context, String message) {
         RubyClass klass = context.runtime.getModule("NIO").getClass("ByteBuffer").getClass("UnderflowError");
         return context.runtime.newRaiseException(klass, message);
+    }
+
+    public ByteBuffer(final Ruby ruby, RubyClass rubyClass) {
+        super(ruby, rubyClass);
     }
 
     @JRubyMethod
@@ -76,7 +72,7 @@ public class ByteBuffer extends RubyObject {
     }
 
     @JRubyMethod(name = "full?")
-    public IRubyObject full(ThreadContext context) {
+    public IRubyObject isFull(ThreadContext context) {
         if (this.byteBuffer.hasRemaining()) {
             return context.getRuntime().getFalse();
         } else {
@@ -111,55 +107,68 @@ public class ByteBuffer extends RubyObject {
         return this;
     }
 
-    @JRubyMethod
-    public IRubyObject write_to(ThreadContext context, IRubyObject f) {
-        try {
-            File file = (File) JavaUtil.unwrapJavaObject(f);
+    @JRubyMethod(name = "read_from")
+    public IRubyObject readFrom(ThreadContext context, IRubyObject io) {
+        Ruby runtime = context.runtime;
+        Channel channel = RubyIO.convertToIO(context, io).getChannel();
 
-            if (!isTheSameFile(file, false)) {
-                currentWritePath = file.getAbsolutePath();
-                if (currentWriteFileChannel != null) currentWriteFileChannel.close();
-                if (fileOutputStream != null) fileOutputStream.close();
-
-                fileOutputStream = new FileOutputStream(file, true);
-                currentWriteFileChannel = fileOutputStream.getChannel();
-            }
-
-            currentWriteFileChannel.write(this.byteBuffer);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("write error: " + e.getLocalizedMessage());
+        if(!this.byteBuffer.hasRemaining()) {
+            throw ByteBuffer.newOverflowError(context, "buffer is full");
+        }
+        
+        if(!(channel instanceof ReadableByteChannel) || !(channel instanceof SelectableChannel)) {
+            throw runtime.newArgumentError("unsupported IO object: " + io.getType().toString());
         }
 
-        return this;
+        try {
+            ((SelectableChannel)channel).configureBlocking(false);
+        } catch(IOException ie) {
+            throw runtime.newIOError(ie.getLocalizedMessage());
+        }
+
+        try {
+            int bytesRead = ((ReadableByteChannel)channel).read(this.byteBuffer);
+
+            if(bytesRead >= 0) {
+                return runtime.newFixnum(bytesRead);
+            } else {
+                throw runtime.newEOFError();
+            }
+        } catch(IOException ie) {
+            throw runtime.newIOError(ie.getLocalizedMessage());
+        }
     }
 
-    @JRubyMethod
-    public IRubyObject read_from(ThreadContext context, IRubyObject f) {
+    @JRubyMethod(name = "write_to")
+    public IRubyObject writeTo(ThreadContext context, IRubyObject io) {
+        Ruby runtime = context.runtime;
+        Channel channel = RubyIO.convertToIO(context, io).getChannel();
+
+        if(!this.byteBuffer.hasRemaining()) {
+            throw ByteBuffer.newUnderflowError(context, "not enough data in buffer");
+        }
+
+        if(!(channel instanceof WritableByteChannel) || !(channel instanceof SelectableChannel)) {
+            throw runtime.newArgumentError("unsupported IO object: " + io.getType().toString());
+        }
+
         try {
-            File file = (File) JavaUtil.unwrapJavaObject(f);
+            ((SelectableChannel)channel).configureBlocking(false);
+        } catch(IOException ie) {
+            throw runtime.newIOError(ie.getLocalizedMessage());
+        }
 
-            if (!isTheSameFile(file, true)) {
-                inChannel.close();
-                currentReadChannel.close();
-                currentReadPath = file.getAbsolutePath();
-                currentReadChannel = new FileInputStream(file);
-                inChannel = currentReadChannel.getChannel();
+        try {
+            int bytesWritten = ((WritableByteChannel)channel).write(this.byteBuffer);
+
+            if(bytesWritten >= 0) {
+                return runtime.newFixnum(bytesWritten);
+            } else {
+                throw runtime.newEOFError();
             }
-
-            inChannel.read(this.byteBuffer);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("read error: " + e.getLocalizedMessage());
+        } catch(IOException ie) {
+            throw runtime.newIOError(ie.getLocalizedMessage());
         }
-
-        return this;
-    }
-
-    private boolean isTheSameFile(File f, boolean read) {
-        if (read) {
-            return (currentReadPath == f.getAbsolutePath());
-        }
-
-        return currentWritePath == f.getAbsolutePath();
     }
 
     @JRubyMethod
@@ -186,8 +195,8 @@ public class ByteBuffer extends RubyObject {
         return this;
     }
 
-    @JRubyMethod
-    public IRubyObject to_s(ThreadContext context) {
-        return JavaUtil.convertJavaToRuby(context.getRuntime(), byteBuffer.toString());
+    @JRubyMethod(name = "to_s")
+    public IRubyObject toString(ThreadContext context) {
+        return context.runtime.newString(byteBuffer.toString());
     }
 }

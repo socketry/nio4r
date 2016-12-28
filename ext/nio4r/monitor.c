@@ -28,12 +28,6 @@ static VALUE NIO_Monitor_value(VALUE self);
 static VALUE NIO_Monitor_set_value(VALUE self, VALUE obj);
 static VALUE NIO_Monitor_readiness(VALUE self);
 
-#if HAVE_RB_IO_T
-  rb_io_t *fptr;
-#else
-  OpenFile *fptr;
-#endif
-
 /* Monitor control how a channel is being waited for by a monitor */
 void Init_NIO_Monitor()
 {
@@ -77,12 +71,7 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
     struct NIO_Monitor *monitor;
     struct NIO_Selector *selector;
     ID interests_id;
-
-    #if HAVE_RB_IO_T
-        rb_io_t *fptr;
-    #else
-        OpenFile *fptr;
-    #endif
+    rb_io_t *fptr;
 
     interests_id = SYM2ID(interests);
 

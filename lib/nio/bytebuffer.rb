@@ -65,27 +65,39 @@ module NIO
     #
     # @return [self]
     def <<(str)
-      raise OverflowError, "buffer is full" if str.length > @capacity - @position
+      raise OverflowError, "buffer is full" if str.length > @limit - @position
       @buffer[@position...str.length] = str
       @position += str.length
       self
     end
 
-    # write content in the buffer to file
-    # call flip before calling this
-    # after write operation to the
-    # buffer
-    def write_to(file)
-      @file_to_write = file unless @file_to_write.eql? file
-      file.write get if remaining?
+    # Perform a non-blocking read from the given IO object into the buffer
+    # Reads as much data as is immediately available and returns
+    #
+    # @param [IO] Ruby IO object to read from
+    #
+    # @return [Integer] number of bytes read (0 if none were available)
+    def read_from(io)
+      nbytes = @limit - @position
+      raise OverflowError, "buffer is full" if nbytes.zero?
+
+      bytes_read = IO.try_convert(io).read_nonblock(nbytes, exception: false)
+      return 0 if bytes_read == :wait_readable
+
+      self << bytes_read
+      bytes_read.length
     end
 
-    # Fill the byteBuffer with content of the file
-    def read_from(file)
-      @file_to_read = file unless @file_to_read.eql? file
-      while (s = file.read(1)) && remaining?
-        put_byte(s)
-      end
+    # Write the contents of the I/
+    def write_to(io)
+      nbytes = @limit - @position
+      raise UnderflowError, "no data remaining in buffer" if nbytes.zero?
+
+      bytes_written = IO.try_convert(io).write_nonblock(@buffer[@position...@limit], exception: false)
+      return 0 if bytes_written == :wait_writable
+
+      @position += bytes_written
+      bytes_written
     end
 
     # Flip the buffer over, preparing it to be read

@@ -166,7 +166,7 @@ static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string)
 
     long length = RSTRING_LEN(string);
 
-    if(length > buffer->capacity - buffer->position) {
+    if(length > buffer->limit - buffer->position) {
         rb_raise(cNIO_ByteBuffer_OverflowError, "buffer is full");
     }
 
@@ -179,48 +179,61 @@ static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string)
 static VALUE NIO_ByteBuffer_read_from(VALUE self, VALUE io)
 {
     struct NIO_ByteBuffer *buffer;
-    Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
-
-    #if HAVE_RB_IO_T
     rb_io_t *fptr;
-    #else
-    OpenFile *fptr;
-    #endif
+    ssize_t nbytes, bytes_read;
 
+    Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
     rb_io_set_nonblock(fptr);
 
-    while(NIO_ByteBuffer_full(self) == Qfalse) {
-        char* nextByte;
-        read(FPTR_TO_FD(fptr), &nextByte, 1);
-        VALUE byte = rb_str_new2(nextByte);
-        NIO_ByteBuffer_put(self, byte);
+    nbytes = buffer->limit - buffer->position;
+    if(nbytes == 0) {
+        rb_raise(cNIO_ByteBuffer_OverflowError, "buffer is full");
     }
 
-    return self;
+    bytes_read = read(FPTR_TO_FD(fptr), buffer->buffer + buffer->position, nbytes);
+
+    if(bytes_read < 0) {
+        if(errno == EAGAIN) {
+            return INT2NUM(0);
+        } else {
+            rb_sys_fail("write");
+        }
+    }
+
+    buffer->position += bytes_read;
+
+    return INT2NUM(bytes_read);
 }
 
 static VALUE NIO_ByteBuffer_write_to(VALUE self, VALUE io)
 {
     struct NIO_ByteBuffer *buffer;
-    Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
-    int size = buffer->limit + 1 - buffer->position;
-
-    #if HAVE_RB_IO_T
     rb_io_t *fptr;
-    #else
-    OpenFile *fptr;
-    #endif
+    ssize_t nbytes, bytes_written;
 
+    Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
     rb_io_set_nonblock(fptr);
 
-    VALUE content = NIO_ByteBuffer_get(self, INT2NUM(1024)); // TODO: fix
-    char* contentAsPointer = StringValuePtr(content);
+    nbytes = buffer->limit - buffer->position;
+    if(nbytes == 0) {
+        rb_raise(cNIO_ByteBuffer_UnderflowError, "no data remaining in buffer");
+    }
 
-    write(FPTR_TO_FD(fptr), contentAsPointer , size);
+    bytes_written = write(FPTR_TO_FD(fptr), buffer->buffer + buffer->position, nbytes);
 
-    return self;
+    if(bytes_written < 0) {
+        if(errno == EAGAIN) {
+            return INT2NUM(0);
+        } else {
+            rb_sys_fail("write");
+        }
+    }
+
+    buffer->position += bytes_written;
+
+    return INT2NUM(bytes_written);
 }
 
 static VALUE NIO_ByteBuffer_flip(VALUE self)
@@ -251,7 +264,7 @@ static VALUE NIO_ByteBuffer_reset(VALUE self)
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
-    if(buffer->mark < 0){
+    if(buffer->mark < 0) {
         rb_raise(rb_eRuntimeError, "Invalid Mark Exception");
     } else {
         buffer->position = buffer->mark;
