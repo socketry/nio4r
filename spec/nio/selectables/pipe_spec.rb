@@ -20,7 +20,7 @@ RSpec.describe "IO.pipe" do
   end
 
   let :unwritable_subject do
-    pipe = pair.last
+    _reader, pipe = pair
 
     # HACK: On OS X 10.8, this str must be larger than PIPE_BUF. Otherwise,
     #      the write is atomic and select() will return writable but write()
