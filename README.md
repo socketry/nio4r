@@ -1,15 +1,15 @@
-# ![nio4r](https://raw.github.com/celluloid/nio4r/master/logo.png)
+# ![nio4r](https://raw.github.com/socketry/nio4r/master/logo.png)
 
 [![Gem Version](https://badge.fury.io/rb/nio4r.svg)](http://rubygems.org/gems/nio4r)
-[![Build Status](https://secure.travis-ci.org/celluloid/nio4r.svg?branch=master)](http://travis-ci.org/celluloid/nio4r)
-[![Code Climate](https://codeclimate.com/github/celluloid/nio4r.svg)](https://codeclimate.com/github/celluloid/nio4r)
-[![Coverage Status](https://coveralls.io/repos/celluloid/nio4r/badge.svg?branch=master)](https://coveralls.io/r/celluloid/nio4r)
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/celluloid/nio4r/blob/master/LICENSE.txt)
+[![Build Status](https://secure.travis-ci.org/socketry/nio4r.svg?branch=master)](http://travis-ci.org/socketry/nio4r)
+[![Code Climate](https://codeclimate.com/github/socketry/nio4r.svg)](https://codeclimate.com/github/socketry/nio4r)
+[![Coverage Status](https://coveralls.io/repos/socketry/nio4r/badge.svg?branch=master)](https://coveralls.io/r/socketry/nio4r)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/socketry/nio4r/blob/master/LICENSE.txt)
 
-_NOTE: This is the 1.x **stable** version of nio4r used by [Rails 5]. For the
-2.x development branch, please see:_
+_NOTE: This is the 1.x **legacy** branch of nio4r used by [Rails 5]. For the
+2.x **stable** branch, please see:_
 
-https://github.com/celluloid/nio4r/tree/master
+https://github.com/socketry/nio4r/tree/master
 
 **New I/O for Ruby (nio4r)**: cross-platform asynchronous I/O primitives for
 scalable network clients and servers. Modeled after the Java NIO API, but
@@ -25,10 +25,10 @@ writing.
 ## Projects using nio4r
 
 * [ActionCable]: Rails 5 WebSocket protocol, uses nio4r for a WebSocket server
-* [Celluloid::IO]: Actor-based concurrency framework, uses nio4r for async I/O
+* [socketry::IO]: Actor-based concurrency framework, uses nio4r for async I/O
 
 [ActionCable]: https://rubygems.org/gems/actioncable
-[Celluloid::IO]: https://github.com/celluloid/celluloid-io
+[socketry::IO]: https://github.com/socketry/socketry-io
 
 ## Goals
 
@@ -160,8 +160,7 @@ handle to an arbitrary object of your choice (e.g. a proc)
 ### Flow Control
 
 For information on how to compose nio4r selectors inside of event loops,
-please read the [Flow Control Guide on the
-Wiki](https://github.com/celluloid/nio4r/wiki/Basic-Flow-Control)
+please read the [Flow Control Guide on the Wiki](https://github.com/socketry/nio4r/wiki/Basic-Flow-Control)
 
 ## Concurrency
 
