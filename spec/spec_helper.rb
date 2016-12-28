@@ -3,12 +3,15 @@
 require "coveralls"
 Coveralls.wear!
 
-require "rubygems"
-require "bundler/setup"
 require "nio"
 require "support/selectable_examples"
+require "rspec/retry"
 
-RSpec.configure(&:disable_monkey_patching!)
+RSpec.configure do |config|
+  config.disable_monkey_patching!
+  config.verbose_retry = true
+  config.display_try_failure_messages = true
+end
 
 $current_tcp_port = 10_000
 

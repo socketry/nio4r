@@ -75,7 +75,7 @@ RSpec.describe TCPSocket do
   it_behaves_like "an NIO bidirectional stream"
 
   context :connect do
-    it "selects writable when connected" do
+    it "selects writable when connected", retry: 5 do # retry: Flaky on OS X
       begin
         server = TCPServer.new(addr, port)
         selector = NIO::Selector.new
