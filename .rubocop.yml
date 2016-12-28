@@ -1,5 +1,4 @@
 AllCops:
-  TargetRubyVersion: 2.2
   DisplayCopNames: true
 
 #
@@ -47,6 +46,9 @@ Style/StringLiterals:
   EnforcedStyle: double_quotes
 
 Style/GlobalVars:
+  Enabled: false
+
+Style/NumericPredicate:
   Enabled: false
 
 Style/RescueModifier:

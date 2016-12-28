@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.shared_context "an NIO selectable" do
   let(:selector) { NIO::Selector.new }
 

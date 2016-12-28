@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module NIO
   # Monitors watch IO objects for specific events
   class Monitor
