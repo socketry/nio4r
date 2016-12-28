@@ -16,9 +16,10 @@ struct NIO_Selector
     struct ev_timer timer; /* for timeouts */
     struct ev_io wakeup;
 
-    int wakeup_reader, wakeup_writer;
-    int closed, selecting, timed_out;
     int ready_count;
+    int closed, selecting;
+    int wakeup_reader, wakeup_writer;
+    volatile int wakeup_fired;
 
     VALUE ready_array;
 };
