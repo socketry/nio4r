@@ -4,112 +4,102 @@ require "spec_helper"
 require "socket"
 
 RSpec.describe NIO::Monitor do
-  let(:example_peers) do
-    address   = "127.0.0.1"
-    base_port = 12_345
-    tries     = 10
+  let(:addr) { "localhost" }
+  let(:port) { next_available_tcp_port }
 
-    server = tries.times do |n|
-      begin
-        break TCPServer.new(address, base_port + n)
-      rescue Errno::EADDRINUSE
-        retry
-      end
-    end
-
-    raise Errno::EADDRINUSE, "couldn't find an open port" unless server
-    client = TCPSocket.new(address, server.addr[1])
-    [server, client]
-  end
-
-  let(:reader) { example_peers.first }
-  let(:writer) { example_peers.last }
+  let(:reader) { TCPServer.new(addr, port) }
+  let(:writer) { TCPSocket.new(addr, port) }
 
   let(:selector) { NIO::Selector.new }
 
-  subject    { selector.register(reader, :r) }
-  let(:peer) { selector.register(writer, :rw) }
-  after      { selector.close }
+  subject(:monitor) { selector.register(reader, :r) }
+  subject(:peer)    { selector.register(writer, :rw) }
 
-  before     { example_peers } # open server and client automatically
-  after      { reader.close }
-  after      { writer.close }
+  before { reader }
+  before { writer }
+  after  { reader.close }
+  after  { writer.close }
+  after  { selector.close }
 
-  it "knows its interests" do
-    expect(subject.interests).to eq(:r)
-    expect(peer.interests).to eq(:rw)
+  describe "#interests" do
+    it "knows its interests" do
+      expect(monitor.interests).to eq(:r)
+      expect(peer.interests).to eq(:rw)
+    end
   end
 
-  it "changes the interest set" do
-    expect(peer.interests).not_to eq(:w)
-    peer.interests = :w
-    expect(peer.interests).to eq(:w)
+  describe "#interests=" do
+    it "changes the interest set" do
+      expect(peer.interests).not_to eq(:w)
+      peer.interests = :w
+      expect(peer.interests).to eq(:w)
+    end
+
+    it "raises EOFError if interests are changed after the monitor is closed" do
+      monitor.close
+      expect { monitor.interests = :rw }.to raise_error(TypeError) # TODO: EOFError
+    end
   end
 
-  it "knows its IO object" do
-    expect(subject.io).to eq(reader)
+  describe "#io" do
+    it "knows its IO object" do
+      expect(monitor.io).to eq(reader)
+    end
   end
 
-  it "knows its selector" do
-    expect(subject.selector).to eq(selector)
+  describe "#selector" do
+    it "knows its selector" do
+      expect(monitor.selector).to eq(selector)
+    end
   end
 
-  it "stores arbitrary values" do
-    subject.value = 42
-    expect(subject.value).to eq(42)
+  describe "#value=" do
+    it "stores arbitrary values" do
+      monitor.value = 42
+      expect(monitor.value).to eq(42)
+    end
   end
 
-  it "knows what operations IO objects are ready for" do
-    # For whatever odd reason this breaks unless we eagerly evaluate subject
-    reader_monitor = subject
-    writer_monitor = peer
+  describe "#readiness" do
+    it "knows what operations IO objects are ready for" do
+      # For whatever odd reason this breaks unless we eagerly evaluate monitor
+      reader_monitor = monitor
+      writer_monitor = peer
 
-    selected = selector.select(0)
-    expect(selected).to include(writer_monitor)
+      selected = selector.select(0)
+      expect(selected).to include(writer_monitor)
 
-    expect(writer_monitor.readiness).to eq(:w)
-    expect(writer_monitor).not_to be_readable
-    expect(writer_monitor).to be_writable
+      expect(writer_monitor.readiness).to eq(:w)
+      expect(writer_monitor).not_to be_readable
+      expect(writer_monitor).to be_writable
 
-    writer << "testing 1 2 3"
+      writer << "testing 1 2 3"
 
-    selected = selector.select(0)
-    expect(selected).to include(reader_monitor)
+      selected = selector.select(0)
+      expect(selected).to include(reader_monitor)
 
-    expect(reader_monitor.readiness).to eq(:r)
-    expect(reader_monitor).to be_readable
-    expect(reader_monitor).not_to be_writable
+      expect(reader_monitor.readiness).to eq(:r)
+      expect(reader_monitor).to be_readable
+      expect(reader_monitor).not_to be_writable
+    end
   end
 
-  it "changes current interests with #interests=" do
-    client = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM, 0)
-    monitor = selector.register(client, :r)
-    expect(monitor.interests).to eq(:r)
-    monitor.interests = :w
-    expect(monitor.interests).to eq(:w)
-  end
+  describe "#close" do
+    it "closes" do
+      expect(monitor).not_to be_closed
+      expect(selector.registered?(reader)).to be_truthy
 
-  it "closes" do
-    expect(subject).not_to be_closed
-    expect(selector.registered?(reader)).to be_truthy
+      monitor.close
+      expect(monitor).to be_closed
+      expect(selector.registered?(reader)).to be_falsey
+    end
 
-    subject.close
-    expect(subject).to be_closed
-    expect(selector.registered?(reader)).to be_falsey
-  end
-
-  it "closes even if the selector has been shutdown" do
-    expect(subject).not_to be_closed
-    selector.close # forces shutdown
-    expect(subject).not_to be_closed
-    subject.close
-    expect(subject).to be_closed
-  end
-
-  it "changes the interest set after monitor closed" do
-    # check for changing the interests on the go after closed expected to fail
-    expect(subject.interests).not_to eq(:rw)
-    subject.close # forced shutdown
-    expect { subject.interests = :rw }.to raise_error(TypeError)
+    it "closes even if the selector has been shutdown" do
+      expect(monitor).not_to be_closed
+      selector.close # forces shutdown
+      expect(monitor).not_to be_closed
+      monitor.close
+      expect(monitor).to be_closed
+    end
   end
 end
