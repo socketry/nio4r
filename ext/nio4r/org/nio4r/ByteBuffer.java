@@ -62,9 +62,29 @@ public class ByteBuffer extends RubyObject {
         return context.getRuntime().newFixnum(this.byteBuffer.position());
     }
 
-    @JRubyMethod
-    public IRubyObject limit(ThreadContext context) {
+    @JRubyMethod(name = "limit")
+    public IRubyObject getLimit(ThreadContext context) {
         return context.getRuntime().newFixnum(this.byteBuffer.limit());
+    }
+
+    @JRubyMethod(name = "limit=")
+    public IRubyObject setLimit(ThreadContext context, IRubyObject newLimit) {
+        int lim = RubyNumeric.num2int(newLimit);
+
+        if(lim < 0) {
+            throw context.runtime.newArgumentError("negative limit given");
+        }
+
+        if(lim > this.byteBuffer.capacity()) {
+            throw context.runtime.newArgumentError("specified limit exceeds capacity");
+        }
+
+        try {
+            this.byteBuffer.limit(lim);
+            return this;
+        } catch(IllegalArgumentException e) {
+            throw context.runtime.newArgumentError(e.getLocalizedMessage());
+        }
     }
 
     @JRubyMethod(name = {"capacity", "size"})

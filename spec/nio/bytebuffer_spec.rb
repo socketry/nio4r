@@ -32,6 +32,50 @@ RSpec.describe NIO::ByteBuffer do
     end
   end
 
+  describe "#limit=" do
+    it "sets the buffer's limit to a valid value" do
+      bytebuffer.flip
+      expect(bytebuffer.limit).to be_zero
+
+      new_limit = capacity / 2
+      bytebuffer.limit = new_limit
+      expect(bytebuffer.limit).to eq new_limit
+    end
+
+    it "preserves position and mark if they're less than the new limit" do
+      bytebuffer << "four"
+      bytebuffer.mark
+      bytebuffer << "more"
+
+      bytebuffer.limit = capacity / 2
+      expect(bytebuffer.position).to eq 8
+      bytebuffer.reset
+      expect(bytebuffer.position).to eq 4
+    end
+
+    it "sets position to the new limit if the previous position is beyond the limit" do
+      bytebuffer << "four"
+      bytebuffer.limit = 2
+      expect(bytebuffer.position).to eq 2
+    end
+
+    it "clears the mark if the new limit is before the current mark" do
+      bytebuffer << "four"
+      bytebuffer.mark
+      bytebuffer.limit = 2
+      expect { bytebuffer.reset }.to raise_error(NIO::ByteBuffer::MarkUnsetError)
+    end
+
+    it "raises ArgumentError if specified limit is less than zero" do
+      expect { bytebuffer.limit = -1 }.to raise_error(ArgumentError)
+    end
+
+    it "raises ArgumentError if specified limit exceeds capacity" do
+      expect { bytebuffer.limit = capacity }.not_to raise_error
+      expect { bytebuffer.limit = capacity + 1 }.to raise_error(ArgumentError)
+    end
+  end
+
   describe "#capacity" do
     it "has the requested capacity" do
       expect(bytebuffer.capacity).to eq capacity

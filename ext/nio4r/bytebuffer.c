@@ -14,7 +14,8 @@ static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *byteBuffer);
 /* Methods */
 static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE capacity);
 static VALUE NIO_ByteBuffer_position(VALUE self);
-static VALUE NIO_ByteBuffer_limit(VALUE self);
+static VALUE NIO_ByteBuffer_get_limit(VALUE self);
+static VALUE NIO_ByteBuffer_set_limit(VALUE self, VALUE new_limit);
 static VALUE NIO_ByteBuffer_capacity(VALUE self);
 static VALUE NIO_ByteBuffer_remaining(VALUE self);
 static VALUE NIO_ByteBuffer_full(VALUE self);
@@ -29,6 +30,8 @@ static VALUE NIO_ByteBuffer_reset(VALUE self);
 static VALUE NIO_ByteBuffer_clear(VALUE self);
 static VALUE NIO_ByteBuffer_inspect(VALUE self);
 
+#define MARK_UNSET -1
+
 void Init_NIO_ByteBuffer()
 {
     mNIO = rb_define_module("NIO");
@@ -42,7 +45,8 @@ void Init_NIO_ByteBuffer()
     rb_define_method(cNIO_ByteBuffer, "initialize", NIO_ByteBuffer_initialize, 1);
     rb_define_method(cNIO_ByteBuffer, "clear", NIO_ByteBuffer_clear, 0);
     rb_define_method(cNIO_ByteBuffer, "position", NIO_ByteBuffer_position, 0);
-    rb_define_method(cNIO_ByteBuffer, "limit", NIO_ByteBuffer_limit, 0);
+    rb_define_method(cNIO_ByteBuffer, "limit", NIO_ByteBuffer_get_limit, 0);
+    rb_define_method(cNIO_ByteBuffer, "limit=", NIO_ByteBuffer_set_limit, 1);
     rb_define_method(cNIO_ByteBuffer, "capacity", NIO_ByteBuffer_capacity, 0);
     rb_define_method(cNIO_ByteBuffer, "size", NIO_ByteBuffer_capacity, 0);
     rb_define_method(cNIO_ByteBuffer, "remaining", NIO_ByteBuffer_remaining, 0);
@@ -95,7 +99,7 @@ static VALUE NIO_ByteBuffer_clear(VALUE self)
 
     buffer->position = 0;
     buffer->limit = buffer->capacity;
-    buffer->mark = -1;
+    buffer->mark = MARK_UNSET;
 
     return self;
 }
@@ -108,10 +112,38 @@ static VALUE NIO_ByteBuffer_position(VALUE self)
     return INT2NUM(buffer->position);
 }
 
-static VALUE NIO_ByteBuffer_limit(VALUE self)
+static VALUE NIO_ByteBuffer_get_limit(VALUE self)
 {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
+
+    return INT2NUM(buffer->limit);
+}
+
+static VALUE NIO_ByteBuffer_set_limit(VALUE self, VALUE new_limit)
+{
+    struct NIO_ByteBuffer *buffer;
+    Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
+
+    int lim = NUM2INT(new_limit);
+
+    if(lim < 0) {
+        rb_raise(rb_eArgError, "negative limit given");
+    }
+
+    if(lim > buffer->capacity) {
+        rb_raise(rb_eArgError, "specified limit exceeds capacity");
+    }
+
+    buffer->limit = lim;
+
+    if(buffer->position > lim) {
+        buffer->position = lim;
+    }
+
+    if(buffer->mark > lim) {
+        buffer->mark = MARK_UNSET;
+    }
 
     return INT2NUM(buffer->limit);
 }
@@ -245,7 +277,7 @@ static VALUE NIO_ByteBuffer_flip(VALUE self)
 
     buffer->limit = buffer->position;
     buffer->position = 0;
-    buffer->mark = -1;
+    buffer->mark = MARK_UNSET;
 
     return self;
 }
@@ -256,7 +288,7 @@ static VALUE NIO_ByteBuffer_rewind(VALUE self)
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
     buffer->position = 0;
-    buffer->mark = -1;
+    buffer->mark = MARK_UNSET;
 
     return self;
 }

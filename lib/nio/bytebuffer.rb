@@ -34,6 +34,24 @@ module NIO
       self
     end
 
+    # Set the limit to the given value. New limit must be less than capacity.
+    # Preserves limit and mark if they're less than the new limit, otherwise
+    # sets position to the new limit and clears the mark.
+    #
+    # @param limit [Integer] position in the buffer
+    #
+    # @raise [ArgumentError] new limit was invalid
+    def limit=(new_limit)
+      raise ArgumentError, "negative limit given" if new_limit < 0
+      raise ArgumentError, "specified limit exceeds capacity" if new_limit > @capacity
+
+      @limit = new_limit
+      @position = new_limit if @position > @limit
+      @mark = nil if @mark && @mark > @limit
+
+      new_limit
+    end
+
     # Number of bytes remaining in the buffer before the limit
     #
     # @return [Integer] number of bytes remaining
