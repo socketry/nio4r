@@ -23,9 +23,6 @@ env:
 
 matrix:
   fast_finish: true
-  allow_failures:
-    - rvm: jruby-9.1.6.0
-      env: NIO4R_PURE=true
 
 notifications:
   irc: "irc.freenode.org#celluloid"
