@@ -19,7 +19,7 @@ static VALUE NIO_ByteBuffer_set_limit(VALUE self, VALUE new_limit);
 static VALUE NIO_ByteBuffer_capacity(VALUE self);
 static VALUE NIO_ByteBuffer_remaining(VALUE self);
 static VALUE NIO_ByteBuffer_full(VALUE self);
-static VALUE NIO_ByteBuffer_get(VALUE self, VALUE length);
+static VALUE NIO_ByteBuffer_get(int argc, VALUE *argv, VALUE self);
 static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string);
 static VALUE NIO_ByteBuffer_write_to(VALUE self, VALUE file);
 static VALUE NIO_ByteBuffer_read_from(VALUE self, VALUE file);
@@ -51,7 +51,7 @@ void Init_NIO_ByteBuffer()
     rb_define_method(cNIO_ByteBuffer, "size", NIO_ByteBuffer_capacity, 0);
     rb_define_method(cNIO_ByteBuffer, "remaining", NIO_ByteBuffer_remaining, 0);
     rb_define_method(cNIO_ByteBuffer, "full?", NIO_ByteBuffer_full, 0);
-    rb_define_method(cNIO_ByteBuffer, "get", NIO_ByteBuffer_get, 1);
+    rb_define_method(cNIO_ByteBuffer, "get", NIO_ByteBuffer_get, -1);
     rb_define_method(cNIO_ByteBuffer, "<<", NIO_ByteBuffer_put, 1);
     rb_define_method(cNIO_ByteBuffer, "read_from", NIO_ByteBuffer_read_from, 1);
     rb_define_method(cNIO_ByteBuffer, "write_to", NIO_ByteBuffer_write_to, 1);
@@ -172,12 +172,20 @@ static VALUE NIO_ByteBuffer_full(VALUE self)
     return buffer->position == buffer->limit ? Qtrue : Qfalse;
 }
 
-static VALUE NIO_ByteBuffer_get(VALUE self, VALUE length)
+static VALUE NIO_ByteBuffer_get(int argc, VALUE *argv, VALUE self)
 {
-    VALUE result;
+    int len;
+    VALUE length, result;
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
-    int len = NUM2INT(length);
+
+    rb_scan_args(argc, argv, "01", &length);
+
+    if(length == Qnil) {
+        len = buffer->limit - buffer->position;
+    } else {
+        len = NUM2INT(length);
+    }
 
     if(len < 0) {
         rb_raise(rb_eArgError, "negative length given");

@@ -102,6 +102,13 @@ RSpec.describe NIO::ByteBuffer do
   end
 
   describe "#get" do
+    it "reads all remaining data if no length is given" do
+      bytebuffer << example_string
+      bytebuffer.flip
+
+      expect(bytebuffer.get).to eq example_string
+    end
+
     it "reads zeroes from a newly initialized buffer" do
       expect(bytebuffer.get(capacity)).to eq("\0" * capacity)
     end
@@ -149,7 +156,7 @@ RSpec.describe NIO::ByteBuffer do
 
       expect(bytebuffer.position).to be_zero
       expect(bytebuffer.limit).to eq example_string.length
-      expect(bytebuffer.get(example_string.length)).to eq example_string
+      expect(bytebuffer.get).to eq example_string
     end
 
     it "sets remaining to the previous position" do
@@ -247,7 +254,7 @@ RSpec.describe NIO::ByteBuffer do
         expect(bytebuffer.read_from(peer)).to eq example_string.length
         bytebuffer.flip
 
-        expect(bytebuffer.get(example_string.length)).to eq example_string
+        expect(bytebuffer.get).to eq example_string
       end
 
       it "raises NIO::ByteBuffer::OverflowError if the buffer is already full" do

@@ -71,7 +71,7 @@ module NIO
     # @raise [NIO::ByteBuffer::UnderflowError] not enough data remaining in buffer
     #
     # @return [String] bytes read from buffer
-    def get(length)
+    def get(length = remaining)
       raise ArgumentError, "negative length given" if length < 0
       raise UnderflowError, "not enough data in buffer" if length > @limit - @position
 

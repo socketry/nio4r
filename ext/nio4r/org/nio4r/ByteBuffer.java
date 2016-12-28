@@ -107,6 +107,11 @@ public class ByteBuffer extends RubyObject {
     }
 
     @JRubyMethod
+    public IRubyObject get(ThreadContext context) {
+        return this.get(context, context.getRuntime().newFixnum(this.byteBuffer.remaining()));
+    }
+
+    @JRubyMethod
     public IRubyObject get(ThreadContext context, IRubyObject length) {
         int len = RubyNumeric.num2int(length);
         byte[] bytes = new byte[len];
