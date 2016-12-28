@@ -151,6 +151,25 @@ RSpec.describe NIO::ByteBuffer do
     end
   end
 
+  describe "#[]" do
+    it "obtains bytes at a given index without altering position" do
+      bytebuffer << example_string
+      expect(bytebuffer[7]).to eq example_string.bytes[7]
+      expect(bytebuffer.position).to eq example_string.length
+    end
+
+    it "raises ArgumentError if the index is less than zero" do
+      expect { bytebuffer[-1] }.to raise_error(ArgumentError)
+    end
+
+    it "raises ArgumentError if the index exceeds the limit" do
+      bytebuffer << example_string
+      bytebuffer.flip
+      expect(bytebuffer[bytebuffer.limit - 1]).to eq example_string.bytes.last
+      expect { bytebuffer[bytebuffer.limit] }.to raise_error(ArgumentError)
+    end
+  end
+
   describe "#<<" do
     it "adds strings to the buffer" do
       bytebuffer << example_string

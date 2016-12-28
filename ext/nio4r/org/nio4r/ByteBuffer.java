@@ -146,6 +146,21 @@ public class ByteBuffer extends RubyObject {
         return RubyString.newString(context.getRuntime(), bytes);
     }
 
+    @JRubyMethod(name = "[]")
+    public IRubyObject fetch(ThreadContext context, IRubyObject index) {
+        int i = RubyNumeric.num2int(index);
+
+        if(i < 0) {
+            throw context.runtime.newArgumentError("negative index given");
+        }
+
+        if(i >= this.byteBuffer.limit()) {
+            throw context.runtime.newArgumentError("index exceeds limit");
+        }
+
+        return context.getRuntime().newFixnum(this.byteBuffer.get(i));
+    }
+
     @JRubyMethod(name = "<<")
     public IRubyObject put(ThreadContext context, IRubyObject str) {
         String string = str.asJavaString();

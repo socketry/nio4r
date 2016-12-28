@@ -22,6 +22,7 @@ static VALUE NIO_ByteBuffer_capacity(VALUE self);
 static VALUE NIO_ByteBuffer_remaining(VALUE self);
 static VALUE NIO_ByteBuffer_full(VALUE self);
 static VALUE NIO_ByteBuffer_get(int argc, VALUE *argv, VALUE self);
+static VALUE NIO_ByteBuffer_fetch(VALUE self, VALUE index);
 static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string);
 static VALUE NIO_ByteBuffer_write_to(VALUE self, VALUE file);
 static VALUE NIO_ByteBuffer_read_from(VALUE self, VALUE file);
@@ -58,6 +59,7 @@ void Init_NIO_ByteBuffer()
     rb_define_method(cNIO_ByteBuffer, "remaining", NIO_ByteBuffer_remaining, 0);
     rb_define_method(cNIO_ByteBuffer, "full?", NIO_ByteBuffer_full, 0);
     rb_define_method(cNIO_ByteBuffer, "get", NIO_ByteBuffer_get, -1);
+    rb_define_method(cNIO_ByteBuffer, "[]", NIO_ByteBuffer_fetch, 1);
     rb_define_method(cNIO_ByteBuffer, "<<", NIO_ByteBuffer_put, 1);
     rb_define_method(cNIO_ByteBuffer, "read_from", NIO_ByteBuffer_read_from, 1);
     rb_define_method(cNIO_ByteBuffer, "write_to", NIO_ByteBuffer_write_to, 1);
@@ -231,6 +233,24 @@ static VALUE NIO_ByteBuffer_get(int argc, VALUE *argv, VALUE self)
     buffer->position += len;
 
     return result;
+}
+
+static VALUE NIO_ByteBuffer_fetch(VALUE self, VALUE index)
+{
+    struct NIO_ByteBuffer *buffer;
+    Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
+
+    int i = NUM2INT(index);
+
+    if(i < 0) {
+        rb_raise(rb_eArgError, "negative index given");
+    }
+
+    if(i >= buffer->limit) {
+        rb_raise(rb_eArgError, "specified index exceeds limit");
+    }
+
+    return INT2NUM(buffer->buffer[i]);
 }
 
 static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string)

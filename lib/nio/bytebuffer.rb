@@ -99,6 +99,18 @@ module NIO
       result
     end
 
+    # Obtain the byte at a given index in the buffer as an Integer
+    #
+    # @raise [ArgumentError] index is invalid (either negative or larger than limit)
+    #
+    # @return [Integer] byte at the given index
+    def [](index)
+      raise ArgumentError, "negative index given" if index < 0
+      raise ArgumentError, "specified index exceeds limit" if index >= @limit
+
+      @buffer.bytes[index]
+    end
+
     # Add a String to the buffer
     #
     # @raise [NIO::ByteBuffer::OverflowError] buffer is full
