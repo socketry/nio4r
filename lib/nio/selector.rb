@@ -84,6 +84,8 @@ module NIO
             # Clear all wakeup signals we've received by reading them
             # Wakeups should have level triggered behavior
             @wakeup.read(@wakeup.stat.size)
+
+            # TODO: return something other than nil on wakeup
             return
           else
             monitor = @selectables[io]
@@ -100,9 +102,7 @@ module NIO
       end
 
       if block_given?
-        selected_monitors.each do |m|
-          yield m
-        end
+        selected_monitors.each { |m| yield m }
         selected_monitors.size
       else
         selected_monitors
@@ -135,8 +135,16 @@ module NIO
       @lock.synchronize do
         return if @closed
 
-        @wakeup.close rescue nil
-        @waker.close rescue nil
+        begin
+          @wakeup.close
+        rescue IOError
+        end
+
+        begin
+          @waker.close
+        rescue IOError
+        end
+
         @closed = true
       end
     end

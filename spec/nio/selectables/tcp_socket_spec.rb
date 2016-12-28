@@ -32,14 +32,16 @@ RSpec.describe TCPSocket do
   let :unwritable_subject do
     server = TCPServer.new("localhost", tcp_port)
     sock = TCPSocket.open("localhost", tcp_port)
-    peer = server.accept
+
+    # TODO: close this socket
+    server.accept
 
     begin
       sock.write_nonblock "X" * 1024
       _, writers = select [], [sock], [], 0
     end while writers && writers.include?(sock)
 
-    # I think the kernel might manage to drain its buffer a bit even after
+    # HAX: I think the kernel might manage to drain its buffer a bit even after
     # the socket first goes unwritable. Attempt to sleep past this and then
     # attempt to write again
     sleep 0.1
@@ -70,19 +72,24 @@ RSpec.describe TCPSocket do
 
   context :connect do
     it "selects writable when connected" do
-      selector = NIO::Selector.new
-      server = TCPServer.new("127.0.0.1", tcp_port)
+      begin
+        server = TCPServer.new("127.0.0.1", tcp_port)
+        selector = NIO::Selector.new
 
-      client = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM, 0)
-      monitor = selector.register(client, :w)
+        client = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM, 0)
+        monitor = selector.register(client, :w)
 
-      expect do
-        client.connect_nonblock Socket.sockaddr_in(tcp_port, "127.0.0.1")
-      end.to raise_exception Errno::EINPROGRESS
+        expect do
+          client.connect_nonblock Socket.sockaddr_in(tcp_port, "127.0.0.1")
+        end.to raise_exception Errno::EINPROGRESS
 
-      expect(selector.select(0.001)).to include monitor
-      result = client.getsockopt(::Socket::SOL_SOCKET, ::Socket::SO_ERROR)
-      expect(result.unpack("i").first).to be_zero
+        expect(selector.select(0.001)).to include monitor
+        result = client.getsockopt(::Socket::SOL_SOCKET, ::Socket::SO_ERROR)
+        expect(result.unpack("i").first).to be_zero
+      ensure
+        server.close rescue nil
+        selector.close rescue nil
+      end
     end
   end
 end

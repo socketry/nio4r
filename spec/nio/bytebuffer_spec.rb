@@ -304,7 +304,7 @@ RSpec.describe NIO::ByteBuffer do
 
       server.close rescue nil
       client.close rescue nil
-      peer.close   rescue nil
+      peer.close rescue nil
     end
 
     describe "#read_from" do

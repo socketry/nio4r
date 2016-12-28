@@ -9,7 +9,7 @@ RSpec.shared_context "an NIO selectable" do
   end
 
   it "does not select unreadable objects" do
-    monitor = selector.register(unreadable_subject, :r)
+    selector.register(unreadable_subject, :r)
     expect(selector.select(0)).to be_nil
   end
 
@@ -21,7 +21,7 @@ RSpec.shared_context "an NIO selectable" do
   end
 
   it "does not select unwritable objects" do
-    monitor = selector.register(unwritable_subject, :w)
+    selector.register(unwritable_subject, :w)
     expect(selector.select(0)).to be_nil
   end
 end
@@ -50,7 +50,7 @@ RSpec.shared_context "an NIO bidirectional stream" do
   let(:peer)     { pair.last }
 
   it "selects readable and writable" do
-    monitor = selector.register(readable_subject, :rw)
+    selector.register(readable_subject, :rw)
     selector.select(0) do |m|
       expect(m.readiness).to eq(:rw)
     end
