@@ -28,6 +28,7 @@ static VALUE NIO_ByteBuffer_rewind(VALUE self);
 static VALUE NIO_ByteBuffer_mark(VALUE self);
 static VALUE NIO_ByteBuffer_reset(VALUE self);
 static VALUE NIO_ByteBuffer_clear(VALUE self);
+static VALUE NIO_ByteBuffer_each(VALUE self);
 static VALUE NIO_ByteBuffer_inspect(VALUE self);
 
 #define MARK_UNSET -1
@@ -41,6 +42,8 @@ void Init_NIO_ByteBuffer()
     cNIO_ByteBuffer_OverflowError  = rb_define_class_under(cNIO_ByteBuffer, "OverflowError", rb_eIOError);
     cNIO_ByteBuffer_UnderflowError = rb_define_class_under(cNIO_ByteBuffer, "UnderflowError", rb_eIOError);
     cNIO_ByteBuffer_MarkUnsetError = rb_define_class_under(cNIO_ByteBuffer, "MarkUnsetError", rb_eIOError);
+
+    rb_include_module(cNIO_ByteBuffer, rb_mEnumerable);
 
     rb_define_method(cNIO_ByteBuffer, "initialize", NIO_ByteBuffer_initialize, 1);
     rb_define_method(cNIO_ByteBuffer, "clear", NIO_ByteBuffer_clear, 0);
@@ -59,6 +62,7 @@ void Init_NIO_ByteBuffer()
     rb_define_method(cNIO_ByteBuffer, "rewind", NIO_ByteBuffer_rewind, 0);
     rb_define_method(cNIO_ByteBuffer, "mark", NIO_ByteBuffer_mark, 0);
     rb_define_method(cNIO_ByteBuffer, "reset", NIO_ByteBuffer_reset, 0);
+    rb_define_method(cNIO_ByteBuffer, "each", NIO_ByteBuffer_each, 0);
     rb_define_method(cNIO_ByteBuffer, "inspect", NIO_ByteBuffer_inspect, 0);
 }
 
@@ -324,14 +328,32 @@ static VALUE NIO_ByteBuffer_reset(VALUE self)
     return self;
 }
 
+static VALUE NIO_ByteBuffer_each(VALUE self)
+{
+    int i;
+    struct NIO_ByteBuffer *buffer;
+    Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
+
+    if(rb_block_given_p()) {
+        for(i = 0; i < buffer->limit; i++) {
+            rb_yield(INT2NUM(buffer->buffer[i]));
+        }
+    } else {
+        rb_raise(rb_eArgError, "no block given");
+    }
+
+    return self;
+}
+
 static VALUE NIO_ByteBuffer_inspect(VALUE self)
 {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
     return rb_sprintf(
-        "#<NIO::ByteBuffer:0x%x @position=%d @limit=%d @capacity=%d>",
-        rb_obj_id(self),
+        "#<%s:%p @position=%d @limit=%d @capacity=%d>",
+        rb_class2name(CLASS_OF(self)),
+        (void*)self,
         buffer->position,
         buffer->limit,
         buffer->capacity

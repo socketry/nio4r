@@ -212,6 +212,17 @@ RSpec.describe NIO::ByteBuffer do
     end
   end
 
+  describe "#each" do
+    it "iterates over data in the buffer" do
+      bytebuffer << example_string
+      bytebuffer.flip
+
+      bytes = []
+      bytebuffer.each { |byte| bytes << byte }
+      expect(bytes).to eq example_string.bytes
+    end
+  end
+
   describe "#inspect" do
     it "inspects the buffer offsets" do
       regex = /\A#<NIO::ByteBuffer:.*? @position=0 @limit=#{capacity} @capacity=#{capacity}>\z/

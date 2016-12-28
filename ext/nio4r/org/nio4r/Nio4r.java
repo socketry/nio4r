@@ -55,6 +55,7 @@ public class Nio4r implements Library {
         }, nio);
 
         byteBuffer.defineAnnotatedMethods(ByteBuffer.class);
+        byteBuffer.includeModule(ruby.getEnumerable());
 
         ruby.defineClassUnder("OverflowError",  ruby.getIOError(), ruby.getIOError().getAllocator(), byteBuffer);
         ruby.defineClassUnder("UnderflowError", ruby.getIOError(), ruby.getIOError().getAllocator(), byteBuffer);

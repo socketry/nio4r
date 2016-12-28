@@ -19,6 +19,7 @@ import org.jruby.anno.JRubyMethod;
 import org.jruby.exceptions.RaiseException;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
+import org.jruby.runtime.Block;
 
 /*
 created by Upekshej
@@ -228,6 +229,15 @@ public class ByteBuffer extends RubyObject {
         } catch(InvalidMarkException ie) {
             throw ByteBuffer.newMarkUnsetError(context, "mark has not been set");
         }
+    }
+
+    @JRubyMethod
+    public IRubyObject each(ThreadContext context, Block block) {
+        for(int i = 0; i < this.byteBuffer.limit(); i++) {
+            block.call(context, context.getRuntime().newFixnum(this.byteBuffer.get(i)));
+        }
+
+        return this;
     }
 
     @JRubyMethod

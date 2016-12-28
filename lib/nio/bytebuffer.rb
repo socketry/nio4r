@@ -1,6 +1,8 @@
 module NIO
   # Efficient byte buffers for performant I/O operations
   class ByteBuffer
+    include Enumerable
+
     attr_reader :position, :limit, :capacity
 
     # Insufficient capacity in buffer
@@ -66,7 +68,8 @@ module NIO
       remaining.zero?
     end
 
-    # Obtain the requested number of bytes from the buffer, advancing the position
+    # Obtain the requested number of bytes from the buffer, advancing the position.
+    # If no length is given, all remaining bytes are consumed.
     #
     # @raise [NIO::ByteBuffer::UnderflowError] not enough data remaining in buffer
     #
@@ -154,6 +157,13 @@ module NIO
       raise MarkUnsetError, "mark has not been set" unless @mark
       @position = @mark
       self
+    end
+
+    # Iterate over the bytes in the buffer (as Integers)
+    #
+    # @return [self]
+    def each(&block)
+      @buffer[0...@limit].each_byte(&block)
     end
 
     # Inspect the state of the buffer
