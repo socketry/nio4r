@@ -354,7 +354,6 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
     int result;
     selector->selecting = 1;
 
-#if defined(HAVE_RB_THREAD_BLOCKING_REGION) || defined(HAVE_RB_THREAD_CALL_WITHOUT_GVL) || defined(HAVE_RB_THREAD_ALONE)
     /* Implement the optional timeout (if any) as a ev_timer */
     if(timeout != Qnil) {
         /* It seems libev is not a fan of timers being zero, so fudge a little */
@@ -363,49 +362,9 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
     } else {
         ev_timer_stop(selector->ev_loop, &selector->timer);
     }
-#else
-    /* Store when we started the loop so we can calculate the timeout */
-    ev_tstamp started_at = ev_now(selector->ev_loop);
-#endif
 
-#if defined(HAVE_RB_THREAD_BLOCKING_REGION) || defined(HAVE_RB_THREAD_CALL_WITHOUT_GVL)
     /* libev is patched to release the GIL when it makes its system call */
     ev_loop(selector->ev_loop, EVLOOP_ONESHOT);
-#elif defined(HAVE_RB_THREAD_ALONE)
-    /* If we're the only thread we can make a blocking system call */
-    if(rb_thread_alone()) {
-#else
-    /* If we don't have rb_thread_alone() we can't block */
-    if(0) {
-#endif /* defined(HAVE_RB_THREAD_BLOCKING_REGION) */
-
-#if !defined(HAVE_RB_THREAD_BLOCKING_REGION) && !defined(HAVE_RB_THREAD_CALL_WITHOUT_GVL)
-        TRAP_BEG;
-        ev_loop(selector->ev_loop, EVLOOP_ONESHOT);
-        TRAP_END;
-    } else {
-        /* We need to busy wait as not to stall the green thread scheduler
-           Ruby 1.8: just say no! :( */
-        ev_timer_init(&selector->timer, NIO_Selector_timeout_callback, BUSYWAIT_INTERVAL, BUSYWAIT_INTERVAL);
-        ev_timer_start(selector->ev_loop, &selector->timer);
-
-        /* Loop until we receive events */
-        while(selector->selecting && !selector->ready_count) {
-            TRAP_BEG;
-            ev_loop(selector->ev_loop, EVLOOP_ONESHOT);
-            TRAP_END;
-
-            /* Run the next green thread */
-            rb_thread_schedule();
-
-            /* Break if the timeout has elapsed */
-            if(timeout != Qnil && ev_now(selector->ev_loop) - started_at >= NUM2DBL(timeout))
-                break;
-        }
-
-        ev_timer_stop(selector->ev_loop, &selector->timer);
-    }
-#endif /* defined(HAVE_RB_THREAD_BLOCKING_REGION) */
 
     result = selector->ready_count;
     selector->selecting = selector->ready_count = 0;
