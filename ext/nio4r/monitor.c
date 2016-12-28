@@ -115,7 +115,7 @@ static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests)
     ID interests_id;
 
     if(NIO_Monitor_is_closed(self) == Qtrue) {
-        rb_raise(rb_eTypeError, "monitor is already closed");
+        rb_raise(rb_eEOFError, "monitor is closed");
     }
 
     interests_id = SYM2ID(interests);

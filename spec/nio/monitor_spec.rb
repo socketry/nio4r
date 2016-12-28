@@ -37,7 +37,7 @@ RSpec.describe NIO::Monitor do
 
     it "raises EOFError if interests are changed after the monitor is closed" do
       monitor.close
-      expect { monitor.interests = :rw }.to raise_error(TypeError) # TODO: EOFError
+      expect { monitor.interests = :rw }.to raise_error(EOFError)
     end
   end
 

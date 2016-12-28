@@ -26,7 +26,7 @@ module NIO
 
     # set the interests set
     def interests=(interests)
-      raise TypeError, "monitor is already closed" if closed?
+      raise EOFError, "monitor is closed" if closed?
       raise ArgumentError, "bad interests: #{interests}" unless [:r, :w, :rw].include?(interests)
 
       @interests = interests

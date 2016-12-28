@@ -41,7 +41,7 @@ public class Monitor extends RubyObject {
     @JRubyMethod(name = "interests=")
     public IRubyObject setInterests(ThreadContext context, IRubyObject interests) {
         if(this.closed == context.getRuntime().getTrue()) {
-            throw context.getRuntime().newTypeError("monitor is already closed");
+            throw context.getRuntime().newEOFError("monitor is closed");
         }
 
         int interestOps = 0;
