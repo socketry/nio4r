@@ -3,7 +3,7 @@
 RSpec.shared_context "an NIO selectable" do
   let(:selector) { NIO::Selector.new }
 
-  it "selects readable objects" do
+  it "selects readable objects", retry: 5 do # retry: Flaky on OS X
     monitor = selector.register(readable_subject, :r)
     ready = selector.select(0)
     expect(ready).to be_an Enumerable
@@ -51,7 +51,7 @@ RSpec.shared_context "an NIO bidirectional stream" do
   let(:stream)   { pair.first }
   let(:peer)     { pair.last }
 
-  it "selects readable and writable" do
+  it "selects readable and writable", retry: 5 do # retry: Flaky on OS X
     selector.register(readable_subject, :rw)
     selector.select(0) do |m|
       expect(m.readiness).to eq(:rw)
