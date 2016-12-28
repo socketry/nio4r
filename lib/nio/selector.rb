@@ -78,7 +78,7 @@ module NIO
           monitor.readiness = nil
         end
 
-        ready_readers, ready_writers = Kernel.select readers, writers, [], timeout
+        ready_readers, ready_writers = Kernel.select(readers, writers, [], timeout)
         return unless ready_readers # timeout
 
         ready_readers.each do |io|
