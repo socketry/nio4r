@@ -24,6 +24,7 @@ import org.nio4r.Monitor;
 public class Selector extends RubyObject {
     private java.nio.channels.Selector selector;
     private HashMap<SelectableChannel,SelectionKey> cancelledKeys;
+    private volatile boolean wakeupFired;
 
     public Selector(final Ruby ruby, RubyClass rubyClass) {
         super(ruby, rubyClass);
@@ -32,6 +33,8 @@ public class Selector extends RubyObject {
     @JRubyMethod
     public IRubyObject initialize(ThreadContext context) {
         this.cancelledKeys = new HashMap<SelectableChannel,SelectionKey>();
+        this.wakeupFired = false;
+
         try {
             this.selector = java.nio.channels.Selector.open();
         } catch(IOException ie) {
@@ -172,13 +175,16 @@ public class Selector extends RubyObject {
             throw context.getRuntime().newIOError("selector is closed");
         }
 
+        this.wakeupFired = false;
         int ready = doSelect(runtime, context, timeout);
 
-        /* Timeout or wakeup */
-        if(ready <= 0)
+        /* Timeout */
+        if(ready <= 0 && !this.wakeupFired) {
             return context.nil;
+        }
 
         RubyArray array = null;
+
         if(!block.isGiven()) {
             array = runtime.newArray(this.selector.selectedKeys().size());
         }
@@ -264,7 +270,9 @@ public class Selector extends RubyObject {
             throw context.getRuntime().newIOError("selector is closed");
         }
 
+        this.wakeupFired = true;
         this.selector.wakeup();
+
         return context.nil;
     }
 }

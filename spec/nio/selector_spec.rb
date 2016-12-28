@@ -102,7 +102,7 @@ RSpec.describe NIO::Selector do
 
       thread = Thread.new do
         started_at = Time.now
-        expect(subject.select).to be_nil
+        expect(subject.select).to eq []
         Time.now - started_at
       end
 

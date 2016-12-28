@@ -17,7 +17,7 @@ struct NIO_Selector
     struct ev_io wakeup;
 
     int wakeup_reader, wakeup_writer;
-    int closed, selecting;
+    int closed, selecting, timed_out;
     int ready_count;
 
     VALUE ready_array;
