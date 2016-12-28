@@ -9,6 +9,9 @@ module NIO
     # Not enough data remaining in buffer
     UnderflowError = Class.new(IOError)
 
+    # Mark has not been set
+    MarkUnsetError = Class.new(IOError)
+
     # Create a new ByteBuffer, either with a specified capacity or populating
     # it from a given string
     #
@@ -109,25 +112,28 @@ module NIO
     def flip
       @limit = @position
       @position = 0
-      @mark = -1
+      @mark = nil
       self
     end
 
     # Set the buffer's current position to 0, leaving the limit unchanged
     def rewind
       @position = 0
-      @mark = -1
+      @mark = nil
       self
     end
 
-    # mark the current position in order to reset later
+    # Mark a position to return to using the `#reset` method
     def mark
       @mark = @position
+      self
     end
 
-    # reset the position to the previously marked position
+    # Reset position to the previously marked location
+    #
+    # @raise [NIO::ByteBuffer::MarkUnsetError] mark has not been set (call `#mark` first)
     def reset
-      raise "Invalid Mark Exception" if @mark < 0
+      raise MarkUnsetError, "mark has not been set" unless @mark
       @position = @mark
       self
     end

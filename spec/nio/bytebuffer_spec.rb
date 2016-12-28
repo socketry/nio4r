@@ -16,7 +16,7 @@ RSpec.describe NIO::ByteBuffer do
       bytebuffer << example_string
       bytebuffer.clear
 
-      expect(bytebuffer.remaining).to eql(capacity)
+      expect(bytebuffer.remaining).to eq capacity
     end
   end
 
@@ -28,21 +28,21 @@ RSpec.describe NIO::ByteBuffer do
 
   describe "#limit" do
     it "defaults to the buffer's capacity" do
-      expect(bytebuffer.limit).to eq(capacity)
+      expect(bytebuffer.limit).to eq capacity
     end
   end
 
   describe "#capacity" do
     it "has the requested capacity" do
-      expect(bytebuffer.capacity).to eql(capacity)
+      expect(bytebuffer.capacity).to eq capacity
     end
   end
 
   describe "#remaining" do
     it "calculates the number of bytes remaining" do
-      expect(bytebuffer.remaining).to eql(capacity)
+      expect(bytebuffer.remaining).to eq capacity
       bytebuffer << example_string
-      expect(bytebuffer.remaining).to eql(capacity - example_string.length)
+      expect(bytebuffer.remaining).to eq(capacity - example_string.length)
     end
   end
 
@@ -68,9 +68,9 @@ RSpec.describe NIO::ByteBuffer do
       bytebuffer << "Third"
       bytebuffer.flip
 
-      expect(bytebuffer.position).to eql(0)
-      expect(bytebuffer.get(10)).to eql "FirstSecon"
-      expect(bytebuffer.position).to eql(10)
+      expect(bytebuffer.position).to be_zero
+      expect(bytebuffer.get(10)).to eq "FirstSecon"
+      expect(bytebuffer.position).to eq 10
     end
 
     it "raises NIO::ByteBuffer::UnderflowError if there is not enough data in the buffer" do
@@ -78,15 +78,15 @@ RSpec.describe NIO::ByteBuffer do
       bytebuffer.flip
 
       expect { bytebuffer.get(example_string.length + 1) }.to raise_error(NIO::ByteBuffer::UnderflowError)
-      expect(bytebuffer.get(example_string.length)).to eq(example_string)
+      expect(bytebuffer.get(example_string.length)).to eq example_string
     end
   end
 
   describe "#<<" do
     it "adds strings to the buffer" do
       bytebuffer << example_string
-      expect(bytebuffer.position).to eql(example_string.length)
-      expect(bytebuffer.limit).to eql(capacity)
+      expect(bytebuffer.position).to eq example_string.length
+      expect(bytebuffer.limit).to eq capacity
     end
 
     it "raises NIO::ByteBuffer::OverflowError if the buffer is full" do
@@ -99,22 +99,22 @@ RSpec.describe NIO::ByteBuffer do
   describe "#flip" do
     it "flips the bytebuffer" do
       bytebuffer << example_string
-      expect(bytebuffer.position).to eql(example_string.length)
+      expect(bytebuffer.position).to eql example_string.length
 
       expect(bytebuffer.flip).to eq bytebuffer
 
       expect(bytebuffer.position).to be_zero
-      expect(bytebuffer.limit).to eql(example_string.length)
-      expect(bytebuffer.get(example_string.length)).to eql(example_string)
+      expect(bytebuffer.limit).to eq example_string.length
+      expect(bytebuffer.get(example_string.length)).to eq example_string
     end
 
     it "sets remaining to the previous position" do
       bytebuffer << example_string
       previous_position = bytebuffer.position
-      expect(bytebuffer.remaining).to eql(capacity - previous_position)
+      expect(bytebuffer.remaining).to eq(capacity - previous_position)
 
       bytebuffer.flip
-      expect(bytebuffer.remaining).to eql(previous_position)
+      expect(bytebuffer.remaining).to eq previous_position
     end
 
     it "sets limit to the previous position" do
@@ -123,7 +123,7 @@ RSpec.describe NIO::ByteBuffer do
 
       previous_position = bytebuffer.position
       bytebuffer.flip
-      expect(bytebuffer.limit).to eql(previous_position)
+      expect(bytebuffer.limit).to eql previous_position
     end
   end
 
@@ -133,7 +133,31 @@ RSpec.describe NIO::ByteBuffer do
       expect(bytebuffer.rewind).to eq bytebuffer
 
       expect(bytebuffer.position).to be_zero
-      expect(bytebuffer.limit).to eql(capacity)
+      expect(bytebuffer.limit).to eq capacity
+    end
+  end
+
+  describe "#mark" do
+    it "returns self" do
+      expect(bytebuffer.mark).to eql bytebuffer
+    end
+  end
+
+  describe "#reset" do
+    it "returns to a previously marked position" do
+      bytebuffer << "First"
+      expected_position = bytebuffer.position
+
+      expect(bytebuffer.mark).to eq bytebuffer
+      bytebuffer << "Second"
+      expect(bytebuffer.position).not_to eq expected_position
+
+      bytebuffer.reset
+      expect(bytebuffer.position).to eq expected_position
+    end
+
+    it "raises NIO::ByteBuffer::MarkUnsetError unless mark has been set" do
+      expect { bytebuffer.reset }.to raise_error(NIO::ByteBuffer::MarkUnsetError)
     end
   end
 

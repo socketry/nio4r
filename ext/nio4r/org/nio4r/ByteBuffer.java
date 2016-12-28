@@ -7,6 +7,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
+import java.nio.InvalidMarkException;
 
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
@@ -32,6 +33,11 @@ public class ByteBuffer extends RubyObject {
 
     public static RaiseException newUnderflowError(ThreadContext context, String message) {
         RubyClass klass = context.runtime.getModule("NIO").getClass("ByteBuffer").getClass("UnderflowError");
+        return context.runtime.newRaiseException(klass, message);
+    }
+
+    public static RaiseException newMarkUnsetError(ThreadContext context, String message) {
+        RubyClass klass = context.runtime.getModule("NIO").getClass("ByteBuffer").getClass("MarkUnsetError");
         return context.runtime.newRaiseException(klass, message);
     }
 
@@ -115,7 +121,7 @@ public class ByteBuffer extends RubyObject {
         if(!this.byteBuffer.hasRemaining()) {
             throw ByteBuffer.newOverflowError(context, "buffer is full");
         }
-        
+
         if(!(channel instanceof ReadableByteChannel) || !(channel instanceof SelectableChannel)) {
             throw runtime.newArgumentError("unsupported IO object: " + io.getType().toString());
         }
@@ -184,15 +190,19 @@ public class ByteBuffer extends RubyObject {
     }
 
     @JRubyMethod
-    public IRubyObject reset(ThreadContext context) {
-        this.byteBuffer.reset();
+    public IRubyObject mark(ThreadContext context) {
+        this.byteBuffer.mark();
         return this;
     }
 
     @JRubyMethod
-    public IRubyObject mark(ThreadContext context) {
-        this.byteBuffer.mark();
-        return this;
+    public IRubyObject reset(ThreadContext context) {
+        try {
+            this.byteBuffer.reset();
+            return this;
+        } catch(InvalidMarkException ie) {
+            throw ByteBuffer.newMarkUnsetError(context, "mark has not been set");
+        }
     }
 
     @JRubyMethod(name = "to_s")
