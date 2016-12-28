@@ -3,8 +3,9 @@
 require "spec_helper"
 require "openssl"
 
-RSpec.describe OpenSSL::SSL::SSLSocket, if: RUBY_VERSION >= "1.9.0" do
-  let(:tcp_port) { 34_567 }
+RSpec.describe OpenSSL::SSL::SSLSocket do
+  let(:addr) { "localhost" }
+  let(:port) { next_available_tcp_port }
 
   let(:ssl_key) { OpenSSL::PKey::RSA.new(1024) }
 
@@ -31,8 +32,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket, if: RUBY_VERSION >= "1.9.0" do
   end
 
   let :readable_subject do
-    server = TCPServer.new("localhost", tcp_port)
-    client = TCPSocket.open("localhost", tcp_port)
+    server = TCPServer.new(addr, port)
+    client = TCPSocket.open(addr, port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
@@ -54,8 +55,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket, if: RUBY_VERSION >= "1.9.0" do
   end
 
   let :unreadable_subject do
-    server = TCPServer.new("localhost", tcp_port + 1)
-    client = TCPSocket.new("localhost", tcp_port + 1)
+    server = TCPServer.new(addr, port)
+    client = TCPSocket.new(addr, port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
@@ -74,8 +75,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket, if: RUBY_VERSION >= "1.9.0" do
   end
 
   let :writable_subject do
-    server = TCPServer.new("localhost", tcp_port + 2)
-    client = TCPSocket.new("localhost", tcp_port + 2)
+    server = TCPServer.new(addr, port)
+    client = TCPSocket.new(addr, port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
@@ -94,8 +95,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket, if: RUBY_VERSION >= "1.9.0" do
   end
 
   let :unwritable_subject do
-    server = TCPServer.new("localhost", tcp_port + 3)
-    client = TCPSocket.open("localhost", tcp_port + 3)
+    server = TCPServer.new(addr, port)
+    client = TCPSocket.new(addr, port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
@@ -142,8 +143,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket, if: RUBY_VERSION >= "1.9.0" do
   let :pair do
     pending "figure out why newly created sockets are selecting readable immediately"
 
-    server = TCPServer.new("localhost", tcp_port + 4)
-    client = TCPSocket.open("localhost", tcp_port + 4)
+    server = TCPServer.new(addr, port)
+    client = TCPSocket.new(addr, port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)

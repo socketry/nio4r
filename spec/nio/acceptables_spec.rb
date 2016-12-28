@@ -17,16 +17,16 @@ RSpec.describe "NIO acceptables" do
   end
 
   describe TCPServer do
-    let(:tcp_port) { 23_456 }
+    let(:port) { next_available_tcp_port }
 
     let :acceptable_subject do
-      server = TCPServer.new("localhost", tcp_port)
-      TCPSocket.open("localhost", tcp_port)
+      server = TCPServer.new("localhost", port)
+      TCPSocket.open("localhost", port)
       server
     end
 
     let :unacceptable_subject do
-      TCPServer.new("localhost", tcp_port + 1)
+      TCPServer.new("localhost", port + 1)
     end
 
     it_behaves_like "an NIO acceptable"
