@@ -1,68 +1,56 @@
-#
-# Deliberate style choices
-#
-
 AllCops:
   TargetRubyVersion: 2.2
   DisplayCopNames: true
 
-LineLength:
-  Max: 128
+#
+# Lint
+#
 
-Style/StringLiterals:
-  EnforcedStyle: double_quotes
+Lint/HandleExceptions:
+  Enabled: false
+
+Lint/Loop:
+  Enabled: false
+
+# TODO: fix this
+Lint/NonLocalExitFromIterator:
+  Enabled: false
+
+#
+# Metrics
+#
+
+Metrics/AbcSize:
+  Max: 35
 
 Metrics/ClassLength:
-  Max: 150
+  Max: 128
+
+Metrics/LineLength:
+  Max: 128
 
 Metrics/MethodLength:
   CountComments: false
-  Max: 40
-
-Metrics/AbcSize:
-  Max: 40
-
-Metrics/PerceivedComplexity:
-  Max: 15
+  Max: 50
 
 Metrics/CyclomaticComplexity:
   Max: 10
 
+Metrics/PerceivedComplexity:
+  Max: 15
+
+#
+# Style
+#
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
 Style/GlobalVars:
   Enabled: false
 
-Style/TrivialAccessors:
-  Enabled: false
-
-#
-# Auto-generated overrides
-#
-
-# Offense count: 2
-Lint/HandleExceptions:
-  Enabled: false
-
-# Offense count: 3
-Lint/Loop:
-  Enabled: false
-
-# Offense count: 1
-Lint/NonLocalExitFromIterator:
-  Enabled: false
-
-# Offense count: 7
-Lint/UselessAssignment:
-  Enabled: false
-
-# Offense count: 1
-# Configuration parameters: SupportedStyles, IndentOneStep.
-Style/CaseIndentation:
-  IndentWhenRelativeTo: end
-
-# Offense count: 1
-Style/Documentation:
-  Enabled: false
-
-# Offense count: 2
 Style/RescueModifier:
+  Enabled: false
+
+Style/TrivialAccessors:
   Enabled: false

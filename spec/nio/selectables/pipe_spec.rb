@@ -6,6 +6,7 @@ RSpec.describe "IO.pipe" do
   let :unreadable_subject do
     pair.first
   end
+
   let :readable_subject do
     pipe, peer = pair
     peer << "data"
@@ -15,8 +16,9 @@ RSpec.describe "IO.pipe" do
   let :writable_subject do
     pair.last
   end
+
   let :unwritable_subject do
-    reader, pipe = IO.pipe
+    pipe = pair.last
 
     # HACK: On OS X 10.8, this str must be larger than PIPE_BUF. Otherwise,
     #      the write is atomic and select() will return writable but write()

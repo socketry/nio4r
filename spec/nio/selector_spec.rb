@@ -49,9 +49,7 @@ RSpec.describe NIO::Selector do
 
   it "reports if it is empty" do
     expect(subject).to be_empty
-
-    monitor = subject.register(reader, :r)
-
+    subject.register(reader, :r)
     expect(subject).not_to be_empty
   end
 
