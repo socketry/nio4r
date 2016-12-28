@@ -161,6 +161,13 @@ RSpec.describe NIO::ByteBuffer do
     end
   end
 
+  describe "#inspect" do
+    it "inspects the buffer offsets" do
+      regex = /\A#<NIO::ByteBuffer:.*? @position=0 @limit=#{capacity} @capacity=#{capacity}>\z/
+      expect(bytebuffer.inspect).to match(regex)
+    end
+  end
+
   context "I/O" do
     let(:addr)   { "127.0.0.1" }
     let(:port)   { 54_321 }

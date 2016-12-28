@@ -138,14 +138,18 @@ module NIO
       self
     end
 
-    def to_s
-      # convert String in byte form to the visible string
-      temp = "ByteBuffer "
-      temp += "[pos=" + @position.to_s
-      temp += " lim =" + @limit.to_s
-      temp += " cap=" + @capacity.to_s
-      temp += "]"
-      temp
+    # Inspect the state of the buffer
+    #
+    # @return [String] string describing the state of the buffer
+    def inspect
+      format(
+        "#<%s:0x%x @position=%d @limit=%d @capacity=%d>",
+        self.class,
+        object_id << 1,
+        @position,
+        @limit,
+        @capacity
+      )
     end
   end
 end

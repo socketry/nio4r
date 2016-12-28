@@ -27,7 +27,7 @@ static VALUE NIO_ByteBuffer_rewind(VALUE self);
 static VALUE NIO_ByteBuffer_mark(VALUE self);
 static VALUE NIO_ByteBuffer_reset(VALUE self);
 static VALUE NIO_ByteBuffer_clear(VALUE self);
-static VALUE NIO_ByteBuffer_to_s(VALUE self);
+static VALUE NIO_ByteBuffer_inspect(VALUE self);
 
 void Init_NIO_ByteBuffer()
 {
@@ -53,9 +53,9 @@ void Init_NIO_ByteBuffer()
     rb_define_method(cNIO_ByteBuffer, "write_to", NIO_ByteBuffer_write_to, 1);
     rb_define_method(cNIO_ByteBuffer, "flip", NIO_ByteBuffer_flip, 0);
     rb_define_method(cNIO_ByteBuffer, "rewind", NIO_ByteBuffer_rewind, 0);
-    rb_define_method(cNIO_ByteBuffer, "reset", NIO_ByteBuffer_reset, 0);
     rb_define_method(cNIO_ByteBuffer, "mark", NIO_ByteBuffer_mark, 0);
-    rb_define_method(cNIO_ByteBuffer, "to_s", NIO_ByteBuffer_to_s, 0);
+    rb_define_method(cNIO_ByteBuffer, "reset", NIO_ByteBuffer_reset, 0);
+    rb_define_method(cNIO_ByteBuffer, "inspect", NIO_ByteBuffer_inspect, 0);
 }
 
 static VALUE NIO_ByteBuffer_allocate(VALUE klass)
@@ -284,10 +284,16 @@ static VALUE NIO_ByteBuffer_reset(VALUE self)
     return self;
 }
 
-static VALUE NIO_ByteBuffer_to_s(VALUE self)
+static VALUE NIO_ByteBuffer_inspect(VALUE self)
 {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
-    return rb_sprintf ("ByteBuffer [pos=%d lim=%d cap=%d]\n", buffer->position, buffer->limit, buffer->capacity);
+    return rb_sprintf(
+        "#<NIO::ByteBuffer:0x%x @position=%d @limit=%d @capacity=%d>",
+        rb_obj_id(self),
+        buffer->position,
+        buffer->limit,
+        buffer->capacity
+    );
 }

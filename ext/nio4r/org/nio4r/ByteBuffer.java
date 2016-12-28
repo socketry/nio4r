@@ -205,8 +205,15 @@ public class ByteBuffer extends RubyObject {
         }
     }
 
-    @JRubyMethod(name = "to_s")
-    public IRubyObject toString(ThreadContext context) {
-        return context.runtime.newString(byteBuffer.toString());
+    @JRubyMethod
+    public IRubyObject inspect(ThreadContext context) {
+        return context.runtime.newString(String.format(
+            "#<%s:0x%x @position=%d @limit=%d @capacity=%d>",
+            this.getType().toString(),
+            System.identityHashCode(this),
+            this.byteBuffer.position(),
+            this.byteBuffer.limit(),
+            this.byteBuffer.capacity()
+        ));
     }
 }
