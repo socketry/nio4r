@@ -79,16 +79,13 @@ module NIO
         end
 
         ready_readers, ready_writers = Kernel.select readers, writers, [], timeout
-        return unless ready_readers # timeout or wakeup
+        return unless ready_readers # timeout
 
         ready_readers.each do |io|
           if io == @wakeup
             # Clear all wakeup signals we've received by reading them
             # Wakeups should have level triggered behavior
             @wakeup.read(@wakeup.stat.size)
-
-            # TODO: return something other than nil on wakeup
-            return
           else
             monitor = @selectables[io]
             monitor.readiness = :r
@@ -107,7 +104,7 @@ module NIO
         selected_monitors.each { |m| yield m }
         selected_monitors.size
       else
-        selected_monitors
+        selected_monitors.to_a
       end
     end
 

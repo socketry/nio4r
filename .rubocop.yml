@@ -11,10 +11,6 @@ Lint/HandleExceptions:
 Lint/Loop:
   Enabled: false
 
-# TODO: fix this
-Lint/NonLocalExitFromIterator:
-  Enabled: false
-
 #
 # Metrics
 #

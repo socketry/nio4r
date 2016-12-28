@@ -103,7 +103,9 @@ static VALUE NIO_Selector_allocate(VALUE klass)
 
     selector = (struct NIO_Selector *)xmalloc(sizeof(struct NIO_Selector));
     selector->ev_loop = ev_loop_new(0);
+
     ev_init(&selector->timer, NIO_Selector_timeout_callback);
+    selector->timer.data = (void *)selector;
 
     selector->wakeup_reader = fds[0];
     selector->wakeup_writer = fds[1];
@@ -112,7 +114,7 @@ static VALUE NIO_Selector_allocate(VALUE klass)
     selector->wakeup.data = (void *)selector;
     ev_io_start(selector->ev_loop, &selector->wakeup);
 
-    selector->closed = selector->selecting = selector->ready_count = 0;
+    selector->closed = selector->selecting = selector->timed_out = selector->ready_count = 0;
     selector->ready_array = Qnil;
 
     return Data_Wrap_Struct(klass, NIO_Selector_mark, NIO_Selector_free, selector);
@@ -335,24 +337,31 @@ static VALUE NIO_Selector_select_synchronized(VALUE *args)
     }
 
     ready = NIO_Selector_run(selector, args[1]);
-    if(ready > 0) {
-        if(rb_block_given_p()) {
-            return INT2NUM(ready);
-        } else {
-            ready_array = selector->ready_array;
+
+    /* Timeout */
+    if(ready < 0) {
+        if(!rb_block_given_p()) {
             selector->ready_array = Qnil;
-            return ready_array;
         }
-    } else {
-        selector->ready_array = Qnil;
+
         return Qnil;
+    }
+
+    if(rb_block_given_p()) {
+        return INT2NUM(ready);
+    } else {
+        ready_array = selector->ready_array;
+        selector->ready_array = Qnil;
+        return ready_array;
     }
 }
 
 static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
 {
     int result;
+
     selector->selecting = 1;
+    selector->timed_out = 0;
 
     /* Implement the optional timeout (if any) as a ev_timer */
     if(timeout != Qnil) {
@@ -369,7 +378,11 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
     result = selector->ready_count;
     selector->selecting = selector->ready_count = 0;
 
-    return result;
+    if(!result && selector->timed_out) {
+        return -1;
+    } else {
+        return result;
+    }
 }
 
 /* Wake the selector up from another thread */
@@ -432,8 +445,8 @@ static VALUE NIO_Selector_is_empty(VALUE self)
 /* Called whenever a timeout fires on the event loop */
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents)
 {
-    /* We don't actually need to do anything here, the mere firing of the
-       timer is sufficient to interrupt the selector. However, libev still wants a callback */
+    struct NIO_Selector *selector = (struct NIO_Selector *)timer->data;
+    selector->timed_out = 1;
 }
 
 /* Called whenever a wakeup request is sent to a selector */
