@@ -252,6 +252,12 @@ public class ByteBuffer extends RubyObject {
     }
 
     @JRubyMethod
+    public IRubyObject compact(ThreadContext context) {
+        this.byteBuffer.compact();
+        return this;
+    }
+
+    @JRubyMethod
     public IRubyObject each(ThreadContext context, Block block) {
         for(int i = 0; i < this.byteBuffer.limit(); i++) {
             block.call(context, context.getRuntime().newFixnum(this.byteBuffer.get(i)));

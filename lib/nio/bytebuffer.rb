@@ -175,6 +175,15 @@ module NIO
       self
     end
 
+    # Move data between the position and limit to the beginning of the buffer
+    # Sets the position to the end of the moved data, and the limit to the capacity
+    def compact
+      @buffer[0...(@limit - @position)] = @buffer[@position...@limit]
+      @position = @limit - @position
+      @limit = capacity
+      self
+    end
+
     # Iterate over the bytes in the buffer (as Integers)
     #
     # @return [self]

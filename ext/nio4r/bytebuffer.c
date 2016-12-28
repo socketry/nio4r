@@ -13,6 +13,7 @@ static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *byteBuffer);
 
 /* Methods */
 static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE capacity);
+static VALUE NIO_ByteBuffer_clear(VALUE self);
 static VALUE NIO_ByteBuffer_get_position(VALUE self);
 static VALUE NIO_ByteBuffer_set_position(VALUE self, VALUE new_position);
 static VALUE NIO_ByteBuffer_get_limit(VALUE self);
@@ -28,7 +29,7 @@ static VALUE NIO_ByteBuffer_flip(VALUE self);
 static VALUE NIO_ByteBuffer_rewind(VALUE self);
 static VALUE NIO_ByteBuffer_mark(VALUE self);
 static VALUE NIO_ByteBuffer_reset(VALUE self);
-static VALUE NIO_ByteBuffer_clear(VALUE self);
+static VALUE NIO_ByteBuffer_compact(VALUE self);
 static VALUE NIO_ByteBuffer_each(VALUE self);
 static VALUE NIO_ByteBuffer_inspect(VALUE self);
 
@@ -64,6 +65,7 @@ void Init_NIO_ByteBuffer()
     rb_define_method(cNIO_ByteBuffer, "rewind", NIO_ByteBuffer_rewind, 0);
     rb_define_method(cNIO_ByteBuffer, "mark", NIO_ByteBuffer_mark, 0);
     rb_define_method(cNIO_ByteBuffer, "reset", NIO_ByteBuffer_reset, 0);
+    rb_define_method(cNIO_ByteBuffer, "compact", NIO_ByteBuffer_compact, 0);
     rb_define_method(cNIO_ByteBuffer, "each", NIO_ByteBuffer_each, 0);
     rb_define_method(cNIO_ByteBuffer, "inspect", NIO_ByteBuffer_inspect, 0);
 }
@@ -350,6 +352,18 @@ static VALUE NIO_ByteBuffer_reset(VALUE self)
     } else {
         buffer->position = buffer->mark;
     }
+
+    return self;
+}
+
+static VALUE NIO_ByteBuffer_compact(VALUE self)
+{
+    struct NIO_ByteBuffer *buffer;
+    Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
+
+    memmove(buffer->buffer, buffer->buffer + buffer->position, buffer->limit - buffer->position);
+    buffer->position = buffer->limit - buffer->position;
+    buffer->limit = buffer->capacity;
 
     return self;
 }

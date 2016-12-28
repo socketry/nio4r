@@ -181,9 +181,7 @@ RSpec.describe NIO::ByteBuffer do
       bytebuffer << example_string
       previous_position = bytebuffer.position
       expect(bytebuffer.remaining).to eq(capacity - previous_position)
-
-      bytebuffer.flip
-      expect(bytebuffer.remaining).to eq previous_position
+      expect(bytebuffer.flip.remaining).to eq previous_position
     end
 
     it "sets limit to the previous position" do
@@ -191,8 +189,7 @@ RSpec.describe NIO::ByteBuffer do
       expect(bytebuffer.limit).to eql(capacity)
 
       previous_position = bytebuffer.position
-      bytebuffer.flip
-      expect(bytebuffer.limit).to eql previous_position
+      expect(bytebuffer.flip.limit).to eql previous_position
     end
   end
 
@@ -220,13 +217,27 @@ RSpec.describe NIO::ByteBuffer do
       expect(bytebuffer.mark).to eq bytebuffer
       bytebuffer << "Second"
       expect(bytebuffer.position).not_to eq expected_position
-
-      bytebuffer.reset
-      expect(bytebuffer.position).to eq expected_position
+      expect(bytebuffer.reset.position).to eq expected_position
     end
 
     it "raises NIO::ByteBuffer::MarkUnsetError unless mark has been set" do
       expect { bytebuffer.reset }.to raise_error(NIO::ByteBuffer::MarkUnsetError)
+    end
+  end
+
+  describe "#compact" do
+    let(:first_string)  { "CompactMe" }
+    let(:second_string) { "Leftover" }
+
+    it "copies data from the current position to the beginning of the buffer" do
+      bytebuffer << first_string << second_string
+      bytebuffer.position = first_string.length
+      bytebuffer.limit = first_string.length + second_string.length
+      bytebuffer.compact
+
+      expect(bytebuffer.position).to eq second_string.length
+      expect(bytebuffer.limit).to eq capacity
+      expect(bytebuffer.flip.get).to eq second_string
     end
   end
 
