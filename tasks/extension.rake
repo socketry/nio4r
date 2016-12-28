@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 if defined? JRUBY_VERSION
   require "rake/javaextensiontask"
   Rake::JavaExtensionTask.new("nio4r_ext") do |ext|

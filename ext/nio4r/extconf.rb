@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "mkmf"
 
 have_header("unistd.h")

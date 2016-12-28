@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module NIO
   # Efficient byte buffers for performant I/O operations
   class ByteBuffer
@@ -28,7 +30,7 @@ module NIO
 
     # Clear the buffer, resetting it to the default state
     def clear
-      @buffer   = "\0".force_encoding(Encoding::BINARY) * @capacity
+      @buffer   = ("\0" * @capacity).force_encoding(Encoding::BINARY)
       @position = 0
       @limit    = @capacity
       @mark     = nil
