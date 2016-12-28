@@ -46,6 +46,17 @@ RSpec.describe NIO::ByteBuffer do
     end
   end
 
+  describe "#full?" do
+    it "returns false when there is space remaining in the buffer" do
+      expect(bytebuffer).not_to be_full
+    end
+
+    it "returns true when the buffer is full" do
+      bytebuffer << "X" * capacity
+      expect(bytebuffer).to be_full
+    end
+  end
+
   describe "#get" do
     it "reads zeroes from a newly initialized buffer" do
       expect(bytebuffer.get(capacity)).to eq("\0" * capacity)

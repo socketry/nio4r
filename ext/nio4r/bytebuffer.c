@@ -135,7 +135,7 @@ static VALUE NIO_ByteBuffer_full(VALUE self)
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
-    return buffer->position < buffer->limit;
+    return buffer->position == buffer->limit ? Qtrue : Qfalse;
 }
 
 static VALUE NIO_ByteBuffer_get(VALUE self, VALUE length)
