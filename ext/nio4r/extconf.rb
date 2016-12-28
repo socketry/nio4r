@@ -2,14 +2,6 @@ require "mkmf"
 
 have_header("unistd.h")
 
-if have_func("rb_thread_blocking_region")
-  $defs << "-DHAVE_RB_THREAD_BLOCKING_REGION"
-end
-
-if have_func("rb_thread_call_without_gvl")
-  $defs << "-DHAVE_RB_THEREAD_CALL_WITHOUT_GVL"
-end
-
 $defs << "-DEV_USE_SELECT" if have_header("sys/select.h")
 
 $defs << "-DEV_USE_POLL" if have_header("poll.h")
