@@ -5,7 +5,7 @@ require File.expand_path("../lib/nio/version", __FILE__)
 Gem::Specification.new do |spec|
   spec.authors       = ["Tony Arcieri"]
   spec.email         = ["bascule@gmail.com"]
-  spec.homepage      = "https://github.com/celluloid/nio4r"
+  spec.homepage      = "https://github.com/socketry/nio4r"
   spec.license       = "MIT"
   spec.summary       = "New IO for Ruby"
   spec.description   = <<-DESCRIPTION.strip.gsub(/\s+/, " ")

@@ -1,15 +1,15 @@
-# ![nio4r](https://raw.github.com/celluloid/nio4r/master/logo.png)
+# ![nio4r](https://raw.github.com/socketry/nio4r/master/logo.png)
 
 [![Gem Version](https://badge.fury.io/rb/nio4r.svg)](http://rubygems.org/gems/nio4r)
-[![Build Status](https://secure.travis-ci.org/celluloid/nio4r.svg?branch=master)](http://travis-ci.org/celluloid/nio4r)
-[![Code Climate](https://codeclimate.com/github/celluloid/nio4r.svg)](https://codeclimate.com/github/celluloid/nio4r)
-[![Coverage Status](https://coveralls.io/repos/celluloid/nio4r/badge.svg?branch=master)](https://coveralls.io/r/celluloid/nio4r)
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/celluloid/nio4r/blob/master/LICENSE.txt)
+[![Build Status](https://secure.travis-ci.org/socketry/nio4r.svg?branch=master)](http://travis-ci.org/socketry/nio4r)
+[![Code Climate](https://codeclimate.com/github/socketry/nio4r.svg)](https://codeclimate.com/github/socketry/nio4r)
+[![Coverage Status](https://coveralls.io/repos/socketry/nio4r/badge.svg?branch=master)](https://coveralls.io/r/socketry/nio4r)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/socketry/nio4r/blob/master/LICENSE.txt)
 
 _NOTE: This is the 2.x **development** branch of nio4r.  For the 1.x **stable**
 branch (used by [Rails 5]), please see:_
 
-https://github.com/celluloid/nio4r/tree/1-x-stable
+https://github.com/socketry/nio4r/tree/1-x-stable
 
 **New I/O for Ruby (nio4r)**: cross-platform asynchronous I/O primitives for
 scalable network clients and servers. Modeled after the Java NIO API, but
@@ -28,7 +28,7 @@ writing.
 * [Celluloid::IO]: Actor-based concurrency framework, uses nio4r for async I/O
 
 [ActionCable]: https://rubygems.org/gems/actioncable
-[Celluloid::IO]: https://github.com/celluloid/celluloid-io
+[Celluloid::IO]: https://github.com/socketry/socketry-io
 
 ## Goals
 
@@ -52,7 +52,7 @@ writing.
 
 ## Documentation
 
-[Please see the nio4r wiki](https://github.com/celluloid/nio4r/wiki)
+[Please see the nio4r wiki](https://github.com/socketry/nio4r/wiki)
 for more detailed documentation and usage notes:
 
 * [Getting Started]: Introduction to nio4r's components
@@ -60,10 +60,10 @@ for more detailed documentation and usage notes:
 * [Monitors]: control interests and inspect readiness for specific `IO` objects
 * [Byte Buffers]: fixed-size native buffers for high-performance I/O
 
-[Getting Started]: https://github.com/celluloid/nio4r/wiki/Getting-Started
-[Selectors]: https://github.com/celluloid/nio4r/wiki/Selectors
-[Monitors]: https://github.com/celluloid/nio4r/wiki/Monitors
-[Byte Buffers]: https://github.com/celluloid/nio4r/wiki/Byte-Buffers
+[Getting Started]: https://github.com/socketry/nio4r/wiki/Getting-Started
+[Selectors]: https://github.com/socketry/nio4r/wiki/Selectors
+[Monitors]: https://github.com/socketry/nio4r/wiki/Monitors
+[Byte Buffers]: https://github.com/socketry/nio4r/wiki/Byte-Buffers
 
 See also:
 
