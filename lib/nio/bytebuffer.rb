@@ -88,7 +88,12 @@ module NIO
       bytes_read.length
     end
 
-    # Write the contents of the I/
+    # Perform a non-blocking write of the buffer's contents to the given I/O object
+    # Writes as much data as is immediately possible and returns
+    #
+    # @param [IO] Ruby IO object to write to
+    #
+    # @return [Integer] number of bytes written (0 if the write would block)
     def write_to(io)
       nbytes = @limit - @position
       raise UnderflowError, "no data remaining in buffer" if nbytes.zero?
@@ -100,17 +105,24 @@ module NIO
       bytes_written
     end
 
-    # Flip the buffer over, preparing it to be read
+    # Set the buffer's current position as the limit and set the position to 0
     def flip
       @limit = @position
       @position = 0
       @mark = -1
+      self
     end
 
-    # rewind read mode to write mode. limit stays unchanged
+    # Set the buffer's current position to 0, leaving the limit unchanged
     def rewind
       @position = 0
       @mark = -1
+      self
+    end
+
+    # mark the current position in order to reset later
+    def mark
+      @mark = @position
     end
 
     # reset the position to the previously marked position
@@ -118,11 +130,6 @@ module NIO
       raise "Invalid Mark Exception" if @mark < 0
       @position = @mark
       self
-    end
-
-    # mark the current position in order to reset later
-    def mark
-      @mark = @position
     end
 
     def to_s

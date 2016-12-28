@@ -101,9 +101,10 @@ RSpec.describe NIO::ByteBuffer do
       bytebuffer << example_string
       expect(bytebuffer.position).to eql(example_string.length)
 
-      bytebuffer.flip
+      expect(bytebuffer.flip).to eq bytebuffer
 
-      expect(bytebuffer.position).to eql(0)
+      expect(bytebuffer.position).to be_zero
+      expect(bytebuffer.limit).to eql(example_string.length)
       expect(bytebuffer.get(example_string.length)).to eql(example_string)
     end
 
@@ -127,7 +128,13 @@ RSpec.describe NIO::ByteBuffer do
   end
 
   describe "#rewind" do
-    pending "rewinds the buffer"
+    it "rewinds the buffer leaving the limit intact" do
+      bytebuffer << example_string
+      expect(bytebuffer.rewind).to eq bytebuffer
+
+      expect(bytebuffer.position).to be_zero
+      expect(bytebuffer.limit).to eql(capacity)
+    end
   end
 
   context "I/O" do
