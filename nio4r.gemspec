@@ -3,11 +3,13 @@ require File.expand_path("../lib/nio/version", __FILE__)
 
 Gem::Specification.new do |gem|
   gem.authors       = ["Tony Arcieri"]
-  gem.email         = ["tony.arcieri@gmail.com"]
-  gem.description   = "New IO for Ruby"
-  gem.summary       = "NIO provides a high performance selector API for monitoring IO objects"
+  gem.email         = ["bascule@gmail.com"]
   gem.homepage      = "https://github.com/celluloid/nio4r"
   gem.license       = "MIT"
+  gem.summary       = "New IO for Ruby"
+  gem.description   = <<-DESCRIPTION.strip.gsub(/\s+/, " ")
+     Ruby NIO provides a high performance selector API for monitoring IO objects
+  DESCRIPTION
 
   gem.executables   = `git ls-files -- bin/*`.split("\n").map { |f| File.basename(f) }
   gem.files         = `git ls-files`.split("\n")
