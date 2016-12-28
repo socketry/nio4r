@@ -24,8 +24,6 @@ $defs << "-DEV_USE_PORT" if have_header("port.h")
 
 $defs << "-DHAVE_SYS_RESOURCE_H" if have_header("sys/resource.h")
 
-$defs << "-DHAVE_RUBYSIG_H" if RUBY_VERSION.to_f < 1.9
-
 dir_config "nio4r_ext"
 create_makefile "nio4r_ext"
 

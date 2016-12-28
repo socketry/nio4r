@@ -8,6 +8,7 @@ import java.nio.channels.Channel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
+
 import org.jruby.Ruby;
 import org.jruby.RubyModule;
 import org.jruby.RubyClass;
@@ -54,6 +55,11 @@ public class Nio4r implements Library {
         }, nio);
 
         byteBuffer.defineAnnotatedMethods(ByteBuffer.class);
+        byteBuffer.includeModule(ruby.getEnumerable());
+
+        ruby.defineClassUnder("OverflowError",  ruby.getIOError(), ruby.getIOError().getAllocator(), byteBuffer);
+        ruby.defineClassUnder("UnderflowError", ruby.getIOError(), ruby.getIOError().getAllocator(), byteBuffer);
+        ruby.defineClassUnder("MarkUnsetError", ruby.getIOError(), ruby.getIOError().getAllocator(), byteBuffer);
     }
 
     public static int symbolToInterestOps(Ruby ruby, SelectableChannel channel, IRubyObject interest) {

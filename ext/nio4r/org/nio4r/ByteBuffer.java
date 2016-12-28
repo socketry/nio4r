@@ -1,311 +1,295 @@
 package org.nio4r;
 
-import org.jruby.*;
+import java.io.IOException;
+import java.nio.channels.Channel;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
+import java.nio.InvalidMarkException;
+
+import org.jruby.Ruby;
+import org.jruby.RubyClass;
+import org.jruby.RubyIO;
+import org.jruby.RubyNumeric;
+import org.jruby.RubyObject;
+import org.jruby.RubyString;
 import org.jruby.anno.JRubyMethod;
-import org.jruby.javasupport.JavaUtil;
+import org.jruby.exceptions.RaiseException;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.nio.channels.FileChannel;
-import java.util.ArrayList;
+import org.jruby.runtime.Block;
 
 /*
 created by Upekshej
  */
 public class ByteBuffer extends RubyObject {
-
     private java.nio.ByteBuffer byteBuffer;
-    private String currentWritePath = "";
-    private String currentReadPath = "";
 
-    private FileChannel currentWriteFileChannel;
-    private FileOutputStream fileOutputStream;
+    public static RaiseException newOverflowError(ThreadContext context, String message) {
+        RubyClass klass = context.runtime.getModule("NIO").getClass("ByteBuffer").getClass("OverflowError");
+        return context.runtime.newRaiseException(klass, message);
+    }
 
-    private FileInputStream currentReadChannel;
-    private FileChannel inChannel;
+    public static RaiseException newUnderflowError(ThreadContext context, String message) {
+        RubyClass klass = context.runtime.getModule("NIO").getClass("ByteBuffer").getClass("UnderflowError");
+        return context.runtime.newRaiseException(klass, message);
+    }
+
+    public static RaiseException newMarkUnsetError(ThreadContext context, String message) {
+        RubyClass klass = context.runtime.getModule("NIO").getClass("ByteBuffer").getClass("MarkUnsetError");
+        return context.runtime.newRaiseException(klass, message);
+    }
 
     public ByteBuffer(final Ruby ruby, RubyClass rubyClass) {
         super(ruby, rubyClass);
     }
 
     @JRubyMethod
-    public IRubyObject initialize(ThreadContext context, IRubyObject value, IRubyObject offset, IRubyObject length) {
-        Ruby ruby = context.getRuntime();
-
-        if (value == ruby.getNil()) {
-            throw ruby.newTypeError("expected String or Integer for value, got NilClass");
-        }
-
-        if (value instanceof RubyString) {
-            if (offset != ruby.getNil() && length != ruby.getNil()) {
-                int arrayOffset = RubyNumeric.num2int(offset);
-                int arrayLimit = RubyNumeric.num2int(length);
-                byteBuffer = java.nio.ByteBuffer.wrap(value.asJavaString().getBytes(), arrayOffset, arrayLimit);
-            } else {
-                byteBuffer = java.nio.ByteBuffer.wrap(value.asJavaString().getBytes());
-            }
-        } else if (value instanceof RubyInteger) {
-            int allocationSize = RubyNumeric.num2int(value);
-            byteBuffer = java.nio.ByteBuffer.allocate(allocationSize);
-        } else {
-            throw ruby.newTypeError("expected String or Integer for value");
-        }
-
+    public IRubyObject initialize(ThreadContext context, IRubyObject capacity) {
+        this.byteBuffer = java.nio.ByteBuffer.allocate(RubyNumeric.num2int(capacity));
         return this;
     }
 
-    /**
-     * Currently assuming only strings will come..
-     *
-     * @param context
-     * @return
-     */
+    @JRubyMethod
+    public IRubyObject clear(ThreadContext context) {
+        this.byteBuffer.clear();
+        return this;
+    }
+
+    @JRubyMethod(name = "position")
+    public IRubyObject getPosition(ThreadContext context) {
+        return context.getRuntime().newFixnum(this.byteBuffer.position());
+    }
+
+    @JRubyMethod(name = "position=")
+    public IRubyObject setPosition(ThreadContext context, IRubyObject newPosition) {
+        int pos = RubyNumeric.num2int(newPosition);
+
+        if(pos < 0) {
+            throw context.runtime.newArgumentError("negative position given");
+        }
+
+        if(pos > this.byteBuffer.limit()) {
+            throw context.runtime.newArgumentError("specified position exceeds limit");
+        }
+
+        try {
+            this.byteBuffer.position(pos);
+            return newPosition;
+        } catch(IllegalArgumentException e) {
+            throw context.runtime.newArgumentError(e.getLocalizedMessage());
+        }
+    }
+
+    @JRubyMethod(name = "limit")
+    public IRubyObject getLimit(ThreadContext context) {
+        return context.getRuntime().newFixnum(this.byteBuffer.limit());
+    }
+
+    @JRubyMethod(name = "limit=")
+    public IRubyObject setLimit(ThreadContext context, IRubyObject newLimit) {
+        int lim = RubyNumeric.num2int(newLimit);
+
+        if(lim < 0) {
+            throw context.runtime.newArgumentError("negative limit given");
+        }
+
+        if(lim > this.byteBuffer.capacity()) {
+            throw context.runtime.newArgumentError("specified limit exceeds capacity");
+        }
+
+        try {
+            this.byteBuffer.limit(lim);
+            return newLimit;
+        } catch(IllegalArgumentException e) {
+            throw context.runtime.newArgumentError(e.getLocalizedMessage());
+        }
+    }
+
+    @JRubyMethod(name = {"capacity", "size"})
+    public IRubyObject capacity(ThreadContext context) {
+        return context.getRuntime().newFixnum(this.byteBuffer.capacity());
+    }
+
+    @JRubyMethod
+    public IRubyObject remaining(ThreadContext context) {
+        return context.getRuntime().newFixnum(this.byteBuffer.remaining());
+    }
+
+    @JRubyMethod(name = "full?")
+    public IRubyObject isFull(ThreadContext context) {
+        if (this.byteBuffer.hasRemaining()) {
+            return context.getRuntime().getFalse();
+        } else {
+            return context.getRuntime().getTrue();
+        }
+    }
+
+    @JRubyMethod
+    public IRubyObject get(ThreadContext context) {
+        return this.get(context, context.getRuntime().newFixnum(this.byteBuffer.remaining()));
+    }
+
+    @JRubyMethod
+    public IRubyObject get(ThreadContext context, IRubyObject length) {
+        int len = RubyNumeric.num2int(length);
+        byte[] bytes = new byte[len];
+
+        try {
+            this.byteBuffer.get(bytes);
+        } catch(BufferUnderflowException e) {
+            throw ByteBuffer.newUnderflowError(context, "not enough data in buffer");
+        }
+
+        return RubyString.newString(context.getRuntime(), bytes);
+    }
+
+    @JRubyMethod(name = "[]")
+    public IRubyObject fetch(ThreadContext context, IRubyObject index) {
+        int i = RubyNumeric.num2int(index);
+
+        if(i < 0) {
+            throw context.runtime.newArgumentError("negative index given");
+        }
+
+        if(i >= this.byteBuffer.limit()) {
+            throw context.runtime.newArgumentError("index exceeds limit");
+        }
+
+        return context.getRuntime().newFixnum(this.byteBuffer.get(i));
+    }
+
     @JRubyMethod(name = "<<")
     public IRubyObject put(ThreadContext context, IRubyObject str) {
         String string = str.asJavaString();
 
-        if (byteBuffer == null) {
-            byteBuffer = java.nio.ByteBuffer.wrap(string.getBytes());
-        }
-
-        byteBuffer.put(string.getBytes());
-        return this;
-    }
-
-    //https://www.ruby-forum.com/topic/3731325
-    @JRubyMethod(name = "get")
-    public IRubyObject get(ThreadContext context) {
-        ArrayList<Byte> temp = new ArrayList<Byte>();
-
-        while (byteBuffer.hasRemaining()) {
-            temp.add(byteBuffer.get());
-        }
-
-        return JavaUtil.convertJavaToRuby(context.getRuntime(), new String(toPrimitives(temp)));
-    }
-
-    @JRubyMethod(name = "read_next")
-    public IRubyObject readNext(ThreadContext context, IRubyObject count) {
-        int c = RubyNumeric.num2int(count);
-
-        if (c < 1) {
-            throw new IllegalArgumentException();
-        }
-
-        if (c <= byteBuffer.remaining()) {
-            org.jruby.util.ByteList temp = new org.jruby.util.ByteList(c);
-
-            while (c > 0) {
-                temp.append(byteBuffer.get());
-                c = c - 1;
-            }
-
-            return context.runtime.newString(temp);
-        }
-
-        return RubyString.newEmptyString(context.runtime);
-    }
-
-    private byte[] toPrimitives(ArrayList<Byte> oBytes) {
-        byte[] bytes = new byte[oBytes.size()];
-
-        for (int i = 0; i < oBytes.size(); i++) {
-            bytes[i] = (oBytes.get(i) == null) ? " ".getBytes()[0] : oBytes.get(i);
-        }
-
-        return bytes;
-    }
-
-    @JRubyMethod(name = "write_to")
-    public IRubyObject writeTo(ThreadContext context, IRubyObject f) {
         try {
-            File file = (File) JavaUtil.unwrapJavaObject(f);
-
-            if (!isTheSameFile(file, false)) {
-                currentWritePath = file.getAbsolutePath();
-                if (currentWriteFileChannel != null) currentWriteFileChannel.close();
-                if (fileOutputStream != null) fileOutputStream.close();
-
-                fileOutputStream = new FileOutputStream(file, true);
-                currentWriteFileChannel = fileOutputStream.getChannel();
-            }
-
-            currentWriteFileChannel.write(byteBuffer);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("write error: " + e.getLocalizedMessage());
+            this.byteBuffer.put(string.getBytes());
+        } catch(BufferOverflowException e) {
+            throw ByteBuffer.newOverflowError(context, "buffer is full");
         }
 
         return this;
     }
 
     @JRubyMethod(name = "read_from")
-    public IRubyObject readFrom(ThreadContext context, IRubyObject f) {
+    public IRubyObject readFrom(ThreadContext context, IRubyObject io) {
+        Ruby runtime = context.runtime;
+        Channel channel = RubyIO.convertToIO(context, io).getChannel();
+
+        if(!this.byteBuffer.hasRemaining()) {
+            throw ByteBuffer.newOverflowError(context, "buffer is full");
+        }
+
+        if(!(channel instanceof ReadableByteChannel) || !(channel instanceof SelectableChannel)) {
+            throw runtime.newArgumentError("unsupported IO object: " + io.getType().toString());
+        }
+
         try {
-            File file = (File) JavaUtil.unwrapJavaObject(f);
+            ((SelectableChannel)channel).configureBlocking(false);
+        } catch(IOException ie) {
+            throw runtime.newIOError(ie.getLocalizedMessage());
+        }
 
-            if (!isTheSameFile(file, true)) {
-                inChannel.close();
-                currentReadChannel.close();
-                currentReadPath = file.getAbsolutePath();
-                currentReadChannel = new FileInputStream(file);
-                inChannel = currentReadChannel.getChannel();
+        try {
+            int bytesRead = ((ReadableByteChannel)channel).read(this.byteBuffer);
+
+            if(bytesRead >= 0) {
+                return runtime.newFixnum(bytesRead);
+            } else {
+                throw runtime.newEOFError();
             }
-
-            inChannel.read(byteBuffer);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("read error: " + e.getLocalizedMessage());
-        }
-
-        return this;
-    }
-
-    private boolean isTheSameFile(File f, boolean read) {
-        if (read) {
-            return (currentReadPath == f.getAbsolutePath());
-        }
-
-        return currentWritePath == f.getAbsolutePath();
-    }
-
-    @JRubyMethod(name = "remaining")
-    public IRubyObject remainingPositions(ThreadContext context) {
-        int count = byteBuffer.remaining();
-        return context.getRuntime().newFixnum(count);
-    }
-
-    @JRubyMethod(name = "remaining?")
-    public IRubyObject hasRemaining(ThreadContext context) {
-        if (byteBuffer.hasRemaining()) {
-            return context.getRuntime().getTrue();
-        }
-
-        return context.getRuntime().getFalse();
-    }
-
-    @JRubyMethod(name = "offset?")
-    public IRubyObject getOffset(ThreadContext context) {
-        int offset = byteBuffer.arrayOffset();
-        return context.getRuntime().newFixnum(offset);
-    }
-
-    /**
-     * Check whether the two ByteBuffers are the same.
-     *
-     * @param context
-     * @param ob      : The RubyObject which needs to be check
-     * @return
-     */
-    @JRubyMethod(name = "equals?")
-    public IRubyObject equals(ThreadContext context, IRubyObject obj) {
-        Object o = JavaUtil.convertRubyToJava(obj);
-
-        if(!(o instanceof ByteBuffer)) {
-            return context.getRuntime().getFalse();
-        }
-
-        if(this.byteBuffer.equals(((ByteBuffer)o).getBuffer())) {
-            return context.getRuntime().getTrue();
-        } else {
-            return context.getRuntime().getFalse();
+        } catch(IOException ie) {
+            throw runtime.newIOError(ie.getLocalizedMessage());
         }
     }
 
-    /**
-     * Flip capability provided by the java nio.ByteBuffer
-     * buf.put(magic);    // Prepend header
-     * in.read(buf);      // Read data into rest of buffer
-     * buf.flip();        // Flip buffer
-     * out.write(buf);    // Write header + data to channel
-     *
-     * @param context
-     * @return
-     */
+    @JRubyMethod(name = "write_to")
+    public IRubyObject writeTo(ThreadContext context, IRubyObject io) {
+        Ruby runtime = context.runtime;
+        Channel channel = RubyIO.convertToIO(context, io).getChannel();
+
+        if(!this.byteBuffer.hasRemaining()) {
+            throw ByteBuffer.newUnderflowError(context, "not enough data in buffer");
+        }
+
+        if(!(channel instanceof WritableByteChannel) || !(channel instanceof SelectableChannel)) {
+            throw runtime.newArgumentError("unsupported IO object: " + io.getType().toString());
+        }
+
+        try {
+            ((SelectableChannel)channel).configureBlocking(false);
+        } catch(IOException ie) {
+            throw runtime.newIOError(ie.getLocalizedMessage());
+        }
+
+        try {
+            int bytesWritten = ((WritableByteChannel)channel).write(this.byteBuffer);
+
+            if(bytesWritten >= 0) {
+                return runtime.newFixnum(bytesWritten);
+            } else {
+                throw runtime.newEOFError();
+            }
+        } catch(IOException ie) {
+            throw runtime.newIOError(ie.getLocalizedMessage());
+        }
+    }
+
     @JRubyMethod
     public IRubyObject flip(ThreadContext context) {
-        byteBuffer.flip();
+        this.byteBuffer.flip();
         return this;
     }
 
-    /**
-     * Rewinds the buffer. Usage in java is like
-     * out.write(buf);    // Write remaining data
-     * buf.rewind();      // Rewind buffer
-     * buf.get(array);    // Copy data into array
-     *
-     * @param context
-     * @return
-     */
     @JRubyMethod
     public IRubyObject rewind(ThreadContext context) {
-        byteBuffer.rewind();
-        return this;
-    }
-
-    @JRubyMethod
-    public IRubyObject reset(ThreadContext context) {
-        byteBuffer.reset();
+        this.byteBuffer.rewind();
         return this;
     }
 
     @JRubyMethod
     public IRubyObject mark(ThreadContext context) {
-        byteBuffer.mark();
+        this.byteBuffer.mark();
         return this;
     }
 
-    /**
-     * Removes all the content in the byteBuffer
-     *
-     * @param context
-     * @return
-     */
     @JRubyMethod
-    public IRubyObject clear(ThreadContext context) {
-        byteBuffer.clear();
-        return this;
+    public IRubyObject reset(ThreadContext context) {
+        try {
+            this.byteBuffer.reset();
+            return this;
+        } catch(InvalidMarkException ie) {
+            throw ByteBuffer.newMarkUnsetError(context, "mark has not been set");
+        }
     }
 
     @JRubyMethod
     public IRubyObject compact(ThreadContext context) {
-        byteBuffer.compact();
+        this.byteBuffer.compact();
         return this;
-    }
-
-    @JRubyMethod(name = "capacity")
-    public IRubyObject capacity(ThreadContext context) {
-        int cap = byteBuffer.capacity();
-        return context.getRuntime().newFixnum(cap);
     }
 
     @JRubyMethod
-    public IRubyObject position(ThreadContext context, IRubyObject newPosition) {
-        int position = RubyNumeric.num2int(newPosition);
-        byteBuffer.position(position);
+    public IRubyObject each(ThreadContext context, Block block) {
+        for(int i = 0; i < this.byteBuffer.limit(); i++) {
+            block.call(context, context.getRuntime().newFixnum(this.byteBuffer.get(i)));
+        }
+
         return this;
     }
 
-    @JRubyMethod(name = "limit")
-    public IRubyObject limit(ThreadContext context, IRubyObject newLimit) {
-        int limit = RubyNumeric.num2int(newLimit);
-        byteBuffer.limit(limit);
-        return this;
-    }
-
-    @JRubyMethod(name = "limit?")
-    public IRubyObject limit(ThreadContext context) {
-        int lmt = byteBuffer.limit();
-        return context.getRuntime().newFixnum(lmt);
-    }
-
-    @JRubyMethod(name = "to_s")
-    public IRubyObject to_String(ThreadContext context) {
-        return JavaUtil.convertJavaToRuby(context.getRuntime(), byteBuffer.toString());
-    }
-
-    public java.nio.ByteBuffer getBuffer() {
-        return byteBuffer;
+    @JRubyMethod
+    public IRubyObject inspect(ThreadContext context) {
+        return context.runtime.newString(String.format(
+            "#<%s:0x%x @position=%d @limit=%d @capacity=%d>",
+            this.getType().toString(),
+            System.identityHashCode(this),
+            this.byteBuffer.position(),
+            this.byteBuffer.limit(),
+            this.byteBuffer.capacity()
+        ));
     }
 }

@@ -64,10 +64,10 @@ check out this blog post which provides some background and examples:
 
 ### Selectors
 
-The NIO::Selector class is the main API provided by nio4r. Use it where you
-might otherwise use Kernel.select, but want to monitor the same set of IO
-objects across multiple select calls rather than having to reregister them
-every single time:
+The `NIO::Selector` class is the main API provided by nio4r. Use it where
+you might otherwise use `Kernel.select`, but want to monitor the same set
+of IO objects across multiple select calls rather than having to reregister
+them every single time:
 
 ```ruby
 require 'nio'
@@ -150,8 +150,8 @@ selector.deregister(reader)
 
 ### Monitors
 
-Monitors provide methods which let you introspect on why a particular IO
-object was selected. These methods are not thread safe unless you are holding
+The `NIO::Monitor` class monitors a specific IO object and lets you introspect on
+why that object was selected. These methods are not thread safe unless you are holding
 the selector lock (i.e. if you're in a block passed to #select). Only use them
 if you aren't concerned with thread safety, or you're within a #select
 block:
@@ -164,6 +164,112 @@ block:
 
 Monitors also support a ***#value*** and ***#value=*** method for storing a
 handle to an arbitrary object of your choice (e.g. a proc)
+
+### Byte Buffers
+
+*NOTE: This feature was added in nio4r 2.0 as a Google Summer of Code project
+by Upekshe Jayasekera*
+
+The `NIO::ByteBuffer` class represents a fixed-sized native buffer, and is
+modeled after the corresponding Java NIO class. The closest Ruby equivalent
+is a `StringIO`. However, unlike Ruby `String`/`StringIO` there are
+no encoding or internal structure issues to worry about. Instead byte buffers
+provide the most efficient means of performing I/O operations on in-memory data.
+
+To create a byte buffer, construct it with a given capacity:
+
+```ruby
+>> buffer = NIO::ByteBuffer.new(16384)
+ => #<NIO::ByteBuffer:0x007fc60fa41528 @position=0 @limit=16384 @capacity=16384>
+```
+
+All byte buffers have the following attributes:
+
+- ***position***: a cursor from which all I/O operations will take place
+- ***limit***: size of the current data in the buffer. Defaults to capacity
+- ***capacity***: total size of the buffer
+
+These values uphold a `position <= limit <= capacity` invariant.
+
+To add data to the buffer directly, use the `<<` method:
+
+```ruby
+>> buffer << "Hello, world!" 
+ => #<NIO::ByteBuffer:0x007fc60fa41528 @position=13 @limit=16384 @capacity=16384>
+```
+
+The intended use of a byte buffer is to first read some data into it, then
+once we've done one or more reads to get the complete data, read the data
+out of it. Before we read the data out, let's add some more data:
+
+```ruby
+>> buffer << " This is a byte buffer."
+ => #<NIO::ByteBuffer:0x007fc60fa41528 @position=36 @limit=16384 @capacity=16384>
+```
+
+Now to begin reading data out, we'll use the `#flip` method. Pay attention to
+`#flip` because it's the secret sauce in the API:
+
+```ruby
+>> buffer.flip
+ => #<NIO::ByteBuffer:0x007fc60fa41528 @position=0 @limit=36 @capacity=16384>
+```
+
+Calling `#flip` changed the *limit* value to be the previous *position* cursor
+value, and set *position* to be 0. Now we can read data out of the buffer by
+using the `#get` method:
+
+```ruby
+>> buffer.get
+ => "Hello, world! This is a byte buffer."
+>> buffer
+ => #<NIO::ByteBuffer:0x007fc60fa41528 @position=36 @limit=36 @capacity=16384>
+```
+
+Calling `#get` returned all of the data up to the limit as a string, and also
+moved the *position* cursor to match the limit. We can also call `#get` with
+a length:
+
+```ruby
+>> buffer.flip
+ => #<NIO::ByteBuffer:0x007fc60fa41528 @position=0 @limit=36 @capacity=16384>
+>> buffer.get(13)
+ => "Hello, world!"
+```
+
+We can set the limit back to its original value using the `#limit=` method:
+
+```ruby
+>> buffer.flip
+ => #<NIO::ByteBuffer:0x007fc60fa41528 @position=0 @limit=36 @capacity=16384>
+>> buffer.limit = 16384
+ => 16384
+```
+
+To perform I/O operations using the buffer, use the `#read_from` and
+`#write_to` methods. These methods perform non-blocking I/O on the
+remaining space in the buffer after the *position* cursor:
+
+```ruby
+>> buffer << "GET / HTTP/1.0\r\n\r\n"
+ => #<NIO::ByteBuffer:0x007fc60fa41528 @position=18 @limit=16384 @capacity=16384>
+>> buffer.flip
+ => #<NIO::ByteBuffer:0x007fc60fa41528 @position=0 @limit=18 @capacity=16384>
+>> socket = TCPSocket.new("github.com", 80)
+ => #<TCPSocket:fd 11>
+>> buffer.write_to(socket)
+ => 18
+>> buffer.clear
+ => #<NIO::ByteBuffer:0x007fc60fa41528 @position=0 @limit=16384 @capacity=16384>
+>> buffer.read_from(socket)
+ => 93
+>> buffer.flip
+ => #<NIO::ByteBuffer:0x007fc60fa41528 @position=0 @limit=93 @capacity=16384>
+>> buffer.get
+ => "HTTP/1.1 301 Moved Permanently\r\nContent-length: 0\r\nLocation: https:///\r\nConnection: close\r\n\r\n"
+```
+
+Also note the `#clear` method, which returns a buffer to its original state.
 
 ### Flow Control
 
