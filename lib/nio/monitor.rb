@@ -24,12 +24,70 @@ module NIO
       @closed    = false
     end
 
-    # set the interests set
+    # Replace the existing interest set with a new one
+    #
+    # @param interests [:r, :w, :rw] I/O readiness we're interested in (read/write/readwrite)
+    #
+    # @return [Symbol] new interests
     def interests=(interests)
-      raise TypeError, "monitor is already closed" if closed?
+      raise EOFError, "monitor is closed" if closed?
       raise ArgumentError, "bad interests: #{interests}" unless [:r, :w, :rw].include?(interests)
 
       @interests = interests
+    end
+
+    # Add new interests to the existing interest set
+    #
+    # @param interests [:r, :w, :rw] new I/O interests (read/write/readwrite)
+    #
+    # @return [self]
+    def add_interest(interest)
+      case interest
+      when :r
+        case @interests
+        when :r  then @interests = :r
+        when :w  then @interests = :rw
+        when :rw then @interests = :rw
+        when nil then @interests = :r
+        end
+      when :w
+        case @interests
+        when :r  then @interests = :rw
+        when :w  then @interests = :w
+        when :rw then @interests = :rw
+        when nil then @interests = :w
+        end
+      when :rw
+        @interests = :rw
+      else raise ArgumentError, "bad interests: #{interest}"
+      end
+    end
+
+    # Remove interests from the existing interest set
+    #
+    # @param interests [:r, :w, :rw] I/O interests to remove (read/write/readwrite)
+    #
+    # @return [self]
+    def remove_interest(interest)
+      case interest
+      when :r
+        case @interests
+        when :r  then @interests = nil
+        when :w  then @interests = :w
+        when :rw then @interests = :w
+        when nil then @interests = nil
+        end
+      when :w
+        case @interests
+        when :r  then @interests = :r
+        when :w  then @interests = nil
+        when :rw then @interests = :r
+        when nil then @interests = nil
+        end
+      when :rw
+        @interests = nil
+      else raise ArgumentError, "bad interests: #{interest}"
+      end
     end
 
     # Is the IO object readable?

@@ -15,18 +15,23 @@ static void NIO_Monitor_free(struct NIO_Monitor *monitor);
 
 /* Methods */
 static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE interests);
-static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests);
-
 static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self);
 static VALUE NIO_Monitor_is_closed(VALUE self);
 static VALUE NIO_Monitor_io(VALUE self);
 static VALUE NIO_Monitor_interests(VALUE self);
+static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests);
+static VALUE NIO_Monitor_add_interest(VALUE self, VALUE interest);
+static VALUE NIO_Monitor_remove_interest(VALUE self, VALUE interest);
 static VALUE NIO_Monitor_selector(VALUE self);
 static VALUE NIO_Monitor_is_readable(VALUE self);
 static VALUE NIO_Monitor_is_writable(VALUE self);
 static VALUE NIO_Monitor_value(VALUE self);
 static VALUE NIO_Monitor_set_value(VALUE self, VALUE obj);
 static VALUE NIO_Monitor_readiness(VALUE self);
+
+/* Internal C functions */
+static int NIO_Monitor_symbol2interest(VALUE interests);
+static void NIO_Monitor_update_interests(VALUE self, int interests);
 
 /* Monitor control how a channel is being waited for by a monitor */
 void Init_NIO_Monitor()
@@ -36,11 +41,13 @@ void Init_NIO_Monitor()
     rb_define_alloc_func(cNIO_Monitor, NIO_Monitor_allocate);
 
     rb_define_method(cNIO_Monitor, "initialize", NIO_Monitor_initialize, 3);
-    rb_define_method(cNIO_Monitor, "interests=", NIO_Monitor_set_interests, 1);
     rb_define_method(cNIO_Monitor, "close", NIO_Monitor_close, -1);
     rb_define_method(cNIO_Monitor, "closed?", NIO_Monitor_is_closed, 0);
     rb_define_method(cNIO_Monitor, "io", NIO_Monitor_io, 0);
     rb_define_method(cNIO_Monitor, "interests", NIO_Monitor_interests, 0);
+    rb_define_method(cNIO_Monitor, "interests=", NIO_Monitor_set_interests, 1);
+    rb_define_method(cNIO_Monitor, "add_interest", NIO_Monitor_add_interest, 1);
+    rb_define_method(cNIO_Monitor, "remove_interest", NIO_Monitor_remove_interest, 1);
     rb_define_method(cNIO_Monitor, "selector", NIO_Monitor_selector, 0);
     rb_define_method(cNIO_Monitor, "value", NIO_Monitor_value, 0);
     rb_define_method(cNIO_Monitor, "value=", NIO_Monitor_set_value, 1);
@@ -109,38 +116,6 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
     return Qnil;
 }
 
-static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests)
-{
-    struct NIO_Monitor *monitor;
-    ID interests_id;
-
-    if(NIO_Monitor_is_closed(self) == Qtrue) {
-        rb_raise(rb_eTypeError, "monitor is already closed");
-    }
-
-    interests_id = SYM2ID(interests);
-    Data_Get_Struct(self, struct NIO_Monitor, monitor);
-
-    if(interests_id == rb_intern("r")) {
-        monitor->interests = EV_READ;
-    } else if(interests_id == rb_intern("w")) {
-        monitor->interests = EV_WRITE;
-    } else if(interests_id == rb_intern("rw")) {
-        monitor->interests = EV_READ | EV_WRITE;
-    } else {
-        rb_raise(rb_eArgError, "invalid interest type %s (must be :r, :w, or :rw)",
-            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0, 0)));
-    }
-
-    ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
-    ev_io_set(&monitor->ev_io, monitor->ev_io.fd, monitor->interests);
-    ev_io_start(monitor->selector->ev_loop, &monitor->ev_io);
-
-    rb_ivar_set(self, rb_intern("interests"), interests);
-
-    return interests;
-}
-
 static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
 {
     VALUE deregister, selector;
@@ -183,6 +158,33 @@ static VALUE NIO_Monitor_io(VALUE self)
 
 static VALUE NIO_Monitor_interests(VALUE self)
 {
+    return rb_ivar_get(self, rb_intern("interests"));
+}
+
+static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests)
+{
+    NIO_Monitor_update_interests(self, NIO_Monitor_symbol2interest(interests));
+
+    return rb_ivar_get(self, rb_intern("interests"));
+}
+
+static VALUE NIO_Monitor_add_interest(VALUE self, VALUE interest) {
+    struct NIO_Monitor *monitor;
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+
+    monitor->interests |= NIO_Monitor_symbol2interest(interest);
+    NIO_Monitor_update_interests(self, monitor->interests);
+
+    return rb_ivar_get(self, rb_intern("interests"));
+}
+
+static VALUE NIO_Monitor_remove_interest(VALUE self, VALUE interest) {
+    struct NIO_Monitor *monitor;
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+
+    monitor->interests &= ~NIO_Monitor_symbol2interest(interest);
+    NIO_Monitor_update_interests(self, monitor->interests);
+
     return rb_ivar_get(self, rb_intern("interests"));
 }
 
@@ -239,4 +241,60 @@ static VALUE NIO_Monitor_is_writable(VALUE self)
     } else {
         return Qfalse;
     }
+}
+
+/* Internal C functions */
+
+static int NIO_Monitor_symbol2interest(VALUE interests)
+{
+    ID interests_id;
+    interests_id = SYM2ID(interests);
+
+    if(interests_id == rb_intern("r")) {
+        return EV_READ;
+    } else if(interests_id == rb_intern("w")) {
+        return EV_WRITE;
+    } else if(interests_id == rb_intern("rw")) {
+        return EV_READ | EV_WRITE;
+    } else {
+        rb_raise(rb_eArgError, "invalid interest type %s (must be :r, :w, or :rw)",
+            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0, 0)));
+    }
+}
+
+static void NIO_Monitor_update_interests(VALUE self, int interests)
+{
+    ID interests_id;
+    struct NIO_Monitor *monitor;
+    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+
+    if(NIO_Monitor_is_closed(self) == Qtrue) {
+        rb_raise(rb_eEOFError, "monitor is closed");
+    }
+
+    if(interests) {
+        switch(interests) {
+            case EV_READ:
+                interests_id = rb_intern("r");
+                break;
+            case EV_WRITE:
+                interests_id = rb_intern("w");
+                break;
+            case EV_READ | EV_WRITE:
+                interests_id = rb_intern("rw");
+                break;
+            default:
+                rb_raise(rb_eRuntimeError, "bogus NIO_Monitor_update_interests! (%d)", interests);
+        }
+
+        rb_ivar_set(self, rb_intern("interests"), ID2SYM(interests_id));
+    } else {
+        rb_ivar_set(self, rb_intern("interests"), Qnil);
+    }
+
+    monitor->interests = interests;
+
+    ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
+    ev_io_set(&monitor->ev_io, monitor->ev_io.fd, monitor->interests);
+    ev_io_start(monitor->selector->ev_loop, &monitor->ev_io);
 }

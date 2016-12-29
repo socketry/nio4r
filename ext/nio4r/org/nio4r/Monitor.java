@@ -38,36 +38,6 @@ public class Monitor extends RubyObject {
         key.attach(this);
     }
 
-    @JRubyMethod(name = "interests=")
-    public IRubyObject setInterests(ThreadContext context, IRubyObject interests) {
-        if(this.closed == context.getRuntime().getTrue()) {
-            throw context.getRuntime().newTypeError("monitor is already closed");
-        }
-
-        int interestOps = 0;
-        Ruby ruby = context.getRuntime();
-        Channel rawChannel = io.getChannel();
-        SelectableChannel channel = (SelectableChannel)rawChannel;
-
-        this.interests = interests;
-
-        if(interests == ruby.newSymbol("r")) {
-            interestOps = SelectionKey.OP_READ;
-        } else if(interests == ruby.newSymbol("w")) {
-            interestOps = SelectionKey.OP_WRITE;
-        } else if(interests == ruby.newSymbol("rw")) {
-            interestOps = SelectionKey.OP_READ|SelectionKey.OP_WRITE;
-        }
-
-        if((interestOps & ~(channel.validOps())) == 0) {
-            key.interestOps(interestOps);
-        } else {
-            throw context.getRuntime().newArgumentError("given interests not supported for this IO object");
-        }
-
-        return this.interests;
-    }
-
     @JRubyMethod
     public IRubyObject io(ThreadContext context) {
         return io;
@@ -78,9 +48,56 @@ public class Monitor extends RubyObject {
         return selector;
     }
 
-    @JRubyMethod
-    public IRubyObject interests(ThreadContext context) {
+    @JRubyMethod(name = "interests")
+    public IRubyObject getInterests(ThreadContext context) {
         return interests;
+    }
+
+    @JRubyMethod(name = "interests=")
+    public IRubyObject setInterests(ThreadContext context, IRubyObject interests) {
+        if(this.closed == context.getRuntime().getTrue()) {
+            throw context.getRuntime().newEOFError("monitor is closed");
+        }
+
+        Ruby ruby = context.getRuntime();
+        SelectableChannel channel = (SelectableChannel)io.getChannel();
+
+        key.interestOps(Nio4r.symbolToInterestOps(ruby, channel, interests));
+        this.interests = interests;
+
+        return this.interests;
+    }
+
+    @JRubyMethod(name = "add_interest")
+    public IRubyObject addInterest(ThreadContext context, IRubyObject interest) {
+        if(this.closed == context.getRuntime().getTrue()) {
+            throw context.getRuntime().newEOFError("monitor is closed");
+        }
+
+        Ruby ruby = context.getRuntime();
+        SelectableChannel channel = (SelectableChannel)io.getChannel();
+        int newInterestOps = key.interestOps() | Nio4r.symbolToInterestOps(ruby, channel, interest);
+
+        key.interestOps(newInterestOps);
+        this.interests = Nio4r.interestOpsToSymbol(ruby, newInterestOps);
+
+        return this.interests;
+    }
+
+    @JRubyMethod(name = "remove_interest")
+    public IRubyObject removeInterest(ThreadContext context, IRubyObject interest) {
+        if(this.closed == context.getRuntime().getTrue()) {
+            throw context.getRuntime().newEOFError("monitor is closed");
+        }
+
+        Ruby ruby = context.getRuntime();
+        SelectableChannel channel = (SelectableChannel)io.getChannel();
+        int newInterestOps = key.interestOps() & ~Nio4r.symbolToInterestOps(ruby, channel, interest);
+
+        key.interestOps(newInterestOps);
+        this.interests = Nio4r.interestOpsToSymbol(ruby, newInterestOps);
+
+        return this.interests;
     }
 
     @JRubyMethod

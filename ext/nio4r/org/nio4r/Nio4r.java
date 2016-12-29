@@ -95,6 +95,8 @@ public class Nio4r implements Library {
             case SelectionKey.OP_READ | SelectionKey.OP_CONNECT:
             case SelectionKey.OP_READ | SelectionKey.OP_WRITE:
                 return ruby.newSymbol("rw");
+            case 0:
+                return ruby.getNil();
             default:
                 throw ruby.newArgumentError("unknown interest op combination");
         }
