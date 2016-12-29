@@ -50,6 +50,17 @@ writing.
 * **Java NIO**: JRuby extension which wraps the Java NIO subsystem
 * **Pure Ruby**: `Kernel.select`-based backend that should work on any Ruby interpreter
 
+## Discussion
+
+For discussion and general help with nio4r, email
+[socketry+subscribe@googlegroups.com][subscribe]
+or join on the web via the [Google Group].
+
+We're also on IRC at ##socketry on irc.freenode.net.
+
+[subscribe]:    mailto:socketry+subscribe@googlegroups.com
+[google group]: https://groups.google.com/group/socketry
+
 ## Documentation
 
 [Please see the nio4r wiki](https://github.com/socketry/nio4r/wiki)
