@@ -1,28 +1,28 @@
-1.2.1 (2016-01-31)
-------------------
+## 1.2.1 (2016-01-31)
+
 * Fix bug in the JRuby backend which cases indefinite blocking when small
   timeout values are passed to the selector
 
-1.2.0 (2015-12-22)
-------------------
+# 1.2.0 (2015-12-22)
+
 * Add NIO::Monitor#interests= API for changing interests. Contributed by
   Upekshe Jayasekera as a Google Summer of Code project.
 * Update to libev 4.22
 
-1.1.1 (2015-07-17)
-------------------
+## 1.1.1 (2015-07-17)
+
 * Update to libev 4.20
 * Fall back to io.h if unistd.h is not found
 * RSpec updates
 * RuboCop
 
-1.1.0 (2015-01-10)
-------------------
+## 1.1.0 (2015-01-10)
+
 * Update to libev 4.19
 * Do not call ev_io_stop on monitors if the loop is already closed
 
-1.0.1 (2014-09-01)
-------------------
+## 1.0.1 (2014-09-01)
+
 * Fix C compiler warnings
 * Eliminate Ruby warnings about @lock_holder
 * Windows improvements
@@ -30,59 +30,59 @@
 * Automatically require 'set'
 * Update to RSpec 3
 
-1.0.0 (2014-01-14)
-------------------
+## 1.0.0 (2014-01-14)
+
 * Have Selector#register obtain the actual IO from a Monitor object
   because Monitor#initialize might convert it.
 * Drop 1.8 support
 
-0.5.0 (2013-08-06)
-------------------
+## 0.5.0 (2013-08-06)
+
 * Fix segv when attempting to register to a closed selector
 * Fix Windows support on Ruby 2.0.0
 * Upgrade to libev 4.15
 
-0.4.6 (2013-05-27)
-------------------
+## 0.4.6 (2013-05-27)
+
 * Fix for JRuby on Windows
 
-0.4.5
------
+## 0.4.5
+
 * Fix botched gem release
 
-0.4.4
------
+## 0.4.4
+
 * Fix return values for Selector_synchronize and Selector_unlock
 
-0.4.3
------
+## 0.4.3
+
 * REALLY have thread synchronization when closing selectors ;)
 
-0.4.2
------
+## 0.4.2
+
 * Attempt to work around packaging problems with bundler-api o_O
 
-0.4.1
------
+## 0.4.1
+
 * Thread synchronization when closing selectors
 
-0.4.0
------
+## 0.4.0
+
 * OpenSSL::SSL::SSLSocket support
 
-0.3.3
------
+## 0.3.3
+
 * NIO::Selector#select_each removed
 * Remove event buffer
 * Patch GIL unlock directly into libev
 * Re-release since 0.3.2 was botched :(
 
-0.3.1
------
+## 0.3.1
+
 * Prevent CancelledKeyExceptions on JRuby
 
-0.3.0
------
+## 0.3.0
+
 * NIO::Selector#select now takes a block and behaves like select_each
 * NIO::Selector#select_each is now deprecated and will be removed
 * Closing monitors detaches them from their selector
@@ -91,23 +91,23 @@
 * Bugfixes for zero/negative select timeouts
 * Handle OP_CONNECT properly on JRuby
 
-0.2.2
------
+## 0.2.2
+
 * Raise IOError if asked to wake up a closed selector
 
-0.2.1
------
+## 0.2.1
+
 * Implement wakeup mechanism using raw pipes instead of ev_async, since
   ev_async likes to cause segvs when used across threads (despite claims
   in the documentation to the contrary)
 
-0.2.0
------
+## 0.2.0
+
 * NIO::Monitor#readiness API to query readiness, along with #readable? and
   #writable? helper methods
 * NIO::Selector#select_each API which avoids memory allocations if possible
 * Bugfixes for the JRuby implementation
 
-0.1.0
------
+## 0.1.0
+
 * Initial release. Merry Christmas!
