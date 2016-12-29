@@ -63,6 +63,35 @@ RSpec.describe NIO::Monitor do
     end
   end
 
+  describe "#remove_interest" do
+    it "removes an interest from the set" do
+      expect(monitor.interests).to eq(:rw)
+
+      expect(monitor.remove_interest(:r)).to eq(:w)
+      expect(monitor.interests).to eq(:w)
+    end
+
+    it "can clear the last interest" do
+      monitor.interests = :w
+      expect(monitor.interests).to eq(:w)
+
+      expect(monitor.remove_interest(:w)).to be_nil
+      expect(monitor.interests).to be_nil
+    end
+
+    it "acts idempotently" do
+      monitor.interests = :w
+      expect(monitor.interests).to eq(:w)
+
+      expect(monitor.remove_interest(:r)).to eq(:w)
+      expect(monitor.interests).to eq(:w)
+    end
+
+    it "raises ArgumentError if given a bogus option" do
+      expect { monitor.add_interest(:derp) }.to raise_error(ArgumentError)
+    end
+  end
+
   describe "#io" do
     it "knows its IO object" do
       expect(monitor.io).to eq(writer)

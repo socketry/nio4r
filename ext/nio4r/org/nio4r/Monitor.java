@@ -76,7 +76,23 @@ public class Monitor extends RubyObject {
 
         Ruby ruby = context.getRuntime();
         SelectableChannel channel = (SelectableChannel)io.getChannel();
-        int newInterestOps = Nio4r.symbolToInterestOps(ruby, channel, interest) | key.interestOps();
+        int newInterestOps = key.interestOps() | Nio4r.symbolToInterestOps(ruby, channel, interest);
+
+        key.interestOps(newInterestOps);
+        this.interests = Nio4r.interestOpsToSymbol(ruby, newInterestOps);
+
+        return this.interests;
+    }
+
+    @JRubyMethod(name = "remove_interest")
+    public IRubyObject removeInterest(ThreadContext context, IRubyObject interest) {
+        if(this.closed == context.getRuntime().getTrue()) {
+            throw context.getRuntime().newEOFError("monitor is closed");
+        }
+
+        Ruby ruby = context.getRuntime();
+        SelectableChannel channel = (SelectableChannel)io.getChannel();
+        int newInterestOps = key.interestOps() & ~Nio4r.symbolToInterestOps(ruby, channel, interest);
 
         key.interestOps(newInterestOps);
         this.interests = Nio4r.interestOpsToSymbol(ruby, newInterestOps);

@@ -38,7 +38,7 @@ module NIO
 
     # Add new interests to the existing interest set
     #
-    # @param interests [:r, :w, :rw] new I/O interests in (read/write/readwrite)
+    # @param interests [:r, :w, :rw] new I/O interests (read/write/readwrite)
     #
     # @return [self]
     def add_interest(interest)
@@ -59,6 +59,33 @@ module NIO
         end
       when :rw
         @interests = :rw
+      else raise ArgumentError, "bad interests: #{interest}"
+      end
+    end
+
+    # Remove interests from the existing interest set
+    #
+    # @param interests [:r, :w, :rw] I/O interests to remove (read/write/readwrite)
+    #
+    # @return [self]
+    def remove_interest(interest)
+      case interest
+      when :r
+        case @interests
+        when :r  then @interests = nil
+        when :w  then @interests = :w
+        when :rw then @interests = :w
+        when nil then @interests = nil
+        end
+      when :w
+        case @interests
+        when :r  then @interests = :r
+        when :w  then @interests = nil
+        when :rw then @interests = :r
+        when nil then @interests = nil
+        end
+      when :rw
+        @interests = nil
       else raise ArgumentError, "bad interests: #{interest}"
       end
     end
