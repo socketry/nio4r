@@ -1,9 +1,38 @@
+## 2.0.0 (2016-12-28)
+
+* [#53](https://github.com/socketry/nio4r/pull/53)
+  Limit lock scope to prevent recursive locking.
+  ([@johnnyt])
+
+* [#95](https://github.com/socketry/nio4r/pull/95)
+   NIO::ByteBuffer Google Summer of Code project.
+   ([@UpeksheJay], [@tarcieri])
+
+* [#111](https://github.com/socketry/nio4r/pull/111)
+  NIO::Selector#backend introspection support.
+  ([@tarcieri])
+
+* [#112](https://github.com/socketry/nio4r/pull/112)
+  Upgrade to libev 4.23.
+  ([@tarcieri])
+
+* [#119](https://github.com/socketry/nio4r/pull/119)
+  Disambiguate wakeup vs timeout (fixes #63, #66).
+  ([@tarcieri])
+
+* [#124](https://github.com/socketry/nio4r/pull/124)
+  Monitor interests API improvements.
+  ([@tarcieri])
+
+* Drop Ruby 2.0 and 2.1 support, require Ruby 2.2.2+.
+  ([@tarcieri])
+
 ## 1.2.1 (2016-01-31)
 
 * Fix bug in the JRuby backend which cases indefinite blocking when small
   timeout values are passed to the selector
 
-# 1.2.0 (2015-12-22)
+## 1.2.0 (2015-12-22)
 
 * Add NIO::Monitor#interests= API for changing interests. Contributed by
   Upekshe Jayasekera as a Google Summer of Code project.
@@ -111,3 +140,7 @@
 ## 0.1.0
 
 * Initial release. Merry Christmas!
+
+[@tarcieri]: https://github.com/tarcieri
+[@johnnyt]: https://github.com/johnnyt
+[@UpeksheJay]: https://github.com/UpeksheJay
