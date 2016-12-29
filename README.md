@@ -6,7 +6,7 @@
 [![Coverage Status](https://coveralls.io/repos/socketry/nio4r/badge.svg?branch=master)](https://coveralls.io/r/socketry/nio4r)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/socketry/nio4r/blob/master/LICENSE.txt)
 
-_NOTE: This is the 2.x **development** branch of nio4r.  For the 1.x **stable**
+_NOTE: This is the 2.x **stable** branch of nio4r.  For the 1.x **legacy**
 branch (used by [Rails 5]), please see:_
 
 https://github.com/socketry/nio4r/tree/1-x-stable
