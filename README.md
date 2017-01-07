@@ -93,7 +93,7 @@ to maintain a large codebase.
 
 ## License
 
-Copyright (c) 2011-2016 Tony Arcieri. Distributed under the MIT License.
+Copyright (c) 2011-2017 Tony Arcieri. Distributed under the MIT License.
 See [LICENSE.txt] for further details.
 
 Includes libev 4.23. Copyright (c) 2007-2016 Marc Alexander Lehmann.
