@@ -28,7 +28,7 @@ writing.
 * [Celluloid::IO]: Actor-based concurrency framework, uses nio4r for async I/O
 
 [ActionCable]: https://rubygems.org/gems/actioncable
-[Celluloid::IO]: https://github.com/celluloid/celluloid
+[Celluloid::IO]: https://github.com/celluloid/celluloid-io
 
 ## Goals
 
