@@ -18,6 +18,8 @@ $defs << "-DEV_USE_PORT" if have_header("port.h")
 
 $defs << "-DHAVE_SYS_RESOURCE_H" if have_header("sys/resource.h")
 
+CONFIG["optflags"] << " -fno-strict-aliasing"
+
 dir_config "nio4r_ext"
 create_makefile "nio4r_ext"
 
