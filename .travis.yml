@@ -17,6 +17,7 @@ rvm:
   - 2.2.7
   - 2.3.4
   - 2.4.1
+  - ruby-head
 
 env:
   global:
@@ -26,6 +27,8 @@ env:
     - NIO4R_PURE=true
 
 matrix:
+  allow_failures:
+    - rvm: ruby-head
   fast_finish: true
 
 notifications:
