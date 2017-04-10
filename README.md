@@ -6,8 +6,8 @@
 [![Coverage Status](https://coveralls.io/repos/socketry/nio4r/badge.svg?branch=master)](https://coveralls.io/r/socketry/nio4r)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/socketry/nio4r/blob/master/LICENSE.txt)
 
-_NOTE: This is the 2.x **stable** branch of nio4r.  For the 1.x **legacy**
-branch (used by [Rails 5]), please see:_
+_NOTE: This is the 2.x **stable** branch of nio4r.  For the 1.x **legacy** branch,
+please see:_
 
 https://github.com/socketry/nio4r/tree/1-x-stable
 
@@ -20,15 +20,15 @@ I/O selectors are the heart of "reactor"-based event loops, and monitor
 multiple I/O objects for various types of readiness, e.g. ready for reading or
 writing.
 
-[Rails 5]: https://rubygems.org/gems/actioncable
-
 ## Projects using nio4r
 
 * [ActionCable]: Rails 5 WebSocket protocol, uses nio4r for a WebSocket server
 * [Celluloid::IO]: Actor-based concurrency framework, uses nio4r for async I/O
+* [Socketry Async]: Asynchronous I/O framework for Ruby
 
 [ActionCable]: https://rubygems.org/gems/actioncable
 [Celluloid::IO]: https://github.com/celluloid/celluloid-io
+[Socketry Async]: https://github.com/socketry/async
 
 ## Goals
 
