@@ -359,22 +359,30 @@ static VALUE NIO_Selector_select_synchronized(VALUE *args)
 
 static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
 {
+    int ev_run_flags = EVRUN_ONCE;
     int result;
+    double timeout_val;
 
     selector->selecting = 1;
     selector->wakeup_fired = 0;
 
-    /* Implement the optional timeout (if any) as a ev_timer */
-    if(timeout != Qnil) {
-        /* It seems libev is not a fan of timers being zero, so fudge a little */
-        selector->timer.repeat = NUM2DBL(timeout) + 0.0001;
-        ev_timer_again(selector->ev_loop, &selector->timer);
-    } else {
+    if(timeout == Qnil) {
+        /* Don't fire a wakeup timeout if we weren't passed one */
         ev_timer_stop(selector->ev_loop, &selector->timer);
+    } else {
+        timeout_val = NUM2DBL(timeout);
+        if(timeout_val == 0) {
+            /* If we've been given an explicit timeout of 0, perform a non-blocking
+               select operation */
+            ev_run_flags = EVRUN_NOWAIT;
+        } else {
+            selector->timer.repeat = timeout_val;
+            ev_timer_again(selector->ev_loop, &selector->timer);
+        }
     }
 
     /* libev is patched to release the GIL when it makes its system call */
-    ev_loop(selector->ev_loop, EVLOOP_ONESHOT);
+    ev_run(selector->ev_loop, ev_run_flags);
 
     result = selector->ready_count;
     selector->selecting = selector->ready_count = 0;
