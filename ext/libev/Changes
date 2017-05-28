@@ -1,5 +1,10 @@
 Revision history for libev, a high-performance and full-featured event loop.
 
+4.24 Wed Dec 28 05:19:55 CET 2016
+	- bump version to 4.24, as the release tarball inexplicably
+          didn't have the right version in ev.h, even though the cvs-tagged
+          version did have the right one (reported by Ales Teska).
+
 4.23 Wed Nov 16 18:23:41 CET 2016
 	- move some declarations at the beginning to help certain retarded
           microsoft compilers, even though their documentation claims
