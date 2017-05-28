@@ -49,8 +49,8 @@ static VALUE NIO_Selector_close_synchronized(VALUE *args);
 static VALUE NIO_Selector_closed_synchronized(VALUE *args);
 
 static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout);
-static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents);
-static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
+static void NIO_Selector_timeout_callback(ev_loop *ev_loop, struct ev_timer *timer, int revents);
+static void NIO_Selector_wakeup_callback(ev_loop *ev_loop, struct ev_io *io, int revents);
 
 /* Default number of slots in the buffer for selected monitors */
 #define INITIAL_READY_BUFFER 32
@@ -455,12 +455,12 @@ static VALUE NIO_Selector_is_empty(VALUE self)
 
 
 /* Called whenever a timeout fires on the event loop */
-static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents)
+static void NIO_Selector_timeout_callback(ev_loop *ev_loop, struct ev_timer *timer, int revents)
 {
 }
 
 /* Called whenever a wakeup request is sent to a selector */
-static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents)
+static void NIO_Selector_wakeup_callback(ev_loop *ev_loop, struct ev_io *io, int revents)
 {
     char buffer[128];
     struct NIO_Selector *selector = (struct NIO_Selector *)io->data;
@@ -471,7 +471,7 @@ static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *
 }
 
 /* libev callback fired whenever a monitor gets an event */
-void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents)
+void NIO_Selector_monitor_callback(ev_loop *ev_loop, struct ev_io *io, int revents)
 {
     struct NIO_Monitor *monitor_data = (struct NIO_Monitor *)io->data;
     struct NIO_Selector *selector = monitor_data->selector;

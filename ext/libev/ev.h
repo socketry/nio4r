@@ -56,11 +56,6 @@ EV_CPP(extern "C" {)
 
 /*****************************************************************************/
 
-/* pre-4.0 compatibility */
-#ifndef EV_COMPAT3
-# define EV_COMPAT3 1
-#endif
-
 #ifndef EV_FEATURES
 # if defined __OPTIMIZE_SIZE__
 #  define EV_FEATURES 0x7c
