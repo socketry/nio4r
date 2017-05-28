@@ -1,3 +1,21 @@
+## 2.1.0 (2017-05-28)
+
+* [#130](https://github.com/socketry/nio4r/pull/130)
+  Add -fno-strict-aliasing flag when compiling C ext.
+  ([@junaruga])
+  
+* [#146](https://github.com/socketry/nio4r/pull/146)
+  Use non-blocking select when a timeout of 0 is given.
+  ([@tarcieri])
+
+* [#147](https://github.com/socketry/nio4r/pull/147)
+  Update to libev 4.24.
+  ([@tarcieri])
+
+* [#148](https://github.com/socketry/nio4r/pull/148)
+  Switch to the libev 4 API internally.
+  ([@tarcieri])
+
 ## 2.0.0 (2016-12-28)
 
 * [#53](https://github.com/socketry/nio4r/pull/53)
@@ -144,3 +162,4 @@
 [@tarcieri]: https://github.com/tarcieri
 [@johnnyt]: https://github.com/johnnyt
 [@UpeksheJay]: https://github.com/UpeksheJay
+[@junaruga]: https://github.com/junaruga
