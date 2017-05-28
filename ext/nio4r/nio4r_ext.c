@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2011 Tony Arcieri. Distributed under the MIT License. See
- * LICENSE.txt for further details.
+ * Copyright (c) 2011-2017 Tony Arcieri. Distributed under the MIT License.
+ * See LICENSE.txt for further details.
  */
 
 #include "nio4r.h"
