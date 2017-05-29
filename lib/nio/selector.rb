@@ -5,8 +5,17 @@ require "set"
 module NIO
   # Selectors monitor IO objects for events of interest
   class Selector
+    # Return supported backends as symbols
+    #
+    # See `#backend` method definition for all possible backends
+    def self.backends
+      [:ruby]
+    end
+
     # Create a new NIO::Selector
-    def initialize
+    def initialize(backend = :ruby)
+      raise ArgumentError, "unsupported backend: #{backend}" unless backend == :ruby
+
       @selectables = {}
       @lock = Mutex.new
 
