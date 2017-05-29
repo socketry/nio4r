@@ -13,6 +13,29 @@ RSpec.describe NIO::Selector do
   let(:reader) { pair.first }
   let(:writer) { pair.last }
 
+  context ".backends" do
+    it "knows all supported backends" do
+      expect(described_class.backends).to be_a Array
+      expect(described_class.backends.first).to be_a Symbol
+    end
+  end
+
+  context "#initialize" do
+    it "allows explicitly specifying a backend" do
+      backend = described_class.backends.first
+      selector = described_class.new(backend)
+      expect(selector.backend).to eq backend
+    end
+
+    it "raises ArgumentError if given an invalid backend" do
+      expect { described_class.new(:derp) }.to raise_error ArgumentError
+    end
+
+    it "raises TypeError if given a non-Symbol parameter" do
+      expect { described_class.new(42).to raise_error TypeError }
+    end
+  end
+
   context "backend" do
     it "knows its backend" do
       expect(subject.backend).to be_a Symbol

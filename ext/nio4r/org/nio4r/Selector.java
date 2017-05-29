@@ -30,8 +30,23 @@ public class Selector extends RubyObject {
         super(ruby, rubyClass);
     }
 
+    @JRubyMethod(meta = true)
+    public static IRubyObject backends(ThreadContext context, IRubyObject self) {
+        return context.runtime.newArray(context.runtime.newSymbol("java"));
+    }
+
     @JRubyMethod
     public IRubyObject initialize(ThreadContext context) {
+        initialize(context, context.runtime.newSymbol("java"));
+        return context.nil;
+    }
+
+    @JRubyMethod
+    public IRubyObject initialize(ThreadContext context, IRubyObject backend) {
+        if(backend != context.runtime.newSymbol("java")) {
+            throw context.runtime.newArgumentError(":java is the only supported backend");
+        }
+
         this.cancelledKeys = new HashMap<SelectableChannel,SelectionKey>();
         this.wakeupFired = false;
 

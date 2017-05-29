@@ -27,8 +27,11 @@ static void NIO_Selector_mark(struct NIO_Selector *loop);
 static void NIO_Selector_shutdown(struct NIO_Selector *selector);
 static void NIO_Selector_free(struct NIO_Selector *loop);
 
-/* Methods */
-static VALUE NIO_Selector_initialize(VALUE self);
+/* Class methods */
+static VALUE NIO_Selector_supported_backends(VALUE klass);
+
+/* Instance methods */
+static VALUE NIO_Selector_initialize(int argc, VALUE *argv, VALUE self);
 static VALUE NIO_Selector_backend(VALUE self);
 static VALUE NIO_Selector_register(VALUE self, VALUE selectable, VALUE interest);
 static VALUE NIO_Selector_deregister(VALUE self, VALUE io);
@@ -65,7 +68,8 @@ void Init_NIO_Selector()
     cNIO_Selector = rb_define_class_under(mNIO, "Selector", rb_cObject);
     rb_define_alloc_func(cNIO_Selector, NIO_Selector_allocate);
 
-    rb_define_method(cNIO_Selector, "initialize", NIO_Selector_initialize, 0);
+    rb_define_singleton_method(cNIO_Selector, "backends", NIO_Selector_supported_backends, 0);
+    rb_define_method(cNIO_Selector, "initialize", NIO_Selector_initialize, -1);
     rb_define_method(cNIO_Selector, "backend", NIO_Selector_backend, 0);
     rb_define_method(cNIO_Selector, "register", NIO_Selector_register, 2);
     rb_define_method(cNIO_Selector, "deregister", NIO_Selector_deregister, 1);
@@ -102,7 +106,9 @@ static VALUE NIO_Selector_allocate(VALUE klass)
     }
 
     selector = (struct NIO_Selector *)xmalloc(sizeof(struct NIO_Selector));
-    selector->ev_loop = ev_loop_new(0);
+
+    /* Defer initializing the loop to #initialize */
+    selector->ev_loop = 0;
 
     ev_init(&selector->timer, NIO_Selector_timeout_callback);
 
@@ -111,8 +117,6 @@ static VALUE NIO_Selector_allocate(VALUE klass)
 
     ev_io_init(&selector->wakeup, NIO_Selector_wakeup_callback, selector->wakeup_reader, EV_READ);
     selector->wakeup.data = (void *)selector;
-
-    ev_io_start(selector->ev_loop, &selector->wakeup);
 
     selector->closed = selector->selecting = selector->wakeup_fired = selector->ready_count = 0;
     selector->ready_array = Qnil;
@@ -154,11 +158,82 @@ static void NIO_Selector_free(struct NIO_Selector *selector)
     xfree(selector);
 }
 
+/* Return an array of symbols for supported backends */
+static VALUE NIO_Selector_supported_backends(VALUE klass) {
+    unsigned int backends = ev_supported_backends();
+    VALUE result = rb_ary_new();
+
+    if(backends & EVBACKEND_EPOLL) {
+        rb_ary_push(result, ID2SYM(rb_intern("epoll")));
+    }
+
+    if(backends & EVBACKEND_POLL) {
+        rb_ary_push(result, ID2SYM(rb_intern("poll")));
+    }
+
+    if(backends & EVBACKEND_KQUEUE) {
+        rb_ary_push(result, ID2SYM(rb_intern("kqueue")));
+    }
+
+    if(backends & EVBACKEND_SELECT) {
+        rb_ary_push(result, ID2SYM(rb_intern("select")));
+    }
+
+    if(backends & EVBACKEND_PORT) {
+        rb_ary_push(result, ID2SYM(rb_intern("port")));
+    }
+
+    return result;
+}
+
 /* Create a new selector. This is more or less the pure Ruby version
    translated into an MRI cext */
-static VALUE NIO_Selector_initialize(VALUE self)
+static VALUE NIO_Selector_initialize(int argc, VALUE *argv, VALUE self)
 {
+    ID backend_id;
+    VALUE backend;
     VALUE lock;
+
+    struct NIO_Selector *selector;
+    unsigned int flags = 0;
+
+    Data_Get_Struct(self, struct NIO_Selector, selector);
+
+    rb_scan_args(argc, argv, "01", &backend);
+
+    if(backend != Qnil) {
+        if(!rb_ary_includes(NIO_Selector_supported_backends(CLASS_OF(self)), backend)) {
+            rb_raise(rb_eArgError, "unsupported backend: %s",
+                RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0, 0)));
+        }
+
+        backend_id = SYM2ID(backend);
+
+        if(backend_id == rb_intern("epoll")) {
+            flags = EVBACKEND_EPOLL;
+        } else if(backend_id == rb_intern("poll")) {
+            flags = EVBACKEND_POLL;
+        } else if(backend_id == rb_intern("kqueue")) {
+            flags = EVBACKEND_KQUEUE;
+        } else if(backend_id == rb_intern("select")) {
+            flags = EVBACKEND_SELECT;
+        } else if(backend_id == rb_intern("port")) {
+            flags = EVBACKEND_PORT;
+        } else {
+            rb_raise(rb_eArgError, "unsupported backend: %s",
+                RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0, 0)));
+        }
+    }
+
+    /* Ensure the selector loop has not yet been initialized */
+    assert(!selector->ev_loop);
+
+    selector->ev_loop = ev_loop_new(flags);
+    if(!selector->ev_loop) {
+        rb_raise(rb_eIOError, "error initializing event loop");
+    }
+
+    ev_io_start(selector->ev_loop, &selector->wakeup);
 
     rb_ivar_set(self, rb_intern("selectables"), rb_hash_new());
     rb_ivar_set(self, rb_intern("lock_holder"), Qnil);
