@@ -207,6 +207,46 @@ RSpec.describe NIO::Selector do
 
       expect { subject.select(0) }.to raise_exception IOError
     end
+
+    it "works with signals on the main thread" do
+      1000.times do
+        begin
+          pid = fork do
+            begin
+              r, _w = IO.pipe
+              selector = NIO::Selector.new
+              selector.register(r, :r)
+              $stderr.write("#{Process.pid}: selecting\n")
+
+              selector.select do
+                raise "#{Process.pid}: didn't expect to select\n"
+              end
+
+              raise "#{Process.pid}: didn't expect to get here either in main\n"
+            rescue SignalException => e
+              raise if ["TERM", "INT"].none? {|sig| Signal.list[sig] == e.signo}
+              $stderr.write("#{Process.pid}: rescued #{e}\n")
+            end
+          end
+
+          sleep(0.1)
+        ensure
+          $stderr.write("sending term\n")
+          Process.kill(:TERM, pid)
+          start = Time.now
+          status = nil
+          until status do
+            _, status = Process.wait2(pid, Process::WNOHANG)
+            if (Time.now - start) > 1
+              Process.kill(:KILL, pid)
+              raise "Timeout!"
+            end
+          end
+        end
+
+        raise "Process exited with an error: #{status}" unless status.success?
+      end
+    end
   end
 
   it "closes" do
