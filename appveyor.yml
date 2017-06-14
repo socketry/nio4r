@@ -1,0 +1,31 @@
+branches:
+  only:
+    - master
+
+environment:
+  PATH: C:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;%PATH%
+  matrix:
+  - RUBY_VERSION: 24
+  - RUBY_VERSION: 23
+  - RUBY_VERSION: 22
+
+matrix:
+  allow_failures:
+    - RUBY_VERSION: 24
+    - RUBY_VERSION: 23
+    - RUBY_VERSION: 22
+
+install:
+  - bundle install
+
+build: off
+
+before_build:
+  - gem update --system
+  - ruby -v
+  - make -v
+  - bundle -v
+
+test_script:
+  - echo %PATH%
+  - bundle exec rake
