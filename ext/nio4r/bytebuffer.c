@@ -124,10 +124,11 @@ static VALUE NIO_ByteBuffer_get_position(VALUE self)
 
 static VALUE NIO_ByteBuffer_set_position(VALUE self, VALUE new_position)
 {
+    int pos;
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
-    int pos = NUM2INT(new_position);
+    pos = NUM2INT(new_position);
 
     if(pos < 0) {
         rb_raise(rb_eArgError, "negative position given");
@@ -156,10 +157,11 @@ static VALUE NIO_ByteBuffer_get_limit(VALUE self)
 
 static VALUE NIO_ByteBuffer_set_limit(VALUE self, VALUE new_limit)
 {
+    int lim;
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
-    int lim = NUM2INT(new_limit);
+    lim = NUM2INT(new_limit);
 
     if(lim < 0) {
         rb_raise(rb_eArgError, "negative limit given");
@@ -237,10 +239,11 @@ static VALUE NIO_ByteBuffer_get(int argc, VALUE *argv, VALUE self)
 
 static VALUE NIO_ByteBuffer_fetch(VALUE self, VALUE index)
 {
+    int i;
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
-    int i = NUM2INT(index);
+    i = NUM2INT(index);
 
     if(i < 0) {
         rb_raise(rb_eArgError, "negative index given");
@@ -255,10 +258,11 @@ static VALUE NIO_ByteBuffer_fetch(VALUE self, VALUE index)
 
 static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string)
 {
+    long length;
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
-    long length = RSTRING_LEN(string);
+    length = RSTRING_LEN(string);
 
     if(length > buffer->limit - buffer->position) {
         rb_raise(cNIO_ByteBuffer_OverflowError, "buffer is full");
