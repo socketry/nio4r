@@ -18,14 +18,14 @@ $defs << "-DEV_USE_PORT" if have_header("port.h")
 
 $defs << "-DHAVE_SYS_RESOURCE_H" if have_header("sys/resource.h")
 
-CONFIG["optflags"] << " -fno-strict-aliasing"
+CONFIG["optflags"] << " -fno-strict-aliasing" unless RUBY_PLATFORM =~ /mswin/
 
 dir_config "nio4r_ext"
 create_makefile "nio4r_ext"
 
 # win32 needs to link in "just the right order" for some reason or
 # ioctlsocket will be mapped to an [inverted] ruby specific version.
-if RUBY_PLATFORM =~ /mingw|win32/
+if RUBY_PLATFORM =~ /mingw|mswin/
   makefile_contents = File.read "Makefile"
 
   makefile_contents.gsub! "DLDFLAGS = ", "DLDFLAGS = -export-all "
