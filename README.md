@@ -1,7 +1,8 @@
 # ![nio4r](https://raw.github.com/socketry/nio4r/master/logo.png)
 
 [![Gem Version](https://badge.fury.io/rb/nio4r.svg)](http://rubygems.org/gems/nio4r)
-[![Build Status](https://secure.travis-ci.org/socketry/nio4r.svg?branch=master)](http://travis-ci.org/socketry/nio4r)
+[![Travis CI Status](https://secure.travis-ci.org/socketry/nio4r.svg?branch=master)](http://travis-ci.org/socketry/nio4r)
+[![Appveyor Status](https://ci.appveyor.com/api/projects/status/1ru8x81v91vaewax/branch/master?svg=true)](https://ci.appveyor.com/project/tarcieri/nio4r/branch/master)
 [![Code Climate](https://codeclimate.com/github/socketry/nio4r.svg)](https://codeclimate.com/github/socketry/nio4r)
 [![Coverage Status](https://coveralls.io/repos/socketry/nio4r/badge.svg?branch=master)](https://coveralls.io/r/socketry/nio4r)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/socketry/nio4r/blob/master/LICENSE.txt)
