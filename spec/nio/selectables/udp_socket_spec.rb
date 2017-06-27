@@ -22,7 +22,17 @@ RSpec.describe UDPSocket do
   end
 
   let :writable_subject do
-    pending "come up with a writable UDPSocket example"
+    peer = UDPSocket.new
+    peer.connect "localhost", udp_port
+    cntr = 0
+    begin
+      peer.send("X" * 1024, 0)
+      cntr += 1
+      t = select [], [peer], [], 0
+    rescue => e
+      skip "Intermittent UDPSocket :writable_subject Error #{e.class}"
+    end while t && t[1].include?(peer) && cntr < 5
+    peer
   end
 
   let :unwritable_subject do

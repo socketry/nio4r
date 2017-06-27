@@ -17,10 +17,10 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
       cert.issuer = name
       cert.subject = name
       cert.not_before = Time.now
-      cert.not_after = Time.now + (365 * 24 * 60 * 60)
+      cert.not_after = Time.now + (7 * 24 * 60 * 60)
       cert.public_key = ssl_key.public_key
 
-      cert.sign(ssl_key, OpenSSL::Digest::SHA1.new)
+      cert.sign(ssl_key, OpenSSL::Digest::SHA256.new)
     end
   end
 
@@ -111,14 +111,15 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
     ssl_peer.accept
     thread.join
 
+    cntr = 0
     begin
-      _, writers = select [], [ssl_client], [], 0
       count = ssl_client.write_nonblock "X" * 1024
       expect(count).not_to eq(0)
+      cntr += 1
+      t = select [], [ssl_client], [], 0
     rescue IO::WaitReadable, IO::WaitWritable
       pending "SSL will report writable but not accept writes"
-      raise if writers.include? ssl_client
-    end while writers && writers.include?(ssl_client)
+    end while t && t[1].include?(ssl_client) && cntr < 30
 
     # I think the kernel might manage to drain its buffer a bit even after
     # the socket first goes unwritable. Attempt to sleep past this and then
@@ -141,8 +142,6 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
   end
 
   let :pair do
-    pending "figure out why newly created sockets are selecting readable immediately"
-
     server = TCPServer.new(addr, port)
     client = TCPSocket.new(addr, port)
     peer = server.accept
