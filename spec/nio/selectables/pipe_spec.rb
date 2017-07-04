@@ -27,12 +27,17 @@ RSpec.describe "IO.pipe" do
     #      will throw EAGAIN if there is too little space to write the string
     # TODO: Use FFI to lookup the platform-specific size of PIPE_BUF
     str = "JUNK IN THE TUBES" * 10_000
+    cntr = 0
     begin
       pipe.write_nonblock str
-      _, writers = select [], [pipe], [], 0
+      cntr += 1
+      t = select [], [pipe], [], 0
     rescue Errno::EPIPE
       break
-    end while writers && writers.include?(pipe)
+    rescue IO::EWOULDBLOCKWaitWritable
+      skip "windows - can't test due to 'select' not showing correct status"
+      break
+    end while t && t[1].include?(pipe) && cntr < 20
 
     pipe
   end
