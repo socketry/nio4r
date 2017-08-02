@@ -1,5 +1,13 @@
 # frozen_string_literal: true
 
+# Write a dummy Makefile on Windows because we use of the pure ruby implementation
+require "rubygems"
+if Gem.win_platform?
+  File.write("Makefile", "all install::\n")
+  File.write("nio4r_ext.so", "")
+  exit
+end
+
 require "mkmf"
 
 have_header("unistd.h")
@@ -22,14 +30,3 @@ CONFIG["optflags"] << " -fno-strict-aliasing" unless RUBY_PLATFORM =~ /mswin/
 
 dir_config "nio4r_ext"
 create_makefile "nio4r_ext"
-
-# win32 needs to link in "just the right order" for some reason or
-# ioctlsocket will be mapped to an [inverted] ruby specific version.
-if RUBY_PLATFORM =~ /mingw|mswin/
-  makefile_contents = File.read "Makefile"
-
-  makefile_contents.gsub! "DLDFLAGS = ", "DLDFLAGS = -export-all "
-
-  makefile_contents.gsub! "LIBS = $(LIBRUBYARG_SHARED)", "LIBS = -lws2_32 $(LIBRUBYARG_SHARED)"
-  File.open("Makefile", "w") { |f| f.write makefile_contents }
-end
