@@ -84,6 +84,7 @@ static void NIO_ByteBuffer_gc_mark(struct NIO_ByteBuffer *buffer)
 
 static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *buffer)
 {
+		xfree(buffer->buffer);
     xfree(buffer);
 }
 
