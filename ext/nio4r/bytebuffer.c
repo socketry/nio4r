@@ -84,7 +84,8 @@ static void NIO_ByteBuffer_gc_mark(struct NIO_ByteBuffer *buffer)
 
 static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *buffer)
 {
-		xfree(buffer->buffer);
+    if(buffer->buffer)
+      xfree(buffer->buffer);
     xfree(buffer);
 }
 
@@ -93,6 +94,7 @@ static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE capacity)
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
+    buffer->buffer = NULL;
     buffer->capacity = NUM2INT(capacity);
     buffer->buffer = xmalloc(buffer->capacity);
 
