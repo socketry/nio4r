@@ -75,6 +75,7 @@ void Init_NIO_ByteBuffer()
 static VALUE NIO_ByteBuffer_allocate(VALUE klass)
 {
     struct NIO_ByteBuffer *bytebuffer = (struct NIO_ByteBuffer *)xmalloc(sizeof(struct NIO_ByteBuffer));
+    bytebuffer->buffer = NULL;
     return Data_Wrap_Struct(klass, NIO_ByteBuffer_gc_mark, NIO_ByteBuffer_free, bytebuffer);
 }
 
@@ -84,6 +85,8 @@ static void NIO_ByteBuffer_gc_mark(struct NIO_ByteBuffer *buffer)
 
 static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *buffer)
 {
+    if(buffer->buffer)
+      xfree(buffer->buffer);
     xfree(buffer);
 }
 
