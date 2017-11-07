@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.channels.Channel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.CancelledKeyException;
 
 import org.jruby.Ruby;
 import org.jruby.RubyArray;
@@ -207,7 +208,14 @@ public class Selector extends RubyObject {
         Iterator selectedKeys = this.selector.selectedKeys().iterator();
         while(selectedKeys.hasNext()) {
             SelectionKey key = (SelectionKey)selectedKeys.next();
-            processKey(key);
+            try {
+              processKey(key);
+            } catch(CancelledKeyException ie) {
+              continue;
+              // TODO: what to do?
+              //throw runtime.newIOError(ie.getLocalizedMessage());
+            }
+
             selectedKeys.remove();
 
             if(block.isGiven()) {
