@@ -3,7 +3,6 @@ sudo: false
 cache: bundler
 
 before_install:
-  - gem update --system 2.6.10
   - gem --version
 
 bundler_args: --without development
@@ -13,7 +12,7 @@ branches:
     - master
 
 rvm:
-  - jruby-9.1.13.0 # latest stable
+  - jruby-9.1.14.0 # latest stable
   - 2.2.7
   - 2.3.4
   - 2.4.1
