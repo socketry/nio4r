@@ -54,4 +54,14 @@ RSpec.shared_context "an NIO bidirectional stream" do
       expect(m.readiness).to eq(:rw)
     end
   end
+  it "selects as readable if selectable has been closed" do
+    selector.register(readable_subject, :rw)
+    selector.select(0) do |m|
+      expect(m.readiness).to eq(:rw)
+    end
+    readable_subject.close
+    selector.select(0) do |m|
+      expect(m.readiness).to eq(:r)
+    end
+  end
 end
