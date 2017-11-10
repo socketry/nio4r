@@ -208,13 +208,7 @@ public class Selector extends RubyObject {
         Iterator selectedKeys = this.selector.selectedKeys().iterator();
         while(selectedKeys.hasNext()) {
             SelectionKey key = (SelectionKey)selectedKeys.next();
-            try {
-              processKey(key);
-            } catch(CancelledKeyException ie) {
-              continue;
-              // TODO: what to do?
-              //throw runtime.newIOError(ie.getLocalizedMessage());
-            }
+            processKey(key);
 
             selectedKeys.remove();
 
