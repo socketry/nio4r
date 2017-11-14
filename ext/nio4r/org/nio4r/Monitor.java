@@ -102,12 +102,16 @@ public class Monitor extends RubyObject {
 
     @JRubyMethod
     public IRubyObject readiness(ThreadContext context) {
+        if(!key.isValid())
+          return this.interests; 
         return Nio4r.interestOpsToSymbol(context.getRuntime(), key.readyOps());
     }
 
     @JRubyMethod(name = "readable?")
     public IRubyObject isReadable(ThreadContext context) {
         Ruby runtime  = context.getRuntime();
+        if (!this.key.isValid())
+          return runtime.getTrue();
         int  readyOps = this.key.readyOps();
 
         if((readyOps & SelectionKey.OP_READ) != 0 || (readyOps & SelectionKey.OP_ACCEPT) != 0) {
@@ -120,6 +124,8 @@ public class Monitor extends RubyObject {
     @JRubyMethod(name = {"writable?", "writeable?"})
     public IRubyObject writable(ThreadContext context) {
         Ruby runtime  = context.getRuntime();
+        if (!this.key.isValid())
+          return runtime.getTrue();
         int  readyOps = this.key.readyOps();
 
         if((readyOps & SelectionKey.OP_WRITE) != 0 || (readyOps & SelectionKey.OP_CONNECT) != 0) {
