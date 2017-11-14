@@ -20,7 +20,7 @@ def next_available_tcp_port
     $current_tcp_port += 1
 
     begin
-      sock = Timeout.timeout(0.5) { TCPSocket.new("localhost", $current_tcp_port) }
+      sock = Timeout.timeout(0.5) { TCPSocket.new("127.0.0.1", $current_tcp_port) }
     rescue Errno::ECONNREFUSED, Timeout::Error
       break $current_tcp_port
     end
