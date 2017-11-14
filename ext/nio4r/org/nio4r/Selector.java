@@ -271,7 +271,7 @@ public class Selector extends RubyObject {
     // Remove connect interest from connected sockets
     // See: http://stackoverflow.com/questions/204186/java-nio-select-returns-without-selected-keys-why
     private void processKey(SelectionKey key) {
-        if((key.readyOps() & SelectionKey.OP_CONNECT) != 0) {
+        if(key.isValid() && (key.readyOps() & SelectionKey.OP_CONNECT) != 0) {
             int interestOps = key.interestOps();
 
             interestOps &= ~SelectionKey.OP_CONNECT;
