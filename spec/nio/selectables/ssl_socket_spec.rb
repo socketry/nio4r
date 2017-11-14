@@ -4,13 +4,13 @@ require "spec_helper"
 require "openssl"
 
 RSpec.describe OpenSSL::SSL::SSLSocket do
-  let(:addr) { "localhost" }
+  let(:addr) { "127.0.0.1" }
   let(:port) { next_available_tcp_port }
 
   let(:ssl_key) { OpenSSL::PKey::RSA.new(1024) }
 
   let(:ssl_cert) do
-    name = OpenSSL::X509::Name.new([%w(CN localhost)])
+    name = OpenSSL::X509::Name.new([%w(CN 127.0.0.1)])
     OpenSSL::X509::Certificate.new.tap do |cert|
       cert.version = 2
       cert.serial = 1

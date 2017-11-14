@@ -7,23 +7,23 @@ RSpec.describe UDPSocket do
 
   let :readable_subject do
     sock = UDPSocket.new
-    sock.bind("localhost", udp_port)
+    sock.bind("127.0.0.1", udp_port)
 
     peer = UDPSocket.new
-    peer.send("hi there", 0, "localhost", udp_port)
+    peer.send("hi there", 0, "127.0.0.1", udp_port)
 
     sock
   end
 
   let :unreadable_subject do
     sock = UDPSocket.new
-    sock.bind("localhost", udp_port + 1)
+    sock.bind("127.0.0.1", udp_port + 1)
     sock
   end
 
   let :writable_subject do
     peer = UDPSocket.new
-    peer.connect "localhost", udp_port
+    peer.connect "127.0.0.1", udp_port
     cntr = 0
     begin
       peer.send("X" * 1024, 0)

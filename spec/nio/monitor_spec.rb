@@ -4,7 +4,7 @@ require "spec_helper"
 require "socket"
 
 RSpec.describe NIO::Monitor do
-  let(:addr) { "localhost" }
+  let(:addr) { "127.0.0.1" }
   let(:port) { next_available_tcp_port }
 
   let(:reader) { TCPServer.new(addr, port) }
