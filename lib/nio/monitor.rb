@@ -31,7 +31,7 @@ module NIO
     # @return [Symbol] new interests
     def interests=(interests)
       raise EOFError, "monitor is closed" if closed?
-      raise ArgumentError, "bad interests: #{interests}" unless [:r, :w, :rw].include?(interests)
+      raise ArgumentError, "bad interests: #{interests}" unless %i[r w rw].include?(interests)
 
       @interests = interests
     end
