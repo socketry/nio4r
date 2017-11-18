@@ -24,4 +24,4 @@ before_build:
 
 test_script:
   - echo %PATH%
-  - bundle exec rake
+  - bundle exec rake spec

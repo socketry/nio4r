@@ -10,7 +10,7 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
   let(:ssl_key) { OpenSSL::PKey::RSA.new(1024) }
 
   let(:ssl_cert) do
-    name = OpenSSL::X509::Name.new([%w(CN 127.0.0.1)])
+    name = OpenSSL::X509::Name.new([%w[CN 127.0.0.1]])
     OpenSSL::X509::Certificate.new.tap do |cert|
       cert.version = 2
       cert.serial = 1

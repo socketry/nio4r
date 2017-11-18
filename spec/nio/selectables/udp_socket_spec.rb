@@ -29,8 +29,8 @@ RSpec.describe UDPSocket do
       peer.send("X" * 1024, 0)
       cntr += 1
       t = select [], [peer], [], 0
-    rescue => e
-      skip "Intermittent UDPSocket :writable_subject Error #{e.class}"
+    rescue Errno::ECONNREFUSED => ex
+      skip "Couln't make writable UDPSocket subject: #{ex.class}: #{ex}"
     end while t && t[1].include?(peer) && cntr < 5
     peer
   end

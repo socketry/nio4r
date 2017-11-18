@@ -48,10 +48,8 @@ module NIO
       raise ArgumentError, "negative position given" if new_position < 0
       raise ArgumentError, "specified position exceeds capacity" if new_position > @capacity
 
+      @mark = nil if @mark && @mark > new_position
       @position = new_position
-      @mark = nil if @mark && @mark > @position
-
-      new_position
     end
 
     # Set the limit to the given value. New limit must be less than capacity.
@@ -65,11 +63,9 @@ module NIO
       raise ArgumentError, "negative limit given" if new_limit < 0
       raise ArgumentError, "specified limit exceeds capacity" if new_limit > @capacity
 
+      @position = new_limit if @position > new_limit
+      @mark = nil if @mark && @mark > new_limit
       @limit = new_limit
-      @position = new_limit if @position > @limit
-      @mark = nil if @mark && @mark > @limit
-
-      new_limit
     end
 
     # Number of bytes remaining in the buffer before the limit

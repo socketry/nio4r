@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-directories %w(lib spec)
+directories %w[lib spec]
 clearing :on
 
 guard :rspec, cmd: "bundle exec rspec" do

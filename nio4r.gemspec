@@ -29,6 +29,6 @@ Gem::Specification.new do |spec|
     spec.extensions = ["ext/nio4r/extconf.rb"]
   end
 
-  spec.add_development_dependency "rake"
   spec.add_development_dependency "bundler"
+  spec.add_development_dependency "rake"
 end
