@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe UDPSocket do
+RSpec.describe UDPSocket, if: !defined?(JRUBY_VERSION) do
   let(:udp_port) { 23_456 }
 
   let :readable_subject do
