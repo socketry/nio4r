@@ -18,7 +18,7 @@ import org.nio4r.Selector;
 public class Nio4r implements Library {
     private Ruby ruby;
 
-    public void load(final Ruby ruby, boolean bln) {
+    public void load(final Ruby ruby) {
         this.ruby = ruby;
 
         RubyModule nio = ruby.defineModule("NIO");
