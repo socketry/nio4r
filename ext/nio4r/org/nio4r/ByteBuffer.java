@@ -163,10 +163,8 @@ public class ByteBuffer extends RubyObject {
 
     @JRubyMethod(name = "<<")
     public IRubyObject put(ThreadContext context, IRubyObject str) {
-        String string = str.asJavaString();
-
         try {
-            this.byteBuffer.put(string.getBytes());
+            this.byteBuffer.put(str.convertToString().getByteList().bytes());
         } catch(BufferOverflowException e) {
             throw ByteBuffer.newOverflowError(context, "buffer is full");
         }

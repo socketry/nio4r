@@ -265,6 +265,7 @@ static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string)
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
+    StringValue(string);
     length = RSTRING_LEN(string);
 
     if(length > buffer->limit - buffer->position) {

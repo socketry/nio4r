@@ -111,15 +111,22 @@ module NIO
 
     # Add a String to the buffer
     #
+    # @param str [#to_str] data to add to the buffer
+    #
+    # @raise [TypeError] given a non-string type
     # @raise [NIO::ByteBuffer::OverflowError] buffer is full
     #
     # @return [self]
-    def <<(str)
+    def put(str)
+      raise TypeError, "expected String, got #{str.class}" unless str.respond_to?(:to_str)
+      str = str.to_str
+
       raise OverflowError, "buffer is full" if str.length > @limit - @position
       @buffer[@position...str.length] = str
       @position += str.length
       self
     end
+    alias << put
 
     # Perform a non-blocking read from the given IO object into the buffer
     # Reads as much data as is immediately available and returns
