@@ -25,7 +25,7 @@ else
   if defined?(JRUBY_VERSION)
     require "java"
     require "jruby"
-    org.nio4r.Nio4r.new.load(JRuby.runtime, false)
+    org.nio4r.Nio4r.new.load(JRuby.runtime)
     NIO::ENGINE = "java"
   else
     NIO::ENGINE = "libev"
