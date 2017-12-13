@@ -180,6 +180,11 @@ RSpec.describe NIO::ByteBuffer do
       expect(bytebuffer.limit).to eq capacity
     end
 
+    it "raises TypeError if given a non-String type" do
+      expect { bytebuffer << 42 }.to raise_error(TypeError)
+      expect { bytebuffer << nil }.to raise_error(TypeError)
+    end
+
     it "raises NIO::ByteBuffer::OverflowError if the buffer is full" do
       bytebuffer << "X" * (capacity - 1)
       expect { bytebuffer << "X" }.not_to raise_error
