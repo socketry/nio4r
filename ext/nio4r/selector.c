@@ -204,7 +204,7 @@ static VALUE NIO_Selector_initialize(int argc, VALUE *argv, VALUE self)
     if(backend != Qnil) {
         if(!rb_ary_includes(NIO_Selector_supported_backends(CLASS_OF(self)), backend)) {
             rb_raise(rb_eArgError, "unsupported backend: %s",
-                RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0, 0)));
+                RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0)));
         }
 
         backend_id = SYM2ID(backend);
@@ -221,7 +221,7 @@ static VALUE NIO_Selector_initialize(int argc, VALUE *argv, VALUE self)
             flags = EVBACKEND_PORT;
         } else {
             rb_raise(rb_eArgError, "unsupported backend: %s",
-                RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0, 0)));
+                RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0)));
         }
     }
 
@@ -279,7 +279,7 @@ static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VA
 
     if(lock_holder != current_thread) {
         lock = rb_ivar_get(self, rb_intern("lock"));
-        rb_funcall(lock, rb_intern("lock"), 0, 0);
+        rb_funcall(lock, rb_intern("lock"), 0);
         rb_ivar_set(self, rb_intern("lock_holder"), current_thread);
 
         /* We've acquired the lock, so ensure we unlock it */
@@ -298,7 +298,7 @@ static VALUE NIO_Selector_unlock(VALUE self)
     rb_ivar_set(self, rb_intern("lock_holder"), Qnil);
 
     lock = rb_ivar_get(self, rb_intern("lock"));
-    rb_funcall(lock, rb_intern("unlock"), 0, 0);
+    rb_funcall(lock, rb_intern("unlock"), 0);
 
     return Qnil;
 }

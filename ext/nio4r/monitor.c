@@ -92,7 +92,7 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
         monitor->interests = EV_READ | EV_WRITE;
     } else {
         rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)",
-            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0, 0)));
+            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0)));
     }
 
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
@@ -258,7 +258,7 @@ static int NIO_Monitor_symbol2interest(VALUE interests)
         return EV_READ | EV_WRITE;
     } else {
         rb_raise(rb_eArgError, "invalid interest type %s (must be :r, :w, or :rw)",
-            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0, 0)));
+            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0)));
     }
 }
 
