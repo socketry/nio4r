@@ -19,9 +19,7 @@ RSpec.describe TCPSocket do
     sock = TCPSocket.new(addr, port)
 
     # Sanity check to make sure we actually produced an unreadable socket
-    if select([sock], [], [], 0)
-      pending "Failed to produce an unreadable socket"
-    end
+    pending "Failed to produce an unreadable socket" if select([sock], [], [], 0)
 
     sock
   end
@@ -57,9 +55,7 @@ RSpec.describe TCPSocket do
     end
 
     # Sanity check to make sure we actually produced an unwritable socket
-    if select([], [sock], [], 0)
-      pending "Failed to produce an unwritable socket"
-    end
+    pending "Failed to produce an unwritable socket" if select([], [sock], [], 0)
 
     sock
   end
