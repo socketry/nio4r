@@ -1,5 +1,5 @@
 AllCops:
-  TargetRubyVersion: 2.4
+  TargetRubyVersion: 2.2
   DisplayCopNames: true
 
 #
@@ -49,8 +49,11 @@ Performance/RegexpMatch:
 # Style
 #
 
-Style/StringLiterals:
-  EnforcedStyle: double_quotes
+Style/FormatStringToken:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
 
 Style/GlobalVars:
   Enabled: false
@@ -63,6 +66,9 @@ Style/RescueModifier:
 
 Style/SafeNavigation:
   Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
 
 Style/TrivialAccessors:
   Enabled: false
