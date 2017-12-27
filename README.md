@@ -5,6 +5,7 @@
 [![Appveyor Status](https://ci.appveyor.com/api/projects/status/1ru8x81v91vaewax/branch/master?svg=true)](https://ci.appveyor.com/project/tarcieri/nio4r/branch/master)
 [![Code Climate](https://codeclimate.com/github/socketry/nio4r.svg)](https://codeclimate.com/github/socketry/nio4r)
 [![Coverage Status](https://coveralls.io/repos/socketry/nio4r/badge.svg?branch=master)](https://coveralls.io/r/socketry/nio4r)
+[![Yard Docs](https://img.shields.io/badge/yard-docs-blue.svg)](http://www.rubydoc.info/gems/nio4r/2.2.0)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/socketry/nio4r/blob/master/LICENSE.txt)
 
 _NOTE: This is the 2.x **stable** branch of nio4r.  For the 1.x **legacy** branch,

@@ -1,3 +1,41 @@
+## 2.2.0 (2017-12-27)
+
+* [#151](https://github.com/socketry/nio4r/pull/151)
+  `NIO::Selector`: Support for enumerating and configuring backend
+  ([@tarcieri])
+
+* [#153](https://github.com/socketry/nio4r/pull/153)
+  Fix builds on Windows
+  ([@unak])
+
+* [#157](https://github.com/socketry/nio4r/pull/157)
+  Windows / MinGW test failure - fix spec_helper.rb
+  ([@MSP-Greg])
+
+* [#162](https://github.com/socketry/nio4r/pull/162)
+  Don't build the C extension on Windows
+  ([@larskanis])
+
+* [#164](https://github.com/socketry/nio4r/pull/164)
+  Fix NIO::ByteBuffer leak
+  ([@HoneyryderChuck])
+
+* [#170](https://github.com/socketry/nio4r/pull/170)
+  Avoid CancelledKeyExceptions on JRuby
+  ([@HoneyryderChuck])
+
+* [#177](https://github.com/socketry/nio4r/pull/177)
+  Fix `NIO::ByteBuffer` string conversions on JRuby
+  ([@tarcieri])
+
+* [#179](https://github.com/socketry/nio4r/pull/179)
+  Fix argument error when running on ruby 2.5.0
+  ([@tompng])
+
+* [#180](https://github.com/socketry/nio4r/pull/180)
+  ext/nio4r/extconf.rb: check for port_event_t in port.h (fixes #178)
+  ([@tarcieri])
+
 ## 2.1.0 (2017-05-28)
 
 * [#130](https://github.com/socketry/nio4r/pull/130)
@@ -163,3 +201,8 @@
 [@johnnyt]: https://github.com/johnnyt
 [@UpeksheJay]: https://github.com/UpeksheJay
 [@junaruga]: https://github.com/junaruga
+[@unak]: https://github.com/unak
+[@MSP-Greg]: https://github.com/MSP-Greg
+[@larskanis]: https://github.com/larskanis
+[@HoneyryderChuck]: https://github.com/HoneyryderChuck
+[@tompng]: https://github.com/tompng
