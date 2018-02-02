@@ -62,7 +62,12 @@ public class Monitor extends RubyObject {
         Ruby ruby = context.getRuntime();
         SelectableChannel channel = (SelectableChannel)io.getChannel();
 
-        key.interestOps(Nio4r.symbolToInterestOps(ruby, channel, interests));
+        if(interests != context.nil) {
+            key.interestOps(Nio4r.symbolToInterestOps(ruby, channel, interests));
+        } else {
+            key.interestOps(0);
+        }
+        
         this.interests = interests;
 
         return this.interests;
