@@ -34,7 +34,7 @@ RSpec.describe NIO::Monitor do
       monitor.interests = nil
       expect(monitor.interests).to eq(nil)
     end
-    
+
     it "changes the interest set" do
       expect(monitor.interests).not_to eq(:w)
       monitor.interests = :w
