@@ -163,7 +163,11 @@ static VALUE NIO_Monitor_interests(VALUE self)
 
 static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests)
 {
-    NIO_Monitor_update_interests(self, NIO_Monitor_symbol2interest(interests));
+    if(interests == Qnil) {
+        NIO_Monitor_update_interests(self, 0);
+    } else {
+        NIO_Monitor_update_interests(self, NIO_Monitor_symbol2interest(interests));
+    }
 
     return rb_ivar_get(self, rb_intern("interests"));
 }
