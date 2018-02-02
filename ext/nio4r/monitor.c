@@ -296,9 +296,11 @@ static void NIO_Monitor_update_interests(VALUE self, int interests)
         rb_ivar_set(self, rb_intern("interests"), Qnil);
     }
 
-    monitor->interests = interests;
+    if(monitor->interests != interests) {
+        monitor->interests = interests;
 
-    ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
-    ev_io_set(&monitor->ev_io, monitor->ev_io.fd, monitor->interests);
-    ev_io_start(monitor->selector->ev_loop, &monitor->ev_io);
+        ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
+        ev_io_set(&monitor->ev_io, monitor->ev_io.fd, monitor->interests);
+        ev_io_start(monitor->selector->ev_loop, &monitor->ev_io);
+    }
 }
