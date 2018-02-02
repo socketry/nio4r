@@ -26,12 +26,12 @@ module NIO
 
     # Replace the existing interest set with a new one
     #
-    # @param interests [:r, :w, :rw] I/O readiness we're interested in (read/write/readwrite)
+    # @param interests [:r, :w, :rw, nil] I/O readiness we're interested in (read/write/readwrite)
     #
     # @return [Symbol] new interests
     def interests=(interests)
       raise EOFError, "monitor is closed" if closed?
-      raise ArgumentError, "bad interests: #{interests}" unless %i[r w rw].include?(interests)
+      raise ArgumentError, "bad interests: #{interests}" unless [:r, :w, :rw, nil].include?(interests)
 
       @interests = interests
     end
