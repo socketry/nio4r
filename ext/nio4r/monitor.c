@@ -163,7 +163,7 @@ static VALUE NIO_Monitor_interests(VALUE self)
 
 static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests)
 {
-    if(interests == Qnil) {
+    if(NIL_P(interests)) {
         NIO_Monitor_update_interests(self, 0);
     } else {
         NIO_Monitor_update_interests(self, NIO_Monitor_symbol2interest(interests));
