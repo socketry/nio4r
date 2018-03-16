@@ -29,6 +29,12 @@ RSpec.describe NIO::Monitor do
   end
 
   describe "#interests=" do
+    it "can set interests to nil" do
+      expect(monitor.interests).not_to eq(nil)
+      monitor.interests = nil
+      expect(monitor.interests).to eq(nil)
+    end
+
     it "changes the interest set" do
       expect(monitor.interests).not_to eq(:w)
       monitor.interests = :w
