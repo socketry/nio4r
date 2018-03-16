@@ -1,3 +1,9 @@
+## 2.3.0 (2018-03-15)
+
+* [#183](https://github.com/socketry/nio4r/pull/183)
+  Allow `Monitor#interests` to be nil
+  ([@ioquatix])
+
 ## 2.2.0 (2017-12-27)
 
 * [#151](https://github.com/socketry/nio4r/pull/151)
@@ -206,3 +212,4 @@
 [@larskanis]: https://github.com/larskanis
 [@HoneyryderChuck]: https://github.com/HoneyryderChuck
 [@tompng]: https://github.com/tompng
+[@ioquatix]: https://github.com/ioquatix
