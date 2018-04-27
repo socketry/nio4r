@@ -111,7 +111,9 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
        object where it originally came from */
     monitor->selector = selector;
 
-    ev_io_start(selector->ev_loop, &monitor->ev_io);
+    if (monitor->interests) {
+      ev_io_start(selector->ev_loop, &monitor->ev_io);
+    }
 
     return Qnil;
 }
@@ -127,7 +129,7 @@ static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
 
     if(selector != Qnil) {
         /* if ev_loop is 0, it means that the loop has been stopped already (see NIO_Selector_shutdown) */
-        if(monitor->selector->ev_loop != 0) {
+        if(monitor->interests && monitor->selector->ev_loop) {
           ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
         }
 
@@ -176,8 +178,8 @@ static VALUE NIO_Monitor_add_interest(VALUE self, VALUE interest) {
     struct NIO_Monitor *monitor;
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
-    monitor->interests |= NIO_Monitor_symbol2interest(interest);
-    NIO_Monitor_update_interests(self, monitor->interests);
+    interest = monitor->interests | NIO_Monitor_symbol2interest(interest);
+    NIO_Monitor_update_interests(self, interest);
 
     return rb_ivar_get(self, rb_intern("interests"));
 }
@@ -186,8 +188,8 @@ static VALUE NIO_Monitor_remove_interest(VALUE self, VALUE interest) {
     struct NIO_Monitor *monitor;
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
-    monitor->interests &= ~NIO_Monitor_symbol2interest(interest);
-    NIO_Monitor_update_interests(self, monitor->interests);
+    interest = monitor->interests & ~NIO_Monitor_symbol2interest(interest);
+    NIO_Monitor_update_interests(self, interest);
 
     return rb_ivar_get(self, rb_intern("interests"));
 }
@@ -297,10 +299,18 @@ static void NIO_Monitor_update_interests(VALUE self, int interests)
     }
 
     if(monitor->interests != interests) {
-        monitor->interests = interests;
+        // If the monitor currently has interests, we should stop it.
+        if(monitor->interests) {
+            ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
+        }
 
-        ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
+        // Assign the interests we are now monitoring for:
+        monitor->interests = interests;
         ev_io_set(&monitor->ev_io, monitor->ev_io.fd, monitor->interests);
-        ev_io_start(monitor->selector->ev_loop, &monitor->ev_io);
+
+        // If we are interested in events, schedule the monitor back into the event loop:
+        if(monitor->interests) {
+            ev_io_start(monitor->selector->ev_loop, &monitor->ev_io);
+        }
     }
 }
