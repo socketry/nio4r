@@ -1,3 +1,9 @@
+## 2.3.1 (2018-05-03)
+
+* [#188](https://github.com/socketry/nio4r/pull/188)
+  Fix remove interests
+  ([@ioquatix])
+
 ## 2.3.0 (2018-03-15)
 
 * [#183](https://github.com/socketry/nio4r/pull/183)
