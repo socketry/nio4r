@@ -552,6 +552,8 @@ void NIO_Selector_monitor_callback(ev_loop *ev_loop, struct ev_io *io, int reven
     struct NIO_Selector *selector = monitor_data->selector;
     VALUE monitor = monitor_data->self;
 
+    assert(monitor_data->interests != 0);
+
     assert(selector != 0);
     selector->ready_count++;
     monitor_data->revents = revents;
