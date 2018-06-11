@@ -14,10 +14,10 @@ branches:
 
 rvm:
   - jruby-9.2.0.0 # latest stable
-  - 2.2.7
-  - 2.3.4
-  - 2.4.1
-  - 2.5.0
+  - 2.2
+  - 2.3
+  - 2.4
+  - 2.5
   - ruby-head
 
 env:
