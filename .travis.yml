@@ -1,11 +1,10 @@
 language: ruby
 cache: bundler
-
+dist: xenial
 bundler_args: --without development
 
 rvm:
   - jruby-9.2.5.0 # latest stable
-  - 2.2
   - 2.3
   - 2.4
   - 2.5
