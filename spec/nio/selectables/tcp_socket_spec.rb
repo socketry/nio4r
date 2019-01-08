@@ -4,19 +4,22 @@ require "spec_helper"
 
 RSpec.describe TCPSocket do
   let(:addr) { "127.0.0.1" }
-  let(:port) { next_available_tcp_port }
 
   let :readable_subject do
-    server = TCPServer.new(addr, port)
-    sock = TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    sock = TCPSocket.new(addr, server.local_address.ip_port)
     peer = server.accept
-    peer << "data"
+    
+    peer << "Xdata"
+    peer.flush
+    sock.read(1)
+    
     sock
   end
 
   let :unreadable_subject do
-    TCPServer.new(addr, port)
-    sock = TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    sock = TCPSocket.new(addr, server.local_address.ip_port)
 
     # Sanity check to make sure we actually produced an unreadable socket
     pending "Failed to produce an unreadable socket" if select([sock], [], [], 0)
@@ -25,13 +28,13 @@ RSpec.describe TCPSocket do
   end
 
   let :writable_subject do
-    TCPServer.new(addr, port)
-    TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    TCPSocket.new(addr, server.local_address.ip_port)
   end
 
   let :unwritable_subject do
-    server = TCPServer.new(addr, port)
-    sock = TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    sock = TCPSocket.new(addr, server.local_address.ip_port)
 
     # TODO: close this socket
     _peer = server.accept
@@ -61,8 +64,8 @@ RSpec.describe TCPSocket do
   end
 
   let :pair do
-    server = TCPServer.new(addr, port)
-    client = TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    client = TCPSocket.new(addr, server.local_address.ip_port)
     [client, server.accept]
   end
 
@@ -71,19 +74,22 @@ RSpec.describe TCPSocket do
   it_behaves_like "an NIO bidirectional stream"
 
   context :connect do
-    it "selects writable when connected", retry: 5 do # retry: Flaky on OS X
+    include_context NIO::Selector
+    
+    it "selects writable when connected" do
       begin
-        server = TCPServer.new(addr, port)
-        selector = NIO::Selector.new
+        server = TCPServer.new(addr, 0)
 
         client = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM, 0)
         monitor = selector.register(client, :w)
 
         expect do
-          client.connect_nonblock Socket.sockaddr_in(port, addr)
+          client.connect_nonblock server.local_address
         end.to raise_exception Errno::EINPROGRESS
-
-        expect(selector.select(0.001)).to include monitor
+        
+        ready = selector.select(1)
+        
+        expect(ready).to include monitor
         result = client.getsockopt(::Socket::SOL_SOCKET, ::Socket::SO_ERROR)
         expect(result.unpack("i").first).to be_zero
       ensure

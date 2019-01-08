@@ -288,8 +288,8 @@ RSpec.describe NIO::ByteBuffer do
 
   context "I/O" do
     let(:addr)   { "127.0.0.1" }
-    let(:port)   { next_available_tcp_port }
-    let(:server) { TCPServer.new(addr, port) }
+    let(:server) { TCPServer.new(addr, 0) }
+    let(:port)   { server.local_address.ip_port }
     let(:client) { TCPSocket.new(addr, port) }
     let(:peer)   { server_thread.value }
 

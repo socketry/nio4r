@@ -6,32 +6,37 @@ RSpec.describe UDPSocket, if: !defined?(JRUBY_VERSION) do
   let(:udp_port) { 23_456 }
 
   let :readable_subject do
-    sock = UDPSocket.new
-    sock.bind("127.0.0.1", udp_port)
+    server = UDPSocket.new
+    server.bind("127.0.0.1", 0)
 
     peer = UDPSocket.new
-    peer.send("hi there", 0, "127.0.0.1", udp_port)
+    peer.send("hi there", 0, "127.0.0.1", server.local_address.ip_port)
 
-    sock
+    server
   end
 
   let :unreadable_subject do
     sock = UDPSocket.new
-    sock.bind("127.0.0.1", udp_port + 1)
+    sock.bind("127.0.0.1", 0)
     sock
   end
 
   let :writable_subject do
+    server = UDPSocket.new
+    server.bind("127.0.0.1", 0)
+    
     peer = UDPSocket.new
-    peer.connect "127.0.0.1", udp_port
+    peer.connect("127.0.0.1", server.local_address.ip_port)
+    
     cntr = 0
     begin
       peer.send("X" * 1024, 0)
       cntr += 1
       t = select [], [peer], [], 0
     rescue Errno::ECONNREFUSED => ex
-      skip "Couln't make writable UDPSocket subject: #{ex.class}: #{ex}"
+      skip "Couldn't make writable UDPSocket subject: #{ex.class}: #{ex}"
     end while t && t[1].include?(peer) && cntr < 5
+    
     peer
   end
 

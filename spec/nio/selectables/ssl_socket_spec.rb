@@ -5,7 +5,6 @@ require "openssl"
 
 RSpec.describe OpenSSL::SSL::SSLSocket do
   let(:addr) { "127.0.0.1" }
-  let(:port) { next_available_tcp_port }
 
   let(:ssl_key) { OpenSSL::PKey::RSA.new(2048) }
 
@@ -32,8 +31,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
   end
 
   let :readable_subject do
-    server = TCPServer.new(addr, port)
-    client = TCPSocket.open(addr, port)
+    server = TCPServer.new(addr, 0)
+    client = TCPSocket.open(addr, server.local_address.ip_port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
@@ -55,8 +54,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
   end
 
   let :unreadable_subject do
-    server = TCPServer.new(addr, port)
-    client = TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    client = TCPSocket.new(addr, server.local_address.ip_port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
@@ -75,8 +74,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
   end
 
   let :writable_subject do
-    server = TCPServer.new(addr, port)
-    client = TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    client = TCPSocket.new(addr, server.local_address.ip_port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
@@ -95,8 +94,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
   end
 
   let :unwritable_subject do
-    server = TCPServer.new(addr, port)
-    client = TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    client = TCPSocket.new(addr, server.local_address.ip_port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
@@ -142,8 +141,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
   end
 
   let :pair do
-    server = TCPServer.new(addr, port)
-    client = TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    client = TCPSocket.new(addr, server.local_address.ip_port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)

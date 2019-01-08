@@ -5,9 +5,9 @@ require "socket"
 
 RSpec.describe NIO::Monitor do
   let(:addr) { "127.0.0.1" }
-  let(:port) { next_available_tcp_port }
 
-  let(:reader) { TCPServer.new(addr, port) }
+  let(:reader) { TCPServer.new(addr, 0) }
+  let(:port) { reader.local_address.ip_port }
   let(:writer) { TCPSocket.new(addr, port) }
 
   let(:selector) { NIO::Selector.new }
