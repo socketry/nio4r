@@ -127,15 +127,15 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
 
     # Once more for good measure!
     begin
-      #        ssl_client.write_nonblock "X" * 1024
+      # ssl_client.write_nonblock "X" * 1024
       loop { ssl_client.write_nonblock "X" * 1024 }
     rescue OpenSSL::SSL::SSLError
     end
 
     # Sanity check to make sure we actually produced an unwritable socket
-    #      if select([], [ssl_client], [], 0)
-    #        pending "Failed to produce an unwritable socket"
-    #      end
+    if select([], [ssl_client], [], 0)
+      pending "Failed to produce an unwritable socket"
+    end
 
     ssl_client
   end
