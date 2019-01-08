@@ -15,7 +15,7 @@ matrix:
       env: NIO4R_PURE=true
     - rvm: 2.6
     - rvm: 2.6
-      os: darwin
+      os: osx
     - rvm: truffleruby
     - rvm: jruby-9.2.0.0
       env: JRUBY_OPTS="--debug -X+O --dev -J-Djruby.launch.inproc=true -J-Xmx1024M"
