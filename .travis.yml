@@ -7,7 +7,6 @@ before_install:
 
 matrix:
   include:
-    - rvm: 2.2
     - rvm: 2.3
     - rvm: 2.4
     - rvm: 2.5
