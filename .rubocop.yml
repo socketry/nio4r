@@ -2,6 +2,12 @@ AllCops:
   TargetRubyVersion: 2.2
   DisplayCopNames: true
 
+Layout/SpaceInsideBlockBraces:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
 #
 # Lint
 #

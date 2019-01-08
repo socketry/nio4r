@@ -9,11 +9,11 @@ RSpec.describe TCPSocket do
     server = TCPServer.new(addr, 0)
     sock = TCPSocket.new(addr, server.local_address.ip_port)
     peer = server.accept
-    
+
     peer << "Xdata"
     peer.flush
     sock.read(1)
-    
+
     sock
   end
 
@@ -75,7 +75,7 @@ RSpec.describe TCPSocket do
 
   context :connect do
     include_context NIO::Selector
-    
+
     it "selects writable when connected" do
       begin
         server = TCPServer.new(addr, 0)
@@ -86,9 +86,9 @@ RSpec.describe TCPSocket do
         expect do
           client.connect_nonblock server.local_address
         end.to raise_exception Errno::EINPROGRESS
-        
+
         ready = selector.select(1)
-        
+
         expect(ready).to include monitor
         result = client.getsockopt(::Socket::SOL_SOCKET, ::Socket::SO_ERROR)
         expect(result.unpack("i").first).to be_zero
