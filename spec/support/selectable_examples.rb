@@ -22,7 +22,7 @@ RSpec.shared_context "an NIO selectable" do
 
   it "does not select unreadable objects" do
     selector.register(unreadable_subject, :r)
-    expect(selector.select(1)).to be_nil
+    expect(selector.select(0)).to be_nil
   end
 
   it "selects writable objects" do
@@ -34,7 +34,8 @@ RSpec.shared_context "an NIO selectable" do
 
   it "does not select unwritable objects" do
     selector.register(unwritable_subject, :w)
-    expect(selector.select(1)).to be_nil
+    ready = selector.select(0)
+    expect(ready).to be_nil
   end
 end
 
