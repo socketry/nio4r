@@ -46,9 +46,9 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
 
     ssl_peer.accept
     ssl_peer << "data"
+    ssl_peer.flush
 
     thread.join
-    pending "Failed to produce a readable SSL socket" unless select([ssl_client], [], [], 0)
 
     ssl_client
   end
