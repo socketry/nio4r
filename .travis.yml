@@ -18,6 +18,8 @@ matrix:
     - rvm: 2.6
       os: osx
     - rvm: truffleruby
+    - rvm: truffleruby
+      env: NIO4R_PURE=true
     - rvm: jruby
       env: JRUBY_OPTS="--debug -X+O --dev -J-Djruby.launch.inproc=true -J-Xmx1024M"
     - rvm: jruby-head
