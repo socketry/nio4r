@@ -120,7 +120,7 @@ RSpec.describe NIO::Selector do
 
   context "wakeup" do
     let(:select_precision) {0.2}
-    
+
     it "wakes up if signaled to from another thread" do
       subject.register(reader, :r)
 
