@@ -2,6 +2,12 @@ AllCops:
   TargetRubyVersion: 2.2
   DisplayCopNames: true
 
+Layout/SpaceInsideBlockBraces:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
 #
 # Lint
 #
@@ -21,6 +27,7 @@ Metrics/AbcSize:
 
 Metrics/BlockLength:
   Max: 128
+  Enabled: false
 
 Metrics/ClassLength:
   Max: 128

@@ -5,9 +5,8 @@ require "openssl"
 
 RSpec.describe OpenSSL::SSL::SSLSocket do
   let(:addr) { "127.0.0.1" }
-  let(:port) { next_available_tcp_port }
 
-  let(:ssl_key) { OpenSSL::PKey::RSA.new(1024) }
+  let(:ssl_key) { OpenSSL::PKey::RSA.new(2048) }
 
   let(:ssl_cert) do
     name = OpenSSL::X509::Name.new([%w[CN 127.0.0.1]])
@@ -32,8 +31,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
   end
 
   let :readable_subject do
-    server = TCPServer.new(addr, port)
-    client = TCPSocket.open(addr, port)
+    server = TCPServer.new(addr, 0)
+    client = TCPSocket.open(addr, server.local_address.ip_port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
@@ -47,16 +46,16 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
 
     ssl_peer.accept
     ssl_peer << "data"
+    ssl_peer.flush
 
     thread.join
-    pending "Failed to produce a readable SSL socket" unless select([ssl_client], [], [], 0)
 
     ssl_client
   end
 
   let :unreadable_subject do
-    server = TCPServer.new(addr, port)
-    client = TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    client = TCPSocket.new(addr, server.local_address.ip_port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
@@ -75,8 +74,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
   end
 
   let :writable_subject do
-    server = TCPServer.new(addr, port)
-    client = TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    client = TCPSocket.new(addr, server.local_address.ip_port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
@@ -95,8 +94,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
   end
 
   let :unwritable_subject do
-    server = TCPServer.new(addr, port)
-    client = TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    client = TCPSocket.new(addr, server.local_address.ip_port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
@@ -128,22 +127,22 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
 
     # Once more for good measure!
     begin
-      #        ssl_client.write_nonblock "X" * 1024
+      # ssl_client.write_nonblock "X" * 1024
       loop { ssl_client.write_nonblock "X" * 1024 }
     rescue OpenSSL::SSL::SSLError
     end
 
     # Sanity check to make sure we actually produced an unwritable socket
-    #      if select([], [ssl_client], [], 0)
-    #        pending "Failed to produce an unwritable socket"
-    #      end
+    if select([], [ssl_client], [], 0)
+      pending "Failed to produce an unwritable socket"
+    end
 
     ssl_client
   end
 
   let :pair do
-    server = TCPServer.new(addr, port)
-    client = TCPSocket.new(addr, port)
+    server = TCPServer.new(addr, 0)
+    client = TCPSocket.new(addr, server.local_address.ip_port)
     peer = server.accept
 
     ssl_peer = OpenSSL::SSL::SSLSocket.new(peer, ssl_server_context)
