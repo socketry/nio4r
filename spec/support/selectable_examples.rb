@@ -62,22 +62,22 @@ RSpec.shared_context "an NIO bidirectional stream" do
   let(:peer) {pair.last}
 
   it "selects readable and writable" do
-    monitor = selector.register(readable_subject, :rw)
+    selector.register(readable_subject, :rw)
 
-    selector.select(1) do |m|
-      expect(m.readiness).to eq(:rw)
+    selector.select(1) do |monitor|
+      expect(monitor.readiness).to eq(:rw)
     end
 
     readable_subject.close
   end
 
   it "keeps readiness after the selectable has been closed" do
-    monitor = selector.register(readable_subject, :rw)
+    selector.register(readable_subject, :rw)
 
-    selector.select(1) do |m|
-      expect(m.readiness).to eq(:rw)
+    selector.select(1) do |monitor|
+      expect(monitor.readiness).to eq(:rw)
       readable_subject.close
-      expect(m.readiness).to eq(:rw)
+      expect(monitor.readiness).to eq(:rw)
     end
   end
 end
