@@ -18,7 +18,7 @@ matrix:
     - rvm: 2.6
       os: osx
     - rvm: truffleruby
-    - rvm: jruby-9.2.5.0
+    - rvm: jruby
       env: JRUBY_OPTS="--debug -X+O --dev -J-Djruby.launch.inproc=true -J-Xmx1024M"
     - rvm: jruby-head
       env: JRUBY_OPTS="--debug -X+O --dev -J-Djruby.launch.inproc=true -J-Xmx1024M"
@@ -29,7 +29,7 @@ matrix:
     - rvm: ruby-head
     - rvm: truffleruby
     - rvm: jruby-head
-    - rvm: jruby-9.2.0.0
+    - rvm: jruby
     - rvm: rbx-3
 
 notifications:
