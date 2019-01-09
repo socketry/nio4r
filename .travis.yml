@@ -1,5 +1,7 @@
 language: ruby
 cache: bundler
+dist: xenial
+bundler_args: --without development
 
 before_install:
   - gem update --system
@@ -16,7 +18,7 @@ matrix:
     - rvm: 2.6
       os: osx
     - rvm: truffleruby
-    - rvm: jruby-9.2.0.0
+    - rvm: jruby-9.2.5.0
       env: JRUBY_OPTS="--debug -X+O --dev -J-Djruby.launch.inproc=true -J-Xmx1024M"
     - rvm: jruby-head
       env: JRUBY_OPTS="--debug -X+O --dev -J-Djruby.launch.inproc=true -J-Xmx1024M"
