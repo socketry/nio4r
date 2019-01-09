@@ -3,11 +3,6 @@
 require "spec_helper"
 require "timeout"
 
-# Timeouts should be at least this precise (in seconds) to pass the tests
-# Typical precision should be better than this, but if it's worse it will fail
-# the tests
-TIMEOUT_PRECISION = 0.1
-
 RSpec.describe NIO::Selector do
   let(:pair)   { IO.pipe }
   let(:reader) { pair.first }
@@ -95,31 +90,37 @@ RSpec.describe NIO::Selector do
   end
 
   context "timeouts" do
+    let(:select_precision) {0.2}
+    let(:payload) {"hi there"}
+
     it "waits for a timeout when selecting" do
       monitor = subject.register(reader, :r)
 
-      payload = "hi there"
       writer << payload
 
       timeout = 0.5
       started_at = Time.now
       expect(subject.select(timeout)).to include monitor
-      expect(Time.now - started_at).to be_within(TIMEOUT_PRECISION).of(0)
+      expect(Time.now - started_at).to be_within(select_precision).of(0)
       reader.read_nonblock(payload.size)
 
       started_at = Time.now
       expect(subject.select(timeout)).to be_nil
-      expect(Time.now - started_at).to be_within(TIMEOUT_PRECISION).of(timeout)
+      expect(Time.now - started_at).to be_within(select_precision).of(timeout)
     end
 
     it "raises ArgumentError if given a negative timeout" do
       subject.register(reader, :r)
 
-      expect { subject.select(-1) }.to raise_exception(ArgumentError)
+      expect do
+        subject.select(-1)
+      end.to raise_exception(ArgumentError)
     end
   end
 
   context "wakeup" do
+    let(:select_precision) {0.2}
+    
     it "wakes up if signaled to from another thread" do
       subject.register(reader, :r)
 
@@ -133,7 +134,7 @@ RSpec.describe NIO::Selector do
       sleep timeout
       subject.wakeup
 
-      expect(thread.value).to be_within(TIMEOUT_PRECISION).of(timeout)
+      expect(thread.value).to be_within(select_precision).of(timeout)
     end
 
     it "raises IOError if asked to wake up a closed selector" do
