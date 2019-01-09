@@ -50,6 +50,7 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
 
     thread.join
 
+    pending "Failed to produce a readable socket" unless select([ssl_client], [], [], 10)
     ssl_client
   end
 
