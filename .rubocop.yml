@@ -27,6 +27,7 @@ Metrics/AbcSize:
 
 Metrics/BlockLength:
   Max: 128
+  Enabled: false
 
 Metrics/ClassLength:
   Max: 128

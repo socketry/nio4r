@@ -8,7 +8,6 @@ require "timeout"
 # the tests
 TIMEOUT_PRECISION = 0.1
 
-# rubocop:disable Metrics/BlockLength
 RSpec.describe NIO::Selector do
   let(:pair)   { IO.pipe }
   let(:reader) { pair.first }

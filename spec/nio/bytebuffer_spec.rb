@@ -2,7 +2,6 @@
 
 require "spec_helper"
 
-# rubocop:disable Metrics/BlockLength
 RSpec.describe NIO::ByteBuffer do
   let(:capacity)       { 256 }
   let(:example_string) { "Testing 1 2 3..." }
