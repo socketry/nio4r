@@ -69,7 +69,6 @@ RSpec.shared_context "an NIO bidirectional stream" do
     end
 
     readable_subject.close
-    monitor.close
   end
 
   it "keeps readiness after the selectable has been closed" do
@@ -80,7 +79,5 @@ RSpec.shared_context "an NIO bidirectional stream" do
       readable_subject.close
       expect(m.readiness).to eq(:rw)
     end
-
-    monitor.close
   end
 end
