@@ -37,6 +37,11 @@
  * either the BSD or the GPL.
  */
 
+/* ########## NIO4R PATCHERY HO! ########## */
+#include "ruby.h"
+#include "ruby/thread.h"
+/* ######################################## */
+
 /* this big block deduces configuration from config.h */
 #ifndef EV_STANDALONE
 # ifdef EV_CONFIG_H
@@ -3569,9 +3574,28 @@ time_update (EV_P_ ev_tstamp max_block)
     }
 }
 
+/* ########## NIO4R PATCHERY HO! ########## */
+struct ev_poll_args {
+  struct ev_loop *loop;
+  ev_tstamp waittime;
+};
+
+static
+VALUE ev_backend_poll(void *ptr)
+{
+  struct ev_poll_args *args = (struct ev_poll_args *)ptr;
+  struct ev_loop *loop = args->loop;
+  backend_poll (EV_A_ args->waittime);
+}
+/* ######################################## */
+
 int
 ev_run (EV_P_ int flags)
 {
+/* ########## NIO4R PATCHERY HO! ########## */
+    struct ev_poll_args poll_args;
+/* ######################################## */
+
 #if EV_FEATURE_API
   ++loop_depth;
 #endif
@@ -3689,7 +3713,54 @@ ev_run (EV_P_ int flags)
         ++loop_count;
 #endif
         assert ((loop_done = EVBREAK_RECURSE, 1)); /* assert for side effect */
-        backend_poll (EV_A_ waittime);
+
+/*
+########################## NIO4R PATCHERY HO! ##########################
+
+According to the grandwizards of Ruby, locking and unlocking of the global
+interpreter lock are apparently too powerful a concept for a mere mortal to
+wield (although redefining what + and - do to numbers is totally cool).
+And so it came to pass that the only acceptable way to release the global
+interpreter lock is through a convoluted callback system that thakes a
+function pointer. While the grandwizard of libev foresaw this sort of scenario,
+he too attempted to place an API with callbacks on it, one that runs before
+the system call, and one that runs immediately after.
+
+And so it came to pass that trying to wrap everything up in callbacks created
+two incompatible APIs, Ruby's which releases the global interpreter lock and
+reacquires it when the callback returns, and libev's, which wants two
+callbacks, one which runs before the polling operation starts, and one which
+runs after it finishes.
+
+These two systems are incompatible as they both want to use callbacks to
+solve the same problem, however libev wants to use before/after callbacks,
+and Ruby wants to use an "around" callback. This presents a significant
+problem as these two patterns of callbacks are diametrical opposites of each
+other and thus cannot be composed.
+
+And thus we are left with no choice but to patch the internals of libev in
+order to release a mutex at just the precise moment.
+
+This is a great example of a situation where granular locking and unlocking
+of the GVL is practically required. The goal is to get as close to the
+system call as possible, and to keep the GVL unlocked for the shortest
+amount of time possible.
+
+Perhaps Ruby could benefit from such an API, e.g:
+
+rb_thread_unsafe_dangerous_crazy_blocking_region_begin(...);
+rb_thread_unsafe_dangerous_crazy_blocking_region_end(...);
+
+#######################################################################
+*/
+
+        poll_args.loop = loop;
+        poll_args.waittime = waittime;
+        rb_thread_call_without_gvl(ev_backend_poll, (void *)&poll_args, RUBY_UBF_IO, 0);
+/*
+############################# END PATCHERY ############################
+*/
+
         assert ((loop_done = EVBREAK_CANCEL, 1)); /* assert for side effect */
 
         pipe_write_wanted = 0; /* just an optimisation, no fence needed */
