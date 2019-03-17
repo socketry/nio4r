@@ -12,7 +12,7 @@
 
 struct NIO_Selector
 {
-    ev_loop *ev_loop;
+    struct ev_loop *ev_loop;
     struct ev_timer timer; /* for timeouts */
     struct ev_io wakeup;
 
