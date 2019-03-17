@@ -17,7 +17,6 @@ module NIO
       raise ArgumentError, "unsupported backend: #{backend}" unless backend == :ruby
 
       @selectables = {}
-      @lock = Mutex.new
 
       # Other threads can wake up a selector
       @wakeup, @waker = IO.pipe
@@ -46,67 +45,61 @@ module NIO
     def register(io, interest)
       io = IO.try_convert(io)
 
-      @lock.synchronize do
-        raise IOError, "selector is closed" if closed?
+      raise IOError, "selector is closed" if closed?
 
-        monitor = @selectables[io]
-        raise ArgumentError, "already registered as #{monitor.interests.inspect}" if monitor
+      monitor = @selectables[io]
+      raise ArgumentError, "already registered as #{monitor.interests.inspect}" if monitor
 
-        monitor = Monitor.new(io, interest, self)
-        @selectables[monitor.io] = monitor
+      monitor = Monitor.new(io, interest, self)
+      @selectables[monitor.io] = monitor
 
-        monitor
-      end
+      monitor
     end
 
     # Deregister the given IO object from the selector
     def deregister(io)
-      @lock.synchronize do
-        monitor = @selectables.delete IO.try_convert(io)
-        monitor.close(false) if monitor && !monitor.closed?
-        monitor
-      end
+      monitor = @selectables.delete IO.try_convert(io)
+      monitor.close(false) if monitor && !monitor.closed?
+      monitor
     end
 
     # Is the given IO object registered with the selector?
     def registered?(io)
-      @lock.synchronize { @selectables.key? io }
+      @selectables.key?(io)
     end
 
     # Select which monitors are ready
     def select(timeout = nil)
       selected_monitors = Set.new
 
-      @lock.synchronize do
-        readers = [@wakeup]
-        writers = []
+      readers = [@wakeup]
+      writers = []
 
-        @selectables.each do |io, monitor|
-          readers << io if monitor.interests == :r || monitor.interests == :rw
-          writers << io if monitor.interests == :w || monitor.interests == :rw
-          monitor.readiness = nil
-        end
+      @selectables.each do |io, monitor|
+        readers << io if monitor.interests == :r || monitor.interests == :rw
+        writers << io if monitor.interests == :w || monitor.interests == :rw
+        monitor.readiness = nil
+      end
 
-        ready_readers, ready_writers = Kernel.select(readers, writers, [], timeout)
-        return unless ready_readers # timeout
+      ready_readers, ready_writers = Kernel.select(readers, writers, [], timeout)
+      return unless ready_readers # timeout
 
-        ready_readers.each do |io|
-          if io == @wakeup
-            # Clear all wakeup signals we've received by reading them
-            # Wakeups should have level triggered behavior
-            @wakeup.read(@wakeup.stat.size)
-          else
-            monitor = @selectables[io]
-            monitor.readiness = :r
-            selected_monitors << monitor
-          end
-        end
-
-        ready_writers.each do |io|
+      ready_readers.each do |io|
+        if io == @wakeup
+          # Clear all wakeup signals we've received by reading them
+          # Wakeups should have level triggered behavior
+          @wakeup.read(@wakeup.stat.size)
+        else
           monitor = @selectables[io]
-          monitor.readiness = monitor.readiness == :r ? :rw : :w
+          monitor.readiness = :r
           selected_monitors << monitor
         end
+      end
+
+      ready_writers.each do |io|
+        monitor = @selectables[io]
+        monitor.readiness = monitor.readiness == :r ? :rw : :w
+        selected_monitors << monitor
       end
 
       if block_given?
@@ -140,21 +133,19 @@ module NIO
 
     # Close this selector and free its resources
     def close
-      @lock.synchronize do
-        return if @closed
+      return if @closed
 
-        begin
-          @wakeup.close
-        rescue IOError
-        end
-
-        begin
-          @waker.close
-        rescue IOError
-        end
-
-        @closed = true
+      begin
+        @wakeup.close
+      rescue IOError
       end
+
+      begin
+        @waker.close
+      rescue IOError
+      end
+
+      @closed = true
     end
 
     # Is this selector closed?
