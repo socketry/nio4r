@@ -40,8 +40,6 @@ test_script:
 matrix:
   allow_failures:
     - RUBY_VERSION: _trunk
-    - RUBY_VERSION: 26-x64
-    - RUBY_VERSION: 25-x64
 
 cache:
   # If one of the files after the right arrow changes, cache will be invalidated

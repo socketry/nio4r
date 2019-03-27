@@ -39,7 +39,7 @@ RSpec.shared_context "an NIO selectable" do
   end
 end
 
-RSpec.shared_context "an NIO selectable stream" do
+RSpec.shared_context "an NIO selectable stream" do |is_tls13|
   include_context NIO::Selector
 
   let(:stream)   { pair.first }
@@ -47,7 +47,9 @@ RSpec.shared_context "an NIO selectable stream" do
 
   it "selects readable when the other end closes" do
     monitor = selector.register(stream, :r)
-    expect(selector.select(1)).to be_nil
+    unless is_tls13
+      expect(selector.select(1)).to be_nil
+    end
 
     peer.close
     # Wait and give the TCP session time to close

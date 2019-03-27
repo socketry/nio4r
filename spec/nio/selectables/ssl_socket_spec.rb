@@ -4,6 +4,10 @@ require "spec_helper"
 require "openssl"
 
 RSpec.describe OpenSSL::SSL::SSLSocket do
+  before(:all) do
+    @tls = []
+  end
+
   let(:addr) { "127.0.0.1" }
 
   let(:ssl_key) { OpenSSL::PKey::RSA.new(2048) }
@@ -27,6 +31,13 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
     OpenSSL::SSL::SSLContext.new.tap do |ctx|
       ctx.cert = ssl_cert
       ctx.key = ssl_key
+      unless @tls.empty?
+        if ctx.respond_to? :set_minmax_proto_version, true
+          ctx.max_version = @tls[0]
+        else
+          ctx.ssl_version = @tls[1]
+        end
+      end
     end
   end
 
@@ -69,6 +80,10 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
     thread = Thread.new { ssl_client.connect }
     ssl_peer.accept
     thread.join
+
+    if ssl_client.ssl_version == "TLSv1.3"
+      expect(ssl_client.read_nonblock(1, exception: false)).to eq(:wait_readable)
+    end
 
     pending "Failed to produce an unreadable socket" if select([ssl_client], [], [], 0)
     ssl_client
@@ -159,6 +174,19 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
     [thread.value, ssl_peer]
   end
 
-  it_behaves_like "an NIO selectable"
-  it_behaves_like "an NIO selectable stream"
+  describe "using TLS 1.2" do
+    before(:all) do
+      @tls = %i[TLS1_2 TLSv1_2]
+    end
+    it_behaves_like "an NIO selectable"
+    it_behaves_like "an NIO selectable stream"
+  end
+
+  describe "using TLS 1.3", if: OpenSSL::SSL.const_defined?(:TLS1_3_VERSION) do
+    before(:all) do
+      @tls = %i[TLS1_3 TLSv1_3]
+    end
+    it_behaves_like "an NIO selectable"
+    it_behaves_like "an NIO selectable stream", true
+  end
 end
