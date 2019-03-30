@@ -44,7 +44,9 @@ module NIO
     # * :w - is the IO writeable?
     # * :rw - is the IO either readable or writeable?
     def register(io, interest)
-      io = IO.try_convert(io)
+      unless io.is_a? OpenSSL::SSL::SSLSocket
+        io = IO.try_convert(io)
+      end
 
       @lock.synchronize do
         raise IOError, "selector is closed" if closed?
