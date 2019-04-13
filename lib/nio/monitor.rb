@@ -6,7 +6,7 @@ module NIO
     attr_reader :io, :interests, :selector
     attr_accessor :value, :readiness
 
-    # :nodoc
+    # :nodoc:
     def initialize(io, interests, selector)
       unless io.is_a? OpenSSL::SSL::SSLSocket
         unless io.is_a?(IO)
