@@ -4,6 +4,7 @@ dist: xenial
 bundler_args: --without development
 
 matrix:
+  fast_finish: true
   include:
     - rvm: 2.3
     - rvm: 2.4
@@ -14,22 +15,15 @@ matrix:
     - rvm: 2.6
       os: osx
     - rvm: truffleruby
-      env: TRUFFLERUBY_RECOMPILE_OPENSSL=true
     - rvm: truffleruby
-      env: TRUFFLERUBY_RECOMPILE_OPENSSL=true NIO4R_PURE=true
+      env: NIO4R_PURE=true
     - rvm: jruby
       env: JRUBY_OPTS="--debug -X+O --dev -J-Djruby.launch.inproc=true -J-Xmx1024M"
     - rvm: jruby-head
       env: JRUBY_OPTS="--debug -X+O --dev -J-Djruby.launch.inproc=true -J-Xmx1024M"
     - rvm: ruby-head
-    - rvm: rbx-3
-  fast_finish: true
   allow_failures:
     - rvm: ruby-head
     - rvm: truffleruby
     - rvm: jruby-head
     - rvm: jruby
-    - rvm: rbx-3
-
-notifications:
-  irc: "irc.freenode.org#celluloid"
