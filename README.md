@@ -45,7 +45,8 @@ writing.
 * Ruby 2.4
 * Ruby 2.5
 * Ruby 2.6
-* JRuby 9000
+* [JRuby](https://github.com/jruby/jruby)
+* [TruffleRuby](https://github.com/oracle/truffleruby)
 
 ## Supported backends
 

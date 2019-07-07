@@ -1,3 +1,24 @@
+## 2.4.0 (2019-07-07)
+
+* [#211](https://github.com/socketry/nio4r/pull/211)
+  Enable KQUEUE on macOS 10.14+.
+  ([@ioquatix])
+
+* Bump minimum supported Ruby to 2.3.
+  ([@ioquatix])
+
+* Assorted fixes for TruffleRuby & JRuby.
+  ([@eregon], [@olleolleolle])
+
+* Update libev to v4.25.
+  ([@ioquatix])
+
+* Bind to ephemeral (port 0) for more reliable specs.
+  ([@ioquatix])
+
+* Improve handling of SSL sockets and related specs.
+  ([@MSP-Greg])
+
 ## 2.3.1 (2018-05-03)
 
 * [#188](https://github.com/socketry/nio4r/pull/188)
@@ -219,3 +240,5 @@
 [@HoneyryderChuck]: https://github.com/HoneyryderChuck
 [@tompng]: https://github.com/tompng
 [@ioquatix]: https://github.com/ioquatix
+[@eregon]: https://github.com/eregon
+[@olleolleolle]: https://github.com/olleolleolle
