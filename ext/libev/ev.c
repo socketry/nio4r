@@ -40,6 +40,10 @@
 /* ########## NIO4R PATCHERY HO! ########## */
 #include "ruby.h"
 #include "ruby/thread.h"
+
+#ifdef __APPLE__
+#include <AvailabilityMacros.h>
+#endif
 /* ######################################## */
 
 /* this big block deduces configuration from config.h */
@@ -2765,16 +2769,17 @@ ev_recommended_backends (void) EV_NOEXCEPT
 {
   unsigned int flags = ev_supported_backends ();
 
-#ifndef __NetBSD__
+#if defined(__APPLE__) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14)
+  /* apple has a poor track record but post 10.12.2 it seems to work sufficiently well */
+#elif defined(__NetBSD__)
   /* kqueue is borked on everything but netbsd apparently */
   /* it usually doesn't work correctly on anything but sockets and pipes */
-  flags &= ~EVBACKEND_KQUEUE;
-#endif
-#ifdef __APPLE__
+#else
   /* only select works correctly on that "unix-certified" platform */
   flags &= ~EVBACKEND_KQUEUE; /* horribly broken, even for sockets */
   flags &= ~EVBACKEND_POLL;   /* poll is based on kqueue from 10.5 onwards */
 #endif
+
 #ifdef __FreeBSD__
   flags &= ~EVBACKEND_POLL;   /* poll return value is unusable (http://forums.freebsd.org/archive/index.php/t-10270.html) */
 #endif
