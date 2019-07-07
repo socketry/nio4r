@@ -18,7 +18,7 @@ if ENV["NIO4R_PURE"] == "true" || (Gem.win_platform? && !defined?(JRUBY_VERSION)
   require "nio/monitor"
   require "nio/selector"
   require "nio/bytebuffer"
-  NIO::ENGINE = "ruby".freeze
+  NIO::ENGINE = "ruby"
 else
   require "nio4r_ext"
 
@@ -26,8 +26,8 @@ else
     require "java"
     require "jruby"
     org.nio4r.Nio4r.new.load(JRuby.runtime, false)
-    NIO::ENGINE = "java".freeze
+    NIO::ENGINE = "java"
   else
-    NIO::ENGINE = "libev".freeze
+    NIO::ENGINE = "libev"
   end
 end
