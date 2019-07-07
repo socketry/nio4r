@@ -11,7 +11,6 @@ environment:
   - RUBY_VERSION: 24-x64
   - RUBY_VERSION: 23-x64
   - RUBY_VERSION: 23
-  - RUBY_VERSION: 22
 
 init:
   - ps: |
@@ -23,16 +22,11 @@ init:
 
 install:
   - SET RAKEOPT=-rdevkit
-  - ps: |
-      if ($env:RUBY_VERSION -eq '_trunk' -or $env:RUBY_VERSION -ge '23' ) {
-        gem update --system --conservative --no-document
-      } else {
-        gem update --system  2.7.9 --conservative --no-document        
-      }
+  - gem update --system --conservative --no-document
   - ruby -v
   - gem -v
   - bundle -v
-  - bundle install --path vendor\bundle
+  - bundle install --path vendor\bundle --without development
 
 test_script:
   - bundle exec rake spec
