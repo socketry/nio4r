@@ -1,7 +1,11 @@
 language: ruby
 cache: bundler
 dist: xenial
+env: OS="xenial 16.04"
 bundler_args: --without development
+
+after_script:
+  - ruby -ropenssl -e "puts ENV['OS'], RUBY_DESCRIPTION, OpenSSL::OPENSSL_LIBRARY_VERSION"
 
 matrix:
   fast_finish: true
@@ -12,8 +16,19 @@ matrix:
     - rvm: 2.6
       env: NIO4R_PURE=true
     - rvm: 2.6
+    - rvm: 2.3
+      dist: trusty
+      env: OS="trusty 14.04"
+    - rvm: 2.6.3
+      dist: bionic
+      env: OS="bionic 18.04"
     - rvm: 2.6
       os: osx
+      env: OS="osx"
+    - rvm: 2.4.6
+      os: osx
+      osx_image: xcode10.2
+      env: OS="osx xcode 10.2"
     - rvm: truffleruby
     - rvm: truffleruby
       env: NIO4R_PURE=true
