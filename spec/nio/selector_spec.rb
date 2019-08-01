@@ -67,6 +67,15 @@ RSpec.describe NIO::Selector do
     expect(monitor).to be_closed
   end
 
+  it "allows deregistering closed IO objects" do
+    subject.register(reader, :r)
+    reader.close
+
+    expect do
+      subject.deregister(reader)
+    end.not_to raise_error
+  end
+
   it "reports if it is empty" do
     expect(subject).to be_empty
     subject.register(reader, :r)

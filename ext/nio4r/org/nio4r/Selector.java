@@ -19,6 +19,7 @@ import org.jruby.anno.JRubyMethod;
 import org.jruby.runtime.Block;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
+import org.jruby.util.io.OpenFile;
 
 import org.nio4r.Monitor;
 
@@ -136,7 +137,10 @@ public class Selector extends RubyObject {
     @JRubyMethod
     public IRubyObject deregister(ThreadContext context, IRubyObject io) {
         Ruby runtime = context.getRuntime();
-        Channel rawChannel = RubyIO.convertToIO(context, io).getChannel();
+        OpenFile f = RubyIO.convertToIO(context, io).getOpenFileInitialized();
+        if (f.fd() == null)
+            return context.nil;
+        Channel rawChannel = f.channel();
 
         if(!(rawChannel instanceof SelectableChannel)) {
             throw runtime.newArgumentError("not a selectable IO object");
