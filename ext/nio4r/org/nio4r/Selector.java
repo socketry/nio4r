@@ -19,6 +19,7 @@ import org.jruby.anno.JRubyMethod;
 import org.jruby.runtime.Block;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
+import org.jruby.exceptions.IOError;
 
 import org.nio4r.Monitor;
 
@@ -136,7 +137,14 @@ public class Selector extends RubyObject {
     @JRubyMethod
     public IRubyObject deregister(ThreadContext context, IRubyObject io) {
         Ruby runtime = context.getRuntime();
-        Channel rawChannel = RubyIO.convertToIO(context, io).getChannel();
+        Channel rawChannel;
+
+        try {
+            rawChannel = RubyIO.convertToIO(context, io).getChannel();
+        } catch(IOError e) {
+            // The IO object we're trying to deregister has been closed
+            return context.nil;
+        }
 
         if(!(rawChannel instanceof SelectableChannel)) {
             throw runtime.newArgumentError("not a selectable IO object");
