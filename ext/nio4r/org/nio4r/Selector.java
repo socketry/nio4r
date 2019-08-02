@@ -137,10 +137,10 @@ public class Selector extends RubyObject {
     @JRubyMethod
     public IRubyObject deregister(ThreadContext context, IRubyObject io) {
         Ruby runtime = context.getRuntime();
-        OpenFile f = RubyIO.convertToIO(context, io).getOpenFileInitialized();
-        if (f.fd() == null)
+        OpenFile file = RubyIO.convertToIO(context, io).getOpenFileInitialized();
+        if (file.fd() == null)
             return context.nil;
-        Channel rawChannel = f.channel();
+        Channel rawChannel = file.channel();
 
         if(!(rawChannel instanceof SelectableChannel)) {
             throw runtime.newArgumentError("not a selectable IO object");
