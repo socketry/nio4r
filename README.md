@@ -27,10 +27,12 @@ writing.
 * [ActionCable]: Rails 5 WebSocket protocol, uses nio4r for a WebSocket server
 * [Celluloid::IO]: Actor-based concurrency framework, uses nio4r for async I/O
 * [Socketry Async]: Asynchronous I/O framework for Ruby
+* [Puma]: Ruby/Rack web server built for concurrency
 
 [ActionCable]: https://rubygems.org/gems/actioncable
 [Celluloid::IO]: https://github.com/celluloid/celluloid-io
 [Socketry Async]: https://github.com/socketry/async
+[Puma]: https://github.com/puma/puma
 
 ## Goals
 
