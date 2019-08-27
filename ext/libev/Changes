@@ -1,8 +1,27 @@
 Revision history for libev, a high-performance and full-featured event loop.
 
+4.27 Thu Jun 27 22:43:44 CEST 2019
+	- linux aio backend almost complete rewritten to work around its
+          limitations.
+        - epoll backend now mandatory for linux aio backend.
+        - fail assertions more aggressively on invalid fd's detected
+          in the event loop, do not just silently fd_kill in case of
+          user error.
+        - ev_io_start/ev_io_stop now verify the watcher fd using
+          a syscall when EV_VERIFY is 2 or higher.
+
+4.26 (EV only)
+	- update to libecb 0x00010006.
+	- new experimental linux aio backend (linux 4.18+).
+	- removed redundant 0-ptr check in ev_once.
+        - updated/extended ev_set_allocator documentation.
+        - replaced EMPTY2 macro by array_needsize_noinit.
+        - minor code cleanups.
+        - epoll backend now uses epoll_create1 also after fork.
+
 4.25 Fri Dec 21 07:49:20 CET 2018
         - INCOMPATIBLE CHANGE: EV_THROW was renamed to EV_NOEXCEPT
-          (EV_THROW sitll provided) and now uses noexcept on C++11 or newer.
+          (EV_THROW still provided) and now uses noexcept on C++11 or newer.
 	- move the darwin select workaround highe rin ev.c, as newer versions of
           darwin managed to break their broken select even more.
 	- ANDROID => __ANDROID__ (reported by enh@google.com).
