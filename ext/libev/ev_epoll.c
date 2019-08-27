@@ -1,7 +1,7 @@
 /*
  * libev epoll fd activity backend
  *
- * Copyright (c) 2007,2008,2009,2010,2011 Marc Alexander Lehmann <libev@schmorp.de>
+ * Copyright (c) 2007,2008,2009,2010,2011,2016,2017,2019 Marc Alexander Lehmann <libev@schmorp.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modifica-
@@ -124,12 +124,14 @@ epoll_modify (EV_P_ int fd, int oev, int nev)
       /* add fd to epoll_eperms, if not already inside */
       if (!(oldmask & EV_EMASK_EPERM))
         {
-          array_needsize (int, epoll_eperms, epoll_epermmax, epoll_epermcnt + 1, EMPTY2);
+          array_needsize (int, epoll_eperms, epoll_epermmax, epoll_epermcnt + 1, array_needsize_noinit);
           epoll_eperms [epoll_epermcnt++] = fd;
         }
 
       return;
     }
+  else
+    assert (("libev: I/O watcher with invalid fd found in epoll_ctl", errno != EBADF && errno != ELOOP && errno != EINVAL));
 
   fd_kill (EV_A_ fd);
 
@@ -235,21 +237,32 @@ epoll_poll (EV_P_ ev_tstamp timeout)
     }
 }
 
+static int
+epoll_epoll_create (void)
+{
+  int fd;
+
+#if defined EPOLL_CLOEXEC && !defined __ANDROID__
+  fd = epoll_create1 (EPOLL_CLOEXEC);
+
+  if (fd < 0 && (errno == EINVAL || errno == ENOSYS))
+#endif
+    {
+      fd = epoll_create (256);
+
+      if (fd >= 0)
+        fcntl (fd, F_SETFD, FD_CLOEXEC);
+    }
+
+  return fd;
+}
+
 inline_size
 int
 epoll_init (EV_P_ int flags)
 {
-#if defined EPOLL_CLOEXEC && !defined __ANDROID__
-  backend_fd = epoll_create1 (EPOLL_CLOEXEC);
-
-  if (backend_fd < 0 && (errno == EINVAL || errno == ENOSYS))
-#endif
-    backend_fd = epoll_create (256);
-
-  if (backend_fd < 0)
+  if ((backend_fd = epoll_epoll_create ()) < 0)
     return 0;
-
-  fcntl (backend_fd, F_SETFD, FD_CLOEXEC);
 
   backend_mintime = 1e-3; /* epoll does sometimes return early, this is just to avoid the worst */
   backend_modify  = epoll_modify;
@@ -275,10 +288,8 @@ epoll_fork (EV_P)
 {
   close (backend_fd);
 
-  while ((backend_fd = epoll_create (256)) < 0)
+  while ((backend_fd = epoll_epoll_create ()) < 0)
     ev_syserr ("(libev) epoll_create");
-
-  fcntl (backend_fd, F_SETFD, FD_CLOEXEC);
 
   fd_rearm_all (EV_A);
 }
