@@ -16,10 +16,12 @@ RSpec.describe NIO::Selector do
   end
 
   context "#initialize" do
-    it "allows explicitly specifying a backend" do
+    it "allows explicitly specifying a backend" do |example|
       backend = described_class.backends.first
       selector = described_class.new(backend)
       expect(selector.backend).to eq backend
+
+      example.reporter.message "Supported backends: #{described_class.backends}"
     end
 
     it "raises ArgumentError if given an invalid backend" do
@@ -32,8 +34,10 @@ RSpec.describe NIO::Selector do
   end
 
   context "backend" do
-    it "knows its backend" do
+    it "knows its backend" do |example|
       expect(subject.backend).to be_a Symbol
+
+      example.reporter.message "Current backend: #{subject.backend}"
     end
   end
 
