@@ -100,14 +100,20 @@ RSpec.describe NIO::Selector do
 
   context "timeouts" do
     let(:select_precision) {0.2}
+    let(:timeout) {2.0}
     let(:payload) {"hi there"}
 
-    it "waits for a timeout when selecting" do
+    it "waits for timeout when selecting from empty selector" do
+      started_at = Time.now
+      expect(subject.select(timeout)).to be_nil
+      expect(Time.now - started_at).to be_within(select_precision).of(timeout)
+    end
+
+    it "waits for a timeout when selecting with reader" do
       monitor = subject.register(reader, :r)
 
       writer << payload
 
-      timeout = 0.5
       started_at = Time.now
       expect(subject.select(timeout)).to include monitor
       expect(Time.now - started_at).to be_within(select_precision).of(0)
