@@ -120,7 +120,7 @@ rake release
 
 Released under the MIT license.
 
-Copyright, 2019, by Tony Arcieri.
+Copyright, 2019, by Tony Arcieri.  
 Copyright, 2019, by [Samuel G. D. Williams](http://www.codeotaku.com/samuel-williams).
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
