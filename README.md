@@ -97,6 +97,25 @@ to maintain a large codebase.
 [EventMachine]: https://github.com/eventmachine/eventmachine
 [Cool.io]: https://coolio.github.io/
 
+## Releases
+
+### CRuby
+
+```
+rake clean
+rake release
+```
+
+### JRuby
+
+You might need to delete `Gemfile.lock` before trying to `bundle install`.
+
+```
+rake clean
+rake compile
+rake release
+```
+
 ## License
 
 Released under the MIT license.
