@@ -99,11 +99,33 @@ to maintain a large codebase.
 
 ## License
 
-Copyright (c) 2011-2018 Tony Arcieri. Distributed under the MIT License.
-See [LICENSE.txt] for further details.
+Released under the MIT license.
 
-Includes libev 4.24. Copyright (c) 2007-2016 Marc Alexander Lehmann.
-Distributed under the BSD license. See [ext/libev/LICENSE] for details.
+Copyright, 2019, by Tony Arcieri.
+Copyright, 2019, by [Samuel G. D. Williams](http://www.codeotaku.com/samuel-williams).
 
-[LICENSE.txt]: https://github.com/socketry/nio4r/blob/master/LICENSE.txt
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+### libev
+
+Released under the BSD license. See [ext/libev/LICENSE] for details.
+
+Copyright, 2007-2019, by Marc Alexander Lehmann.
+
 [ext/libev/LICENSE]: https://github.com/socketry/nio4r/blob/master/ext/libev/LICENSE
