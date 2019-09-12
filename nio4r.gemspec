@@ -20,6 +20,14 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.version       = NIO::VERSION
 
+  spec.metadata = {
+    "bug_tracker_uri"   => "https://github.com/socketry/nio4r/issues",
+    "changelog_uri"     => "https://github.com/socketry/nio4r/blob/master/CHANGES.md",
+    "documentation_uri" => "https://www.rubydoc.info/gems/nio4r/#{spec.version}",
+    "source_code_uri"   => "https://github.com/socketry/nio4r/tree/v#{spec.version}",
+    "wiki_uri"          => "https://github.com/socketry/nio4r/wiki"
+  }
+
   spec.required_ruby_version = ">= 2.3"
 
   if defined? JRUBY_VERSION
