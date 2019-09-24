@@ -1746,7 +1746,7 @@ ev_syserr (const char *msg)
 }
 
 static void *
-ev_realloc_emul (void *ptr, long size) EV_NOEXCEPT
+ev_realloc_emul (void *ptr, size_t size) EV_NOEXCEPT
 {
   /* some systems, notably openbsd and darwin, fail to properly
    * implement realloc (x, 0) (as required by both ansi c-89 and
@@ -1762,17 +1762,17 @@ ev_realloc_emul (void *ptr, long size) EV_NOEXCEPT
   return 0;
 }
 
-static void *(*alloc)(void *ptr, long size) EV_NOEXCEPT = ev_realloc_emul;
+static void *(*alloc)(void *ptr, size_t size) EV_NOEXCEPT = ev_realloc_emul;
 
 ecb_cold
 void
-ev_set_allocator (void *(*cb)(void *ptr, long size) EV_NOEXCEPT) EV_NOEXCEPT
+ev_set_allocator (void *(*cb)(void *ptr, size_t size) EV_NOEXCEPT) EV_NOEXCEPT
 {
   alloc = cb;
 }
 
 inline_speed void *
-ev_realloc (void *ptr, long size)
+ev_realloc (void *ptr, size_t size)
 {
   ptr = alloc (ptr, size);
 
