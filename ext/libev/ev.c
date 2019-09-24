@@ -3628,11 +3628,13 @@ struct ev_poll_args {
 };
 
 static
-VALUE ev_backend_poll(void *ptr)
+void * ev_backend_poll(void *ptr)
 {
   struct ev_poll_args *args = (struct ev_poll_args *)ptr;
   struct ev_loop *loop = args->loop;
   backend_poll (EV_A_ args->waittime);
+
+  return NULL;
 }
 /* ######################################## */
 
