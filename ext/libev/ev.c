@@ -335,14 +335,6 @@
 # define EV_USE_PORT 0
 #endif
 
-#ifndef EV_USE_LINUXAIO
-# if __linux /* libev currently assumes linux/aio_abi.h is always available on linux */
-#  define EV_USE_LINUXAIO 1
-# else
-#  define EV_USE_LINUXAIO 0
-# endif
-#endif
-
 #ifndef EV_USE_INOTIFY
 # if __linux && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 4))
 #  define EV_USE_INOTIFY EV_FEATURE_OS
