@@ -2784,7 +2784,11 @@ ev_supported_backends (void) EV_NOEXCEPT
   if (EV_USE_PORT    ) flags |= EVBACKEND_PORT;
   if (EV_USE_KQUEUE  ) flags |= EVBACKEND_KQUEUE;
   if (EV_USE_EPOLL   ) flags |= EVBACKEND_EPOLL;
+
+#ifdef EV_USE_LINUXAIO
   if (EV_USE_LINUXAIO) flags |= EVBACKEND_LINUXAIO;
+#endif
+
   if (EV_USE_POLL    ) flags |= EVBACKEND_POLL;
   if (EV_USE_SELECT  ) flags |= EVBACKEND_SELECT;
   
