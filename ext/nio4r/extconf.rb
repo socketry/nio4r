@@ -13,7 +13,6 @@ require "mkmf"
 
 have_header("unistd.h")
 
-
 $defs << "-DEV_USE_LINUXAIO"     if have_header("linux/aio_abi.h")
 $defs << "-DEV_USE_SELECT"       if have_header("sys/select.h")
 $defs << "-DEV_USE_POLL"         if have_type("port_event_t", "poll.h")
