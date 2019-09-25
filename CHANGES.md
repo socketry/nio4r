@@ -1,11 +1,11 @@
 ## 2.5.2 (2019-09-24)
 
-* [#225](https://github.com/socketry/nio4r/issues/225)
-  Avoid need for linux headers.
+* [#220](https://github.com/socketry/nio4r/issues/220)
+  Update to libev-4.27 & fix assorted warnings.
   ([@ioquatix])
 
-* [#220](https://github.com/socketry/nio4r/issues/220)
-  Update to libev-4.27 & Fix assorted warnings.
+* [#225](https://github.com/socketry/nio4r/issues/225)
+  Avoid need for linux headers.
   ([@ioquatix])
 
 ## 2.4.0 (2019-07-07)
