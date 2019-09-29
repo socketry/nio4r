@@ -33,8 +33,8 @@ RSpec.describe UDPSocket, if: !defined?(JRUBY_VERSION) do
       peer.send("X" * 1024, 0)
       cntr += 1
       t = select [], [peer], [], 0
-    rescue Errno::ECONNREFUSED => ex
-      skip "Couldn't make writable UDPSocket subject: #{ex.class}: #{ex}"
+    rescue Errno::ECONNREFUSED => e
+      skip "Couldn't make writable UDPSocket subject: #{e.class}: #{e}"
     end while t && t[1].include?(peer) && cntr < 5
 
     peer
