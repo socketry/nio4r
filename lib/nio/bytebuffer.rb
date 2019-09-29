@@ -24,6 +24,7 @@ module NIO
     # @return [NIO::ByteBuffer]
     def initialize(capacity)
       raise TypeError, "no implicit conversion of #{capacity.class} to Integer" unless capacity.is_a?(Integer)
+
       @capacity = capacity
       clear
     end
@@ -119,9 +120,11 @@ module NIO
     # @return [self]
     def put(str)
       raise TypeError, "expected String, got #{str.class}" unless str.respond_to?(:to_str)
+
       str = str.to_str
 
       raise OverflowError, "buffer is full" if str.length > @limit - @position
+
       @buffer[@position...str.length] = str
       @position += str.length
       self
@@ -188,6 +191,7 @@ module NIO
     # @raise [NIO::ByteBuffer::MarkUnsetError] mark has not been set (call `#mark` first)
     def reset
       raise MarkUnsetError, "mark has not been set" unless @mark
+
       @position = @mark
       self
     end
