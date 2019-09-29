@@ -234,4 +234,3 @@ RSpec.describe NIO::Selector do
     expect(subject).to be_closed
   end
 end
-# rubocop:enable Metrics/BlockLength
