@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require File.expand_path("../lib/nio/version", __FILE__)
+require File.expand_path("lib/nio/version", __dir__)
 
 Gem::Specification.new do |spec|
   spec.authors       = ["Tony Arcieri"]
