@@ -352,4 +352,3 @@ RSpec.describe NIO::ByteBuffer do
     end
   end
 end
-# rubocop:enable Metrics/BlockLength
