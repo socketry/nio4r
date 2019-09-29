@@ -2,6 +2,9 @@ AllCops:
   TargetRubyVersion: 2.3
   DisplayCopNames: true
 
+Layout/AlignHash:
+  Enabled: false
+
 Layout/SpaceInsideBlockBraces:
   Enabled: false
 
