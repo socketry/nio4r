@@ -49,13 +49,6 @@ Metrics/PerceivedComplexity:
   Max: 15
 
 #
-# Performance
-#
-
-Performance/RegexpMatch:
-  Enabled: false
-
-#
 # Style
 #
 
