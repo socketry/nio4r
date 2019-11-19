@@ -19,7 +19,7 @@ class EchoServer
 
   def run
     loop do
-      @selector.select { |monitor| monitor.value.call(monitor) }
+      @selector.select { |monitor| monitor.value.call }
     end
   end
 
