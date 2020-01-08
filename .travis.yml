@@ -16,6 +16,7 @@ matrix:
     - rvm: 2.6
       env: NIO4R_PURE=true
     - rvm: 2.6
+    - rvm: 2.7
     - rvm: 2.3
       dist: trusty
       env: OS="trusty 14.04"
