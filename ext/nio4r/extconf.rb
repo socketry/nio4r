@@ -4,6 +4,7 @@ require "rubygems"
 
 # Write a dummy Makefile on Windows because we use the pure Ruby implementation there
 if Gem.win_platform?
+  require "devkit" if RUBY_PLATFORM.include?("mingw")
   File.write("Makefile", "all install::\n")
   File.write("nio4r_ext.so", "")
   exit
