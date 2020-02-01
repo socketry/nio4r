@@ -1,0 +1,45 @@
+name: nio4r
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: >-
+      ${{ matrix.os }}, ${{ matrix.ruby }}
+    env:
+      CI: true
+      TESTOPTS: -v
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-16.04, ubuntu-18.04, macos, windows-latest ]
+        ruby: [ 2.3, 2.4, 2.5, 2.6, 2.7, jruby ]
+        exclude:
+          - os: windows-latest
+            ruby: 2.3
+          - os: windows-latest
+            ruby: jruby
+
+    steps:
+      - name: repo checkout
+        uses: actions/checkout@v2
+
+      - name: load ruby
+        uses: eregon/use-ruby-action@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: RubyGems, Bundler Update
+        run:  gem update --system --no-document --conservative
+
+      - name: bundle install
+        run:  bundle install --path .bundle/gems --without development
+
+      - name: compile
+        run:  bundle exec rake compile
+
+      - name: test
+        run:  bundle exec rake spec
+        timeout-minutes: 10

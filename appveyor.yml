@@ -5,12 +5,8 @@ environment:
   PATH: C:\Ruby%RUBY_VERSION%\bin;%PATH%
   APPVEYOR_SAVE_CACHE_ON_ERROR: True
   matrix:
-  - RUBY_VERSION: _trunk
-  - RUBY_VERSION: 26-x64
-  - RUBY_VERSION: 25-x64
-  - RUBY_VERSION: 24-x64
-  - RUBY_VERSION: 23-x64
   - RUBY_VERSION: 23
+  - RUBY_VERSION: _trunk
 
 init:
   - ps: |
@@ -21,7 +17,6 @@ init:
       }
 
 install:
-  - SET RAKEOPT=-rdevkit
   - gem update --system --conservative --no-document
   - ruby -v
   - gem -v
