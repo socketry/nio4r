@@ -47,6 +47,7 @@ writing.
 * Ruby 2.4
 * Ruby 2.5
 * Ruby 2.6
+* Ruby 2.7
 * [JRuby](https://github.com/jruby/jruby)
 * [TruffleRuby](https://github.com/oracle/truffleruby)
 
