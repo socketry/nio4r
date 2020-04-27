@@ -15,10 +15,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-16.04, ubuntu-18.04, macos, windows-latest]
-        ruby: [2.4, 2.5, 2.6, 2.7, jruby, truffleruby]
+        ruby: [2.4, 2.5, 2.6, 2.7, jruby, truffleruby-head]
         exclude:
           - { os: windows-latest, ruby: jruby }
-          - { os: windows-latest, ruby: truffleruby }
+          - { os: windows-latest, ruby: truffleruby-head }
 
     steps:
       - name: repo checkout
