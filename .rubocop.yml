@@ -5,6 +5,9 @@ AllCops:
 Layout/HashAlignment:
   Enabled: false
 
+Layout/LineLength:
+  Max: 128
+
 Layout/SpaceInsideBlockBraces:
   Enabled: false
 
@@ -33,9 +36,6 @@ Metrics/BlockLength:
   Enabled: false
 
 Metrics/ClassLength:
-  Max: 128
-
-Metrics/LineLength:
   Max: 128
 
 Metrics/MethodLength:
