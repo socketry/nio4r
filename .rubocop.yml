@@ -17,6 +17,9 @@ Layout/SpaceInsideBlockBraces:
 Style/IfUnlessModifier:
   Enabled: false
 
+Style/UnpackFirst:
+  Enabled: false
+
 #
 # Lint
 #
