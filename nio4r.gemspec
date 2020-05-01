@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
     "wiki_uri"          => "https://github.com/socketry/nio4r/wiki"
   }
 
-  spec.required_ruby_version = ">= 2.3"
+  spec.required_ruby_version = ">= 2.4"
 
   if defined? JRUBY_VERSION
     spec.files << "lib/nio4r_ext.jar"
