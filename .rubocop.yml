@@ -8,6 +8,9 @@ Layout/HashAlignment:
 Layout/LineLength:
   Max: 128
 
+Layout/SpaceAroundMethodCallOperator:
+  Enabled: false
+
 Layout/SpaceInsideBlockBraces:
   Enabled: false
 
@@ -24,6 +27,11 @@ Lint/SuppressedException:
 Lint/Loop:
   Enabled: false
 
+Lint/RaiseException:
+  Enabled: false
+
+Lint/StructNewOverride:
+  Enabled: false
 #
 # Metrics
 #
@@ -52,6 +60,9 @@ Metrics/PerceivedComplexity:
 # Style
 #
 
+Style/ExponentialNotation:
+  Enabled: false
+
 Style/FormatStringToken:
   Enabled: false
 
@@ -59,6 +70,15 @@ Style/FrozenStringLiteralComment:
   Enabled: true
 
 Style/GlobalVars:
+  Enabled: false
+
+Style/HashEachMethods:
+  Enabled: false
+
+Style/HashTransformKeys:
+  Enabled: false
+
+Style/HashTransformValues:
   Enabled: false
 
 Style/NumericPredicate:
