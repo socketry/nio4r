@@ -44,7 +44,7 @@ module NIO
     # * :w - is the IO writeable?
     # * :rw - is the IO either readable or writeable?
     def register(io, interest)
-      unless io.is_a? OpenSSL::SSL::SSLSocket
+      unless defined?(::OpenSSL) && io.is_a?(::OpenSSL::SSL::SSLSocket)
         io = IO.try_convert(io)
       end
 
