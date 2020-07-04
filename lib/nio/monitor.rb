@@ -8,7 +8,7 @@ module NIO
 
     # :nodoc:
     def initialize(io, interests, selector)
-      unless io.is_a? OpenSSL::SSL::SSLSocket
+      unless defined?(::OpenSSL) && io.is_a?(::OpenSSL::SSL::SSLSocket)
         unless io.is_a?(IO)
           if IO.respond_to? :try_convert
             io = IO.try_convert(io)
