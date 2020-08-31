@@ -66,6 +66,7 @@ static VALUE NIO_Monitor_allocate(VALUE klass)
 
 static void NIO_Monitor_mark(struct NIO_Monitor *monitor)
 {
+    rb_gc_mark(monitor->self); /* so GC won't move our reference to self */
 }
 
 static void NIO_Monitor_free(struct NIO_Monitor *monitor)
