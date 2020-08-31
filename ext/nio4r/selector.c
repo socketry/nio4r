@@ -5,7 +5,7 @@
 
 #include "nio4r.h"
 #ifdef HAVE_RUBYSIG_H
-# include "rubysig.h"
+#include "rubysig.h"
 #endif
 
 #ifdef HAVE_UNISTD_H
@@ -14,10 +14,10 @@
 #include <io.h>
 #endif
 
-#include <fcntl.h>
 #include <assert.h>
+#include <fcntl.h>
 
-static VALUE mNIO = Qnil;
+static VALUE mNIO          = Qnil;
 static VALUE cNIO_Monitor  = Qnil;
 static VALUE cNIO_Selector = Qnil;
 
@@ -64,7 +64,7 @@ static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *
 /* Selectors wait for events */
 void Init_NIO_Selector()
 {
-    mNIO = rb_define_module("NIO");
+    mNIO          = rb_define_module("NIO");
     cNIO_Selector = rb_define_class_under(mNIO, "Selector", rb_cObject);
     rb_define_alloc_func(cNIO_Selector, NIO_Selector_allocate);
 
@@ -80,7 +80,7 @@ void Init_NIO_Selector()
     rb_define_method(cNIO_Selector, "closed?", NIO_Selector_closed, 0);
     rb_define_method(cNIO_Selector, "empty?", NIO_Selector_is_empty, 0);
 
-    cNIO_Monitor = rb_define_class_under(mNIO, "Monitor",  rb_cObject);
+    cNIO_Monitor = rb_define_class_under(mNIO, "Monitor", rb_cObject);
 }
 
 /* Create the libev event loop and incoming event buffer */
@@ -100,8 +100,7 @@ static VALUE NIO_Selector_allocate(VALUE klass)
     }
 
     /* Use non-blocking reads/writes during wakeup, in case the buffer is full */
-    if(fcntl(fds[0], F_SETFL, O_NONBLOCK) < 0 ||
-       fcntl(fds[1], F_SETFL, O_NONBLOCK) < 0) {
+    if(fcntl(fds[0], F_SETFL, O_NONBLOCK) < 0 || fcntl(fds[1], F_SETFL, O_NONBLOCK) < 0) {
         rb_sys_fail("fcntl");
     }
 
@@ -119,7 +118,7 @@ static VALUE NIO_Selector_allocate(VALUE klass)
     selector->wakeup.data = (void *)selector;
 
     selector->closed = selector->selecting = selector->wakeup_fired = selector->ready_count = 0;
-    selector->ready_array = Qnil;
+    selector->ready_array                                                                   = Qnil;
 
     return Data_Wrap_Struct(klass, NIO_Selector_mark, NIO_Selector_free, selector);
 }
@@ -159,9 +158,10 @@ static void NIO_Selector_free(struct NIO_Selector *selector)
 }
 
 /* Return an array of symbols for supported backends */
-static VALUE NIO_Selector_supported_backends(VALUE klass) {
+static VALUE NIO_Selector_supported_backends(VALUE klass)
+{
     unsigned int backends = ev_supported_backends();
-    VALUE result = rb_ary_new();
+    VALUE result          = rb_ary_new();
 
     if(backends & EVBACKEND_EPOLL) {
         rb_ary_push(result, ID2SYM(rb_intern("epoll")));
@@ -203,8 +203,7 @@ static VALUE NIO_Selector_initialize(int argc, VALUE *argv, VALUE self)
 
     if(backend != Qnil) {
         if(!rb_ary_includes(NIO_Selector_supported_backends(CLASS_OF(self)), backend)) {
-            rb_raise(rb_eArgError, "unsupported backend: %s",
-                RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0)));
+            rb_raise(rb_eArgError, "unsupported backend: %s", RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0)));
         }
 
         backend_id = SYM2ID(backend);
@@ -220,8 +219,7 @@ static VALUE NIO_Selector_initialize(int argc, VALUE *argv, VALUE self)
         } else if(backend_id == rb_intern("port")) {
             flags = EVBACKEND_PORT;
         } else {
-            rb_raise(rb_eArgError, "unsupported backend: %s",
-                RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0)));
+            rb_raise(rb_eArgError, "unsupported backend: %s", RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0)));
         }
     }
 
@@ -245,7 +243,8 @@ static VALUE NIO_Selector_initialize(int argc, VALUE *argv, VALUE self)
     return Qnil;
 }
 
-static VALUE NIO_Selector_backend(VALUE self) {
+static VALUE NIO_Selector_backend(VALUE self)
+{
     struct NIO_Selector *selector;
 
     Data_Get_Struct(self, struct NIO_Selector, selector);
@@ -253,7 +252,7 @@ static VALUE NIO_Selector_backend(VALUE self) {
         rb_raise(rb_eIOError, "selector is closed");
     }
 
-    switch (ev_backend(selector->ev_loop)) {
+    switch(ev_backend(selector->ev_loop)) {
         case EVBACKEND_EPOLL:
             return ID2SYM(rb_intern("epoll"));
         case EVBACKEND_POLL:
@@ -275,7 +274,7 @@ static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VA
     VALUE current_thread, lock_holder, lock;
 
     current_thread = rb_thread_current();
-    lock_holder = rb_ivar_get(self, rb_intern("lock_holder"));
+    lock_holder    = rb_ivar_get(self, rb_intern("lock_holder"));
 
     if(lock_holder != current_thread) {
         lock = rb_ivar_get(self, rb_intern("lock"));
@@ -306,7 +305,7 @@ static VALUE NIO_Selector_unlock(VALUE self)
 /* Register an IO object with the selector for the given interests */
 static VALUE NIO_Selector_register(VALUE self, VALUE io, VALUE interests)
 {
-    VALUE args[3] = {self, io, interests};
+    VALUE args[3] = { self, io, interests };
     return NIO_Selector_synchronize(self, NIO_Selector_register_synchronized, args);
 }
 
@@ -317,8 +316,8 @@ static VALUE NIO_Selector_register_synchronized(VALUE *args)
     VALUE monitor_args[3];
     struct NIO_Selector *selector;
 
-    self = args[0];
-    io = args[1];
+    self      = args[0];
+    io        = args[1];
     interests = args[2];
 
     Data_Get_Struct(self, struct NIO_Selector, selector);
@@ -327,7 +326,7 @@ static VALUE NIO_Selector_register_synchronized(VALUE *args)
     }
 
     selectables = rb_ivar_get(self, rb_intern("selectables"));
-    monitor = rb_hash_lookup(selectables, io);
+    monitor     = rb_hash_lookup(selectables, io);
 
     if(monitor != Qnil)
         rb_raise(rb_eArgError, "this IO is already registered with selector");
@@ -346,7 +345,7 @@ static VALUE NIO_Selector_register_synchronized(VALUE *args)
 /* Deregister an IO object from the selector */
 static VALUE NIO_Selector_deregister(VALUE self, VALUE io)
 {
-    VALUE args[2] = {self, io};
+    VALUE args[2] = { self, io };
     return NIO_Selector_synchronize(self, NIO_Selector_deregister_synchronized, args);
 }
 
@@ -356,10 +355,10 @@ static VALUE NIO_Selector_deregister_synchronized(VALUE *args)
     VALUE self, io, selectables, monitor;
 
     self = args[0];
-    io = args[1];
+    io   = args[1];
 
     selectables = rb_ivar_get(self, rb_intern("selectables"));
-    monitor = rb_hash_delete(selectables, io);
+    monitor     = rb_hash_delete(selectables, io);
 
     if(monitor != Qnil) {
         rb_funcall(monitor, rb_intern("close"), 1, Qfalse);
@@ -426,7 +425,7 @@ static VALUE NIO_Selector_select_synchronized(VALUE *args)
     if(rb_block_given_p()) {
         return INT2NUM(ready);
     } else {
-        ready_array = selector->ready_array;
+        ready_array           = selector->ready_array;
         selector->ready_array = Qnil;
         return ready_array;
     }
@@ -438,7 +437,7 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
     int result;
     double timeout_val;
 
-    selector->selecting = 1;
+    selector->selecting    = 1;
     selector->wakeup_fired = 0;
 
     if(timeout == Qnil) {
@@ -459,7 +458,7 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
     /* libev is patched to release the GIL when it makes its system call */
     ev_run(selector->ev_loop, ev_run_flags);
 
-    result = selector->ready_count;
+    result              = selector->ready_count;
     selector->selecting = selector->ready_count = 0;
 
     if(result > 0 || selector->wakeup_fired) {
@@ -489,7 +488,7 @@ static VALUE NIO_Selector_wakeup(VALUE self)
 /* Close the selector and free system resources */
 static VALUE NIO_Selector_close(VALUE self)
 {
-    VALUE args[1] = {self};
+    VALUE args[1] = { self };
     return NIO_Selector_synchronize(self, NIO_Selector_close_synchronized, args);
 }
 
@@ -507,7 +506,7 @@ static VALUE NIO_Selector_close_synchronized(VALUE *args)
 /* Is the selector closed? */
 static VALUE NIO_Selector_closed(VALUE self)
 {
-    VALUE args[1] = {self};
+    VALUE args[1] = { self };
     return NIO_Selector_synchronize(self, NIO_Selector_closed_synchronized, args);
 }
 
@@ -528,7 +527,6 @@ static VALUE NIO_Selector_is_empty(VALUE self)
     return rb_funcall(selectables, rb_intern("empty?"), 0) == Qtrue ? Qtrue : Qfalse;
 }
 
-
 /* Called whenever a timeout fires on the event loop */
 static void NIO_Selector_timeout_callback(struct ev_loop *ev_loop, struct ev_timer *timer, int revents)
 {
@@ -539,18 +537,19 @@ static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *
 {
     char buffer[128];
     struct NIO_Selector *selector = (struct NIO_Selector *)io->data;
-    selector->selecting = 0;
+    selector->selecting           = 0;
 
     /* Drain the wakeup pipe, giving us level-triggered behavior */
-    while(read(selector->wakeup_reader, buffer, 128) > 0);
+    while(read(selector->wakeup_reader, buffer, 128) > 0)
+        ;
 }
 
 /* libev callback fired whenever a monitor gets an event */
 void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents)
 {
     struct NIO_Monitor *monitor_data = (struct NIO_Monitor *)io->data;
-    struct NIO_Selector *selector = monitor_data->selector;
-    VALUE monitor = monitor_data->self;
+    struct NIO_Selector *selector    = monitor_data->selector;
+    VALUE monitor                    = monitor_data->self;
 
     assert(monitor_data->interests != 0);
 

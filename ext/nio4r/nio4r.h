@@ -7,8 +7,9 @@
 #define NIO4R_H
 
 #include "ruby.h"
-#include "ruby/io.h"
+
 #include "libev.h"
+#include "ruby/io.h"
 
 struct NIO_Selector
 {
@@ -44,11 +45,10 @@ struct NIO_ByteBuffer
     int position, limit, capacity, mark;
 };
 
-
 #ifdef GetReadFile
-# define FPTR_TO_FD(fptr) (fileno(GetReadFile(fptr)))
+#define FPTR_TO_FD(fptr) (fileno(GetReadFile(fptr)))
 #else
-# define FPTR_TO_FD(fptr) fptr->fd
+#define FPTR_TO_FD(fptr) fptr->fd
 #endif /* GetReadFile */
 
 /* Thunk between libev callbacks in NIO::Monitors and NIO::Selectors */

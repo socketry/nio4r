@@ -1,8 +1,8 @@
 #include "nio4r.h"
 
-static VALUE mNIO = Qnil;
-static VALUE cNIO_ByteBuffer = Qnil;
-static VALUE cNIO_ByteBuffer_OverflowError = Qnil;
+static VALUE mNIO                           = Qnil;
+static VALUE cNIO_ByteBuffer                = Qnil;
+static VALUE cNIO_ByteBuffer_OverflowError  = Qnil;
 static VALUE cNIO_ByteBuffer_UnderflowError = Qnil;
 static VALUE cNIO_ByteBuffer_MarkUnsetError = Qnil;
 
@@ -38,7 +38,7 @@ static VALUE NIO_ByteBuffer_inspect(VALUE self);
 
 void Init_NIO_ByteBuffer()
 {
-    mNIO = rb_define_module("NIO");
+    mNIO            = rb_define_module("NIO");
     cNIO_ByteBuffer = rb_define_class_under(mNIO, "ByteBuffer", rb_cObject);
     rb_define_alloc_func(cNIO_ByteBuffer, NIO_ByteBuffer_allocate);
 
@@ -75,7 +75,7 @@ void Init_NIO_ByteBuffer()
 static VALUE NIO_ByteBuffer_allocate(VALUE klass)
 {
     struct NIO_ByteBuffer *bytebuffer = (struct NIO_ByteBuffer *)xmalloc(sizeof(struct NIO_ByteBuffer));
-    bytebuffer->buffer = NULL;
+    bytebuffer->buffer                = NULL;
     return Data_Wrap_Struct(klass, NIO_ByteBuffer_gc_mark, NIO_ByteBuffer_free, bytebuffer);
 }
 
@@ -86,7 +86,7 @@ static void NIO_ByteBuffer_gc_mark(struct NIO_ByteBuffer *buffer)
 static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *buffer)
 {
     if(buffer->buffer)
-      xfree(buffer->buffer);
+        xfree(buffer->buffer);
     xfree(buffer);
 }
 
@@ -96,7 +96,7 @@ static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE capacity)
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
     buffer->capacity = NUM2INT(capacity);
-    buffer->buffer = xmalloc(buffer->capacity);
+    buffer->buffer   = xmalloc(buffer->capacity);
 
     NIO_ByteBuffer_clear(self);
 
@@ -111,8 +111,8 @@ static VALUE NIO_ByteBuffer_clear(VALUE self)
     memset(buffer->buffer, 0, buffer->capacity);
 
     buffer->position = 0;
-    buffer->limit = buffer->capacity;
-    buffer->mark = MARK_UNSET;
+    buffer->limit    = buffer->capacity;
+    buffer->mark     = MARK_UNSET;
 
     return self;
 }
@@ -343,9 +343,9 @@ static VALUE NIO_ByteBuffer_flip(VALUE self)
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
-    buffer->limit = buffer->position;
+    buffer->limit    = buffer->position;
     buffer->position = 0;
-    buffer->mark = MARK_UNSET;
+    buffer->mark     = MARK_UNSET;
 
     return self;
 }
@@ -356,7 +356,7 @@ static VALUE NIO_ByteBuffer_rewind(VALUE self)
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
     buffer->position = 0;
-    buffer->mark = MARK_UNSET;
+    buffer->mark     = MARK_UNSET;
 
     return self;
 }
@@ -391,7 +391,7 @@ static VALUE NIO_ByteBuffer_compact(VALUE self)
 
     memmove(buffer->buffer, buffer->buffer + buffer->position, buffer->limit - buffer->position);
     buffer->position = buffer->limit - buffer->position;
-    buffer->limit = buffer->capacity;
+    buffer->limit    = buffer->capacity;
 
     return self;
 }
@@ -421,9 +421,8 @@ static VALUE NIO_ByteBuffer_inspect(VALUE self)
     return rb_sprintf(
         "#<%s:%p @position=%d @limit=%d @capacity=%d>",
         rb_class2name(CLASS_OF(self)),
-        (void*)self,
+        (void *)self,
         buffer->position,
         buffer->limit,
-        buffer->capacity
-    );
+        buffer->capacity);
 }

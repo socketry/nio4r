@@ -5,7 +5,7 @@
 
 #include "nio4r.h"
 
-static VALUE mNIO = Qnil;
+static VALUE mNIO         = Qnil;
 static VALUE cNIO_Monitor = Qnil;
 
 /* Allocator/deallocator */
@@ -36,7 +36,7 @@ static void NIO_Monitor_update_interests(VALUE self, int interests);
 /* Monitor control how a channel is being waited for by a monitor */
 void Init_NIO_Monitor()
 {
-    mNIO = rb_define_module("NIO");
+    mNIO         = rb_define_module("NIO");
     cNIO_Monitor = rb_define_class_under(mNIO, "Monitor", rb_cObject);
     rb_define_alloc_func(cNIO_Monitor, NIO_Monitor_allocate);
 
@@ -91,8 +91,7 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
     } else if(interests_id == rb_intern("rw")) {
         monitor->interests = EV_READ | EV_WRITE;
     } else {
-        rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)",
-            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0)));
+        rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)", RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0)));
     }
 
     GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
@@ -104,15 +103,15 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
 
     Data_Get_Struct(selector_obj, struct NIO_Selector, selector);
 
-    monitor->self = self;
+    monitor->self       = self;
     monitor->ev_io.data = (void *)monitor;
 
     /* We can safely hang onto this as we also hang onto a reference to the
        object where it originally came from */
     monitor->selector = selector;
 
-    if (monitor->interests) {
-      ev_io_start(selector->ev_loop, &monitor->ev_io);
+    if(monitor->interests) {
+        ev_io_start(selector->ev_loop, &monitor->ev_io);
     }
 
     return Qnil;
@@ -130,12 +129,12 @@ static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
     if(selector != Qnil) {
         /* if ev_loop is 0, it means that the loop has been stopped already (see NIO_Selector_shutdown) */
         if(monitor->interests && monitor->selector->ev_loop) {
-          ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
+            ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
         }
 
         monitor->selector = 0;
         rb_ivar_set(self, rb_intern("selector"), Qnil);
-    
+
         /* Default value is true */
         if(deregister == Qtrue || deregister == Qnil) {
             rb_funcall(selector, rb_intern("deregister"), 1, rb_ivar_get(self, rb_intern("io")));
@@ -174,7 +173,8 @@ static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests)
     return rb_ivar_get(self, rb_intern("interests"));
 }
 
-static VALUE NIO_Monitor_add_interest(VALUE self, VALUE interest) {
+static VALUE NIO_Monitor_add_interest(VALUE self, VALUE interest)
+{
     struct NIO_Monitor *monitor;
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
@@ -184,7 +184,8 @@ static VALUE NIO_Monitor_add_interest(VALUE self, VALUE interest) {
     return rb_ivar_get(self, rb_intern("interests"));
 }
 
-static VALUE NIO_Monitor_remove_interest(VALUE self, VALUE interest) {
+static VALUE NIO_Monitor_remove_interest(VALUE self, VALUE interest)
+{
     struct NIO_Monitor *monitor;
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
@@ -263,8 +264,7 @@ static int NIO_Monitor_symbol2interest(VALUE interests)
     } else if(interests_id == rb_intern("rw")) {
         return EV_READ | EV_WRITE;
     } else {
-        rb_raise(rb_eArgError, "invalid interest type %s (must be :r, :w, or :rw)",
-            RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0)));
+        rb_raise(rb_eArgError, "invalid interest type %s (must be :r, :w, or :rw)", RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0)));
     }
 }
 
