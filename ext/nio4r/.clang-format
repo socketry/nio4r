@@ -1,6 +1,6 @@
 ---
-Language:        Cpp
-BasedOnStyle:  WebKit
+Language: Cpp
+BasedOnStyle: WebKit
 AllowAllParametersOfDeclarationOnNextLine: false
 BinPackArguments: false
 BinPackParameters: false
