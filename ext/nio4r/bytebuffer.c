@@ -42,7 +42,7 @@ void Init_NIO_ByteBuffer()
     cNIO_ByteBuffer = rb_define_class_under(mNIO, "ByteBuffer", rb_cObject);
     rb_define_alloc_func(cNIO_ByteBuffer, NIO_ByteBuffer_allocate);
 
-    cNIO_ByteBuffer_OverflowError  = rb_define_class_under(cNIO_ByteBuffer, "OverflowError", rb_eIOError);
+    cNIO_ByteBuffer_OverflowError = rb_define_class_under(cNIO_ByteBuffer, "OverflowError", rb_eIOError);
     cNIO_ByteBuffer_UnderflowError = rb_define_class_under(cNIO_ByteBuffer, "UnderflowError", rb_eIOError);
     cNIO_ByteBuffer_MarkUnsetError = rb_define_class_under(cNIO_ByteBuffer, "MarkUnsetError", rb_eIOError);
 
@@ -86,7 +86,7 @@ static void NIO_ByteBuffer_gc_mark(struct NIO_ByteBuffer *buffer)
 static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *buffer)
 {
     if(buffer->buffer)
-      xfree(buffer->buffer);
+        xfree(buffer->buffer);
     xfree(buffer);
 }
 
@@ -421,9 +421,8 @@ static VALUE NIO_ByteBuffer_inspect(VALUE self)
     return rb_sprintf(
         "#<%s:%p @position=%d @limit=%d @capacity=%d>",
         rb_class2name(CLASS_OF(self)),
-        (void*)self,
+        (void *)self,
         buffer->position,
         buffer->limit,
-        buffer->capacity
-    );
+        buffer->capacity);
 }

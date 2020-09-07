@@ -3,8 +3,8 @@
  * See LICENSE.txt for further details.
  */
 
-#include "nio4r.h"
 #include "../libev/ev.c"
+#include "nio4r.h"
 
 void Init_NIO_Selector();
 void Init_NIO_Monitor();
