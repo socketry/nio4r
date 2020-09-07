@@ -1,3 +1,9 @@
+## 2.5.3 (2020-09-07)
+
+* [#241](https://github.com/socketry/nio4r/issues/241)
+  Possible bug with Ruby >= 2.7.0 and `GC.compact`.
+  ([@boazsegev])
+
 ## 2.5.2 (2019-09-24)
 
 * [#220](https://github.com/socketry/nio4r/issues/220)
@@ -19,7 +25,7 @@
 
 * Assorted fixes for TruffleRuby & JRuby.
   ([@eregon], [@olleolleolle])
-
+Possible bug with Ruby >= 2.7.0 and `GC.compact`
 * Update libev to v4.25.
   ([@ioquatix])
 
@@ -252,3 +258,4 @@
 [@ioquatix]: https://github.com/ioquatix
 [@eregon]: https://github.com/eregon
 [@olleolleolle]: https://github.com/olleolleolle
+[@boazsegev]: https://github.com/boazsegev
