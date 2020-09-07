@@ -36,13 +36,12 @@ static VALUE NIO_ByteBuffer_inspect(VALUE self);
 
 #define MARK_UNSET -1
 
-void Init_NIO_ByteBuffer()
-{
+void Init_NIO_ByteBuffer() {
     mNIO = rb_define_module("NIO");
     cNIO_ByteBuffer = rb_define_class_under(mNIO, "ByteBuffer", rb_cObject);
     rb_define_alloc_func(cNIO_ByteBuffer, NIO_ByteBuffer_allocate);
 
-    cNIO_ByteBuffer_OverflowError  = rb_define_class_under(cNIO_ByteBuffer, "OverflowError", rb_eIOError);
+    cNIO_ByteBuffer_OverflowError = rb_define_class_under(cNIO_ByteBuffer, "OverflowError", rb_eIOError);
     cNIO_ByteBuffer_UnderflowError = rb_define_class_under(cNIO_ByteBuffer, "UnderflowError", rb_eIOError);
     cNIO_ByteBuffer_MarkUnsetError = rb_define_class_under(cNIO_ByteBuffer, "MarkUnsetError", rb_eIOError);
 
@@ -72,26 +71,22 @@ void Init_NIO_ByteBuffer()
     rb_define_method(cNIO_ByteBuffer, "inspect", NIO_ByteBuffer_inspect, 0);
 }
 
-static VALUE NIO_ByteBuffer_allocate(VALUE klass)
-{
+static VALUE NIO_ByteBuffer_allocate(VALUE klass) {
     struct NIO_ByteBuffer *bytebuffer = (struct NIO_ByteBuffer *)xmalloc(sizeof(struct NIO_ByteBuffer));
     bytebuffer->buffer = NULL;
     return Data_Wrap_Struct(klass, NIO_ByteBuffer_gc_mark, NIO_ByteBuffer_free, bytebuffer);
 }
 
-static void NIO_ByteBuffer_gc_mark(struct NIO_ByteBuffer *buffer)
-{
+static void NIO_ByteBuffer_gc_mark(struct NIO_ByteBuffer *buffer) {
 }
 
-static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *buffer)
-{
+static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *buffer) {
     if(buffer->buffer)
-      xfree(buffer->buffer);
+        xfree(buffer->buffer);
     xfree(buffer);
 }
 
-static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE capacity)
-{
+static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE capacity) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
@@ -103,8 +98,7 @@ static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE capacity)
     return self;
 }
 
-static VALUE NIO_ByteBuffer_clear(VALUE self)
-{
+static VALUE NIO_ByteBuffer_clear(VALUE self) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
@@ -117,16 +111,14 @@ static VALUE NIO_ByteBuffer_clear(VALUE self)
     return self;
 }
 
-static VALUE NIO_ByteBuffer_get_position(VALUE self)
-{
+static VALUE NIO_ByteBuffer_get_position(VALUE self) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
     return INT2NUM(buffer->position);
 }
 
-static VALUE NIO_ByteBuffer_set_position(VALUE self, VALUE new_position)
-{
+static VALUE NIO_ByteBuffer_set_position(VALUE self, VALUE new_position) {
     int pos;
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
@@ -150,16 +142,14 @@ static VALUE NIO_ByteBuffer_set_position(VALUE self, VALUE new_position)
     return new_position;
 }
 
-static VALUE NIO_ByteBuffer_get_limit(VALUE self)
-{
+static VALUE NIO_ByteBuffer_get_limit(VALUE self) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
     return INT2NUM(buffer->limit);
 }
 
-static VALUE NIO_ByteBuffer_set_limit(VALUE self, VALUE new_limit)
-{
+static VALUE NIO_ByteBuffer_set_limit(VALUE self, VALUE new_limit) {
     int lim;
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
@@ -187,32 +177,28 @@ static VALUE NIO_ByteBuffer_set_limit(VALUE self, VALUE new_limit)
     return new_limit;
 }
 
-static VALUE NIO_ByteBuffer_capacity(VALUE self)
-{
+static VALUE NIO_ByteBuffer_capacity(VALUE self) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
     return INT2NUM(buffer->capacity);
 }
 
-static VALUE NIO_ByteBuffer_remaining(VALUE self)
-{
+static VALUE NIO_ByteBuffer_remaining(VALUE self) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
     return INT2NUM(buffer->limit - buffer->position);
 }
 
-static VALUE NIO_ByteBuffer_full(VALUE self)
-{
+static VALUE NIO_ByteBuffer_full(VALUE self) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
     return buffer->position == buffer->limit ? Qtrue : Qfalse;
 }
 
-static VALUE NIO_ByteBuffer_get(int argc, VALUE *argv, VALUE self)
-{
+static VALUE NIO_ByteBuffer_get(int argc, VALUE *argv, VALUE self) {
     int len;
     VALUE length, result;
     struct NIO_ByteBuffer *buffer;
@@ -240,8 +226,7 @@ static VALUE NIO_ByteBuffer_get(int argc, VALUE *argv, VALUE self)
     return result;
 }
 
-static VALUE NIO_ByteBuffer_fetch(VALUE self, VALUE index)
-{
+static VALUE NIO_ByteBuffer_fetch(VALUE self, VALUE index) {
     int i;
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
@@ -259,8 +244,7 @@ static VALUE NIO_ByteBuffer_fetch(VALUE self, VALUE index)
     return INT2NUM(buffer->buffer[i]);
 }
 
-static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string)
-{
+static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string) {
     long length;
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
@@ -278,8 +262,7 @@ static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string)
     return self;
 }
 
-static VALUE NIO_ByteBuffer_read_from(VALUE self, VALUE io)
-{
+static VALUE NIO_ByteBuffer_read_from(VALUE self, VALUE io) {
     struct NIO_ByteBuffer *buffer;
     rb_io_t *fptr;
     ssize_t nbytes, bytes_read;
@@ -308,8 +291,7 @@ static VALUE NIO_ByteBuffer_read_from(VALUE self, VALUE io)
     return INT2NUM(bytes_read);
 }
 
-static VALUE NIO_ByteBuffer_write_to(VALUE self, VALUE io)
-{
+static VALUE NIO_ByteBuffer_write_to(VALUE self, VALUE io) {
     struct NIO_ByteBuffer *buffer;
     rb_io_t *fptr;
     ssize_t nbytes, bytes_written;
@@ -338,8 +320,7 @@ static VALUE NIO_ByteBuffer_write_to(VALUE self, VALUE io)
     return INT2NUM(bytes_written);
 }
 
-static VALUE NIO_ByteBuffer_flip(VALUE self)
-{
+static VALUE NIO_ByteBuffer_flip(VALUE self) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
@@ -350,8 +331,7 @@ static VALUE NIO_ByteBuffer_flip(VALUE self)
     return self;
 }
 
-static VALUE NIO_ByteBuffer_rewind(VALUE self)
-{
+static VALUE NIO_ByteBuffer_rewind(VALUE self) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
@@ -361,8 +341,7 @@ static VALUE NIO_ByteBuffer_rewind(VALUE self)
     return self;
 }
 
-static VALUE NIO_ByteBuffer_mark(VALUE self)
-{
+static VALUE NIO_ByteBuffer_mark(VALUE self) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
@@ -370,8 +349,7 @@ static VALUE NIO_ByteBuffer_mark(VALUE self)
     return self;
 }
 
-static VALUE NIO_ByteBuffer_reset(VALUE self)
-{
+static VALUE NIO_ByteBuffer_reset(VALUE self) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
@@ -384,8 +362,7 @@ static VALUE NIO_ByteBuffer_reset(VALUE self)
     return self;
 }
 
-static VALUE NIO_ByteBuffer_compact(VALUE self)
-{
+static VALUE NIO_ByteBuffer_compact(VALUE self) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
@@ -396,8 +373,7 @@ static VALUE NIO_ByteBuffer_compact(VALUE self)
     return self;
 }
 
-static VALUE NIO_ByteBuffer_each(VALUE self)
-{
+static VALUE NIO_ByteBuffer_each(VALUE self) {
     int i;
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
@@ -413,17 +389,15 @@ static VALUE NIO_ByteBuffer_each(VALUE self)
     return self;
 }
 
-static VALUE NIO_ByteBuffer_inspect(VALUE self)
-{
+static VALUE NIO_ByteBuffer_inspect(VALUE self) {
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
     return rb_sprintf(
         "#<%s:%p @position=%d @limit=%d @capacity=%d>",
         rb_class2name(CLASS_OF(self)),
-        (void*)self,
+        (void *)self,
         buffer->position,
         buffer->limit,
-        buffer->capacity
-    );
+        buffer->capacity);
 }

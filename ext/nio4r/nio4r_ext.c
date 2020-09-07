@@ -3,15 +3,14 @@
  * See LICENSE.txt for further details.
  */
 
-#include "nio4r.h"
 #include "../libev/ev.c"
+#include "nio4r.h"
 
 void Init_NIO_Selector();
 void Init_NIO_Monitor();
 void Init_NIO_ByteBuffer();
 
-void Init_nio4r_ext()
-{
+void Init_nio4r_ext() {
     ev_set_allocator(xrealloc);
 
     Init_NIO_Selector();

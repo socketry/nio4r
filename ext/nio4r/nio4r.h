@@ -6,12 +6,11 @@
 #ifndef NIO4R_H
 #define NIO4R_H
 
+#include "libev.h"
 #include "ruby.h"
 #include "ruby/io.h"
-#include "libev.h"
 
-struct NIO_Selector
-{
+struct NIO_Selector {
     struct ev_loop *ev_loop;
     struct ev_timer timer; /* for timeouts */
     struct ev_io wakeup;
@@ -24,31 +23,27 @@ struct NIO_Selector
     VALUE ready_array;
 };
 
-struct NIO_callback_data
-{
+struct NIO_callback_data {
     VALUE *monitor;
     struct NIO_Selector *selector;
 };
 
-struct NIO_Monitor
-{
+struct NIO_Monitor {
     VALUE self;
     int interests, revents;
     struct ev_io ev_io;
     struct NIO_Selector *selector;
 };
 
-struct NIO_ByteBuffer
-{
+struct NIO_ByteBuffer {
     char *buffer;
     int position, limit, capacity, mark;
 };
 
-
 #ifdef GetReadFile
-# define FPTR_TO_FD(fptr) (fileno(GetReadFile(fptr)))
+#define FPTR_TO_FD(fptr) (fileno(GetReadFile(fptr)))
 #else
-# define FPTR_TO_FD(fptr) fptr->fd
+#define FPTR_TO_FD(fptr) fptr->fd
 #endif /* GetReadFile */
 
 /* Thunk between libev callbacks in NIO::Monitors and NIO::Selectors */
