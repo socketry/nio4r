@@ -11,6 +11,6 @@ BraceWrapping:
   AfterControlStatement: Never
 IndentCaseLabels: true
 PointerAlignment: Right
-SpaceBeforeParens: Never
+SpaceBeforeParens: ControlStatements
 IndentWidth: 4
 ...

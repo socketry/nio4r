@@ -85,7 +85,7 @@ static void NIO_ByteBuffer_gc_mark(struct NIO_ByteBuffer *buffer)
 
 static void NIO_ByteBuffer_free(struct NIO_ByteBuffer *buffer)
 {
-    if(buffer->buffer)
+    if (buffer->buffer)
         xfree(buffer->buffer);
     xfree(buffer);
 }
@@ -133,17 +133,17 @@ static VALUE NIO_ByteBuffer_set_position(VALUE self, VALUE new_position)
 
     pos = NUM2INT(new_position);
 
-    if(pos < 0) {
+    if (pos < 0) {
         rb_raise(rb_eArgError, "negative position given");
     }
 
-    if(pos > buffer->limit) {
+    if (pos > buffer->limit) {
         rb_raise(rb_eArgError, "specified position exceeds limit");
     }
 
     buffer->position = pos;
 
-    if(buffer->mark > buffer->position) {
+    if (buffer->mark > buffer->position) {
         buffer->mark = MARK_UNSET;
     }
 
@@ -166,21 +166,21 @@ static VALUE NIO_ByteBuffer_set_limit(VALUE self, VALUE new_limit)
 
     lim = NUM2INT(new_limit);
 
-    if(lim < 0) {
+    if (lim < 0) {
         rb_raise(rb_eArgError, "negative limit given");
     }
 
-    if(lim > buffer->capacity) {
+    if (lim > buffer->capacity) {
         rb_raise(rb_eArgError, "specified limit exceeds capacity");
     }
 
     buffer->limit = lim;
 
-    if(buffer->position > lim) {
+    if (buffer->position > lim) {
         buffer->position = lim;
     }
 
-    if(buffer->mark > lim) {
+    if (buffer->mark > lim) {
         buffer->mark = MARK_UNSET;
     }
 
@@ -220,17 +220,17 @@ static VALUE NIO_ByteBuffer_get(int argc, VALUE *argv, VALUE self)
 
     rb_scan_args(argc, argv, "01", &length);
 
-    if(length == Qnil) {
+    if (length == Qnil) {
         len = buffer->limit - buffer->position;
     } else {
         len = NUM2INT(length);
     }
 
-    if(len < 0) {
+    if (len < 0) {
         rb_raise(rb_eArgError, "negative length given");
     }
 
-    if(len > buffer->limit - buffer->position) {
+    if (len > buffer->limit - buffer->position) {
         rb_raise(cNIO_ByteBuffer_UnderflowError, "not enough data in buffer");
     }
 
@@ -248,11 +248,11 @@ static VALUE NIO_ByteBuffer_fetch(VALUE self, VALUE index)
 
     i = NUM2INT(index);
 
-    if(i < 0) {
+    if (i < 0) {
         rb_raise(rb_eArgError, "negative index given");
     }
 
-    if(i >= buffer->limit) {
+    if (i >= buffer->limit) {
         rb_raise(rb_eArgError, "specified index exceeds limit");
     }
 
@@ -268,7 +268,7 @@ static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string)
     StringValue(string);
     length = RSTRING_LEN(string);
 
-    if(length > buffer->limit - buffer->position) {
+    if (length > buffer->limit - buffer->position) {
         rb_raise(cNIO_ByteBuffer_OverflowError, "buffer is full");
     }
 
@@ -289,14 +289,14 @@ static VALUE NIO_ByteBuffer_read_from(VALUE self, VALUE io)
     rb_io_set_nonblock(fptr);
 
     nbytes = buffer->limit - buffer->position;
-    if(nbytes == 0) {
+    if (nbytes == 0) {
         rb_raise(cNIO_ByteBuffer_OverflowError, "buffer is full");
     }
 
     bytes_read = read(FPTR_TO_FD(fptr), buffer->buffer + buffer->position, nbytes);
 
-    if(bytes_read < 0) {
-        if(errno == EAGAIN) {
+    if (bytes_read < 0) {
+        if (errno == EAGAIN) {
             return INT2NUM(0);
         } else {
             rb_sys_fail("write");
@@ -319,14 +319,14 @@ static VALUE NIO_ByteBuffer_write_to(VALUE self, VALUE io)
     rb_io_set_nonblock(fptr);
 
     nbytes = buffer->limit - buffer->position;
-    if(nbytes == 0) {
+    if (nbytes == 0) {
         rb_raise(cNIO_ByteBuffer_UnderflowError, "no data remaining in buffer");
     }
 
     bytes_written = write(FPTR_TO_FD(fptr), buffer->buffer + buffer->position, nbytes);
 
-    if(bytes_written < 0) {
-        if(errno == EAGAIN) {
+    if (bytes_written < 0) {
+        if (errno == EAGAIN) {
             return INT2NUM(0);
         } else {
             rb_sys_fail("write");
@@ -375,7 +375,7 @@ static VALUE NIO_ByteBuffer_reset(VALUE self)
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
-    if(buffer->mark < 0) {
+    if (buffer->mark < 0) {
         rb_raise(cNIO_ByteBuffer_MarkUnsetError, "mark has not been set");
     } else {
         buffer->position = buffer->mark;
@@ -402,8 +402,8 @@ static VALUE NIO_ByteBuffer_each(VALUE self)
     struct NIO_ByteBuffer *buffer;
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
 
-    if(rb_block_given_p()) {
-        for(i = 0; i < buffer->limit; i++) {
+    if (rb_block_given_p()) {
+        for (i = 0; i < buffer->limit; i++) {
             rb_yield(INT2NUM(buffer->buffer[i]));
         }
     } else {

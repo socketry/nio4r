@@ -95,12 +95,12 @@ static VALUE NIO_Selector_allocate(VALUE klass)
        safety. Pipes are nice and safe to use between threads.
 
        Note that Java NIO uses this same mechanism */
-    if(pipe(fds) < 0) {
+    if (pipe(fds) < 0) {
         rb_sys_fail("pipe");
     }
 
     /* Use non-blocking reads/writes during wakeup, in case the buffer is full */
-    if(fcntl(fds[0], F_SETFL, O_NONBLOCK) < 0 || fcntl(fds[1], F_SETFL, O_NONBLOCK) < 0) {
+    if (fcntl(fds[0], F_SETFL, O_NONBLOCK) < 0 || fcntl(fds[1], F_SETFL, O_NONBLOCK) < 0) {
         rb_sys_fail("fcntl");
     }
 
@@ -126,7 +126,7 @@ static VALUE NIO_Selector_allocate(VALUE klass)
 /* NIO selectors store all Ruby objects in instance variables so mark is a stub */
 static void NIO_Selector_mark(struct NIO_Selector *selector)
 {
-    if(selector->ready_array != Qnil) {
+    if (selector->ready_array != Qnil) {
         rb_gc_mark(selector->ready_array);
     }
 }
@@ -135,14 +135,14 @@ static void NIO_Selector_mark(struct NIO_Selector *selector)
    Called by both NIO::Selector#close and the finalizer below */
 static void NIO_Selector_shutdown(struct NIO_Selector *selector)
 {
-    if(selector->closed) {
+    if (selector->closed) {
         return;
     }
 
     close(selector->wakeup_reader);
     close(selector->wakeup_writer);
 
-    if(selector->ev_loop) {
+    if (selector->ev_loop) {
         ev_loop_destroy(selector->ev_loop);
         selector->ev_loop = 0;
     }
@@ -163,23 +163,23 @@ static VALUE NIO_Selector_supported_backends(VALUE klass)
     unsigned int backends = ev_supported_backends();
     VALUE result = rb_ary_new();
 
-    if(backends & EVBACKEND_EPOLL) {
+    if (backends & EVBACKEND_EPOLL) {
         rb_ary_push(result, ID2SYM(rb_intern("epoll")));
     }
 
-    if(backends & EVBACKEND_POLL) {
+    if (backends & EVBACKEND_POLL) {
         rb_ary_push(result, ID2SYM(rb_intern("poll")));
     }
 
-    if(backends & EVBACKEND_KQUEUE) {
+    if (backends & EVBACKEND_KQUEUE) {
         rb_ary_push(result, ID2SYM(rb_intern("kqueue")));
     }
 
-    if(backends & EVBACKEND_SELECT) {
+    if (backends & EVBACKEND_SELECT) {
         rb_ary_push(result, ID2SYM(rb_intern("select")));
     }
 
-    if(backends & EVBACKEND_PORT) {
+    if (backends & EVBACKEND_PORT) {
         rb_ary_push(result, ID2SYM(rb_intern("port")));
     }
 
@@ -201,22 +201,22 @@ static VALUE NIO_Selector_initialize(int argc, VALUE *argv, VALUE self)
 
     rb_scan_args(argc, argv, "01", &backend);
 
-    if(backend != Qnil) {
-        if(!rb_ary_includes(NIO_Selector_supported_backends(CLASS_OF(self)), backend)) {
+    if (backend != Qnil) {
+        if (!rb_ary_includes(NIO_Selector_supported_backends(CLASS_OF(self)), backend)) {
             rb_raise(rb_eArgError, "unsupported backend: %s", RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0)));
         }
 
         backend_id = SYM2ID(backend);
 
-        if(backend_id == rb_intern("epoll")) {
+        if (backend_id == rb_intern("epoll")) {
             flags = EVBACKEND_EPOLL;
-        } else if(backend_id == rb_intern("poll")) {
+        } else if (backend_id == rb_intern("poll")) {
             flags = EVBACKEND_POLL;
-        } else if(backend_id == rb_intern("kqueue")) {
+        } else if (backend_id == rb_intern("kqueue")) {
             flags = EVBACKEND_KQUEUE;
-        } else if(backend_id == rb_intern("select")) {
+        } else if (backend_id == rb_intern("select")) {
             flags = EVBACKEND_SELECT;
-        } else if(backend_id == rb_intern("port")) {
+        } else if (backend_id == rb_intern("port")) {
             flags = EVBACKEND_PORT;
         } else {
             rb_raise(rb_eArgError, "unsupported backend: %s", RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0)));
@@ -227,7 +227,7 @@ static VALUE NIO_Selector_initialize(int argc, VALUE *argv, VALUE self)
     assert(!selector->ev_loop);
 
     selector->ev_loop = ev_loop_new(flags);
-    if(!selector->ev_loop) {
+    if (!selector->ev_loop) {
         rb_raise(rb_eIOError, "error initializing event loop");
     }
 
@@ -248,11 +248,11 @@ static VALUE NIO_Selector_backend(VALUE self)
     struct NIO_Selector *selector;
 
     Data_Get_Struct(self, struct NIO_Selector, selector);
-    if(selector->closed) {
+    if (selector->closed) {
         rb_raise(rb_eIOError, "selector is closed");
     }
 
-    switch(ev_backend(selector->ev_loop)) {
+    switch (ev_backend(selector->ev_loop)) {
         case EVBACKEND_EPOLL:
             return ID2SYM(rb_intern("epoll"));
         case EVBACKEND_POLL:
@@ -276,7 +276,7 @@ static VALUE NIO_Selector_synchronize(VALUE self, VALUE (*func)(VALUE *args), VA
     current_thread = rb_thread_current();
     lock_holder = rb_ivar_get(self, rb_intern("lock_holder"));
 
-    if(lock_holder != current_thread) {
+    if (lock_holder != current_thread) {
         lock = rb_ivar_get(self, rb_intern("lock"));
         rb_funcall(lock, rb_intern("lock"), 0);
         rb_ivar_set(self, rb_intern("lock_holder"), current_thread);
@@ -321,14 +321,14 @@ static VALUE NIO_Selector_register_synchronized(VALUE *args)
     interests = args[2];
 
     Data_Get_Struct(self, struct NIO_Selector, selector);
-    if(selector->closed) {
+    if (selector->closed) {
         rb_raise(rb_eIOError, "selector is closed");
     }
 
     selectables = rb_ivar_get(self, rb_intern("selectables"));
     monitor = rb_hash_lookup(selectables, io);
 
-    if(monitor != Qnil)
+    if (monitor != Qnil)
         rb_raise(rb_eArgError, "this IO is already registered with selector");
 
     /* Create a new NIO::Monitor */
@@ -360,7 +360,7 @@ static VALUE NIO_Selector_deregister_synchronized(VALUE *args)
     selectables = rb_ivar_get(self, rb_intern("selectables"));
     monitor = rb_hash_delete(selectables, io);
 
-    if(monitor != Qnil) {
+    if (monitor != Qnil) {
         rb_funcall(monitor, rb_intern("close"), 1, Qfalse);
     }
 
@@ -384,7 +384,7 @@ static VALUE NIO_Selector_select(int argc, VALUE *argv, VALUE self)
 
     rb_scan_args(argc, argv, "01", &timeout);
 
-    if(timeout != Qnil && NUM2DBL(timeout) < 0) {
+    if (timeout != Qnil && NUM2DBL(timeout) < 0) {
         rb_raise(rb_eArgError, "time interval must be positive");
     }
 
@@ -403,26 +403,26 @@ static VALUE NIO_Selector_select_synchronized(VALUE *args)
 
     Data_Get_Struct(args[0], struct NIO_Selector, selector);
 
-    if(selector->closed) {
+    if (selector->closed) {
         rb_raise(rb_eIOError, "selector is closed");
     }
 
-    if(!rb_block_given_p()) {
+    if (!rb_block_given_p()) {
         selector->ready_array = rb_ary_new();
     }
 
     ready = NIO_Selector_run(selector, args[1]);
 
     /* Timeout */
-    if(ready < 0) {
-        if(!rb_block_given_p()) {
+    if (ready < 0) {
+        if (!rb_block_given_p()) {
             selector->ready_array = Qnil;
         }
 
         return Qnil;
     }
 
-    if(rb_block_given_p()) {
+    if (rb_block_given_p()) {
         return INT2NUM(ready);
     } else {
         ready_array = selector->ready_array;
@@ -440,12 +440,12 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
     selector->selecting = 1;
     selector->wakeup_fired = 0;
 
-    if(timeout == Qnil) {
+    if (timeout == Qnil) {
         /* Don't fire a wakeup timeout if we weren't passed one */
         ev_timer_stop(selector->ev_loop, &selector->timer);
     } else {
         timeout_val = NUM2DBL(timeout);
-        if(timeout_val == 0) {
+        if (timeout_val == 0) {
             /* If we've been given an explicit timeout of 0, perform a non-blocking
                select operation */
             ev_run_flags = EVRUN_NOWAIT;
@@ -461,7 +461,7 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
     result = selector->ready_count;
     selector->selecting = selector->ready_count = 0;
 
-    if(result > 0 || selector->wakeup_fired) {
+    if (result > 0 || selector->wakeup_fired) {
         selector->wakeup_fired = 0;
         return result;
     } else {
@@ -475,7 +475,7 @@ static VALUE NIO_Selector_wakeup(VALUE self)
     struct NIO_Selector *selector;
     Data_Get_Struct(self, struct NIO_Selector, selector);
 
-    if(selector->closed) {
+    if (selector->closed) {
         rb_raise(rb_eIOError, "selector is closed");
     }
 
@@ -540,7 +540,7 @@ static void NIO_Selector_wakeup_callback(struct ev_loop *ev_loop, struct ev_io *
     selector->selecting = 0;
 
     /* Drain the wakeup pipe, giving us level-triggered behavior */
-    while(read(selector->wakeup_reader, buffer, 128) > 0)
+    while (read(selector->wakeup_reader, buffer, 128) > 0)
         ;
 }
 
@@ -557,7 +557,7 @@ void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, in
     selector->ready_count++;
     monitor_data->revents = revents;
 
-    if(rb_block_given_p()) {
+    if (rb_block_given_p()) {
         rb_yield(monitor);
     } else {
         assert(selector->ready_array != Qnil);

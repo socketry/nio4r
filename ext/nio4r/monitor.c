@@ -85,11 +85,11 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
 
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
-    if(interests_id == rb_intern("r")) {
+    if (interests_id == rb_intern("r")) {
         monitor->interests = EV_READ;
-    } else if(interests_id == rb_intern("w")) {
+    } else if (interests_id == rb_intern("w")) {
         monitor->interests = EV_WRITE;
-    } else if(interests_id == rb_intern("rw")) {
+    } else if (interests_id == rb_intern("rw")) {
         monitor->interests = EV_READ | EV_WRITE;
     } else {
         rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)", RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0)));
@@ -111,7 +111,7 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
        object where it originally came from */
     monitor->selector = selector;
 
-    if(monitor->interests) {
+    if (monitor->interests) {
         ev_io_start(selector->ev_loop, &monitor->ev_io);
     }
 
@@ -127,9 +127,9 @@ static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
     rb_scan_args(argc, argv, "01", &deregister);
     selector = rb_ivar_get(self, rb_intern("selector"));
 
-    if(selector != Qnil) {
+    if (selector != Qnil) {
         /* if ev_loop is 0, it means that the loop has been stopped already (see NIO_Selector_shutdown) */
-        if(monitor->interests && monitor->selector->ev_loop) {
+        if (monitor->interests && monitor->selector->ev_loop) {
             ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
         }
 
@@ -137,7 +137,7 @@ static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
         rb_ivar_set(self, rb_intern("selector"), Qnil);
 
         /* Default value is true */
-        if(deregister == Qtrue || deregister == Qnil) {
+        if (deregister == Qtrue || deregister == Qnil) {
             rb_funcall(selector, rb_intern("deregister"), 1, rb_ivar_get(self, rb_intern("io")));
         }
     }
@@ -165,7 +165,7 @@ static VALUE NIO_Monitor_interests(VALUE self)
 
 static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests)
 {
-    if(NIL_P(interests)) {
+    if (NIL_P(interests)) {
         NIO_Monitor_update_interests(self, 0);
     } else {
         NIO_Monitor_update_interests(self, NIO_Monitor_symbol2interest(interests));
@@ -216,11 +216,11 @@ static VALUE NIO_Monitor_readiness(VALUE self)
     struct NIO_Monitor *monitor;
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
-    if((monitor->revents & (EV_READ | EV_WRITE)) == (EV_READ | EV_WRITE)) {
+    if ((monitor->revents & (EV_READ | EV_WRITE)) == (EV_READ | EV_WRITE)) {
         return ID2SYM(rb_intern("rw"));
-    } else if(monitor->revents & EV_READ) {
+    } else if (monitor->revents & EV_READ) {
         return ID2SYM(rb_intern("r"));
-    } else if(monitor->revents & EV_WRITE) {
+    } else if (monitor->revents & EV_WRITE) {
         return ID2SYM(rb_intern("w"));
     } else {
         return Qnil;
@@ -232,7 +232,7 @@ static VALUE NIO_Monitor_is_readable(VALUE self)
     struct NIO_Monitor *monitor;
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
-    if(monitor->revents & EV_READ) {
+    if (monitor->revents & EV_READ) {
         return Qtrue;
     } else {
         return Qfalse;
@@ -244,7 +244,7 @@ static VALUE NIO_Monitor_is_writable(VALUE self)
     struct NIO_Monitor *monitor;
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
-    if(monitor->revents & EV_WRITE) {
+    if (monitor->revents & EV_WRITE) {
         return Qtrue;
     } else {
         return Qfalse;
@@ -258,11 +258,11 @@ static int NIO_Monitor_symbol2interest(VALUE interests)
     ID interests_id;
     interests_id = SYM2ID(interests);
 
-    if(interests_id == rb_intern("r")) {
+    if (interests_id == rb_intern("r")) {
         return EV_READ;
-    } else if(interests_id == rb_intern("w")) {
+    } else if (interests_id == rb_intern("w")) {
         return EV_WRITE;
-    } else if(interests_id == rb_intern("rw")) {
+    } else if (interests_id == rb_intern("rw")) {
         return EV_READ | EV_WRITE;
     } else {
         rb_raise(rb_eArgError, "invalid interest type %s (must be :r, :w, or :rw)", RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0)));
@@ -275,12 +275,12 @@ static void NIO_Monitor_update_interests(VALUE self, int interests)
     struct NIO_Monitor *monitor;
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
-    if(NIO_Monitor_is_closed(self) == Qtrue) {
+    if (NIO_Monitor_is_closed(self) == Qtrue) {
         rb_raise(rb_eEOFError, "monitor is closed");
     }
 
-    if(interests) {
-        switch(interests) {
+    if (interests) {
+        switch (interests) {
             case EV_READ:
                 interests_id = rb_intern("r");
                 break;
@@ -299,9 +299,9 @@ static void NIO_Monitor_update_interests(VALUE self, int interests)
         rb_ivar_set(self, rb_intern("interests"), Qnil);
     }
 
-    if(monitor->interests != interests) {
+    if (monitor->interests != interests) {
         // If the monitor currently has interests, we should stop it.
-        if(monitor->interests) {
+        if (monitor->interests) {
             ev_io_stop(monitor->selector->ev_loop, &monitor->ev_io);
         }
 
@@ -310,7 +310,7 @@ static void NIO_Monitor_update_interests(VALUE self, int interests)
         ev_io_set(&monitor->ev_io, monitor->ev_io.fd, monitor->interests);
 
         // If we are interested in events, schedule the monitor back into the event loop:
-        if(monitor->interests) {
+        if (monitor->interests) {
             ev_io_start(monitor->selector->ev_loop, &monitor->ev_io);
         }
     }
