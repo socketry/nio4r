@@ -64,7 +64,7 @@ static VALUE NIO_Monitor_allocate(VALUE klass)
     if(!monitor)
         return Qnil;
     
-    monitor->self = Qnil;
+    *monitor = (struct NIO_Monitor){.self = Qnil};
     return Data_Wrap_Struct(klass, NIO_Monitor_mark, NIO_Monitor_free, monitor);
 }
 
