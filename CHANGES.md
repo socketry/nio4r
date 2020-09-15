@@ -1,3 +1,9 @@
+## 2.5.4 (2020-09-16)
+
+* [#251](https://github.com/socketry/nio4r/issues/251)
+  Intermittent SEGV during GC.
+  ([@boazsegev])
+
 ## 2.5.3 (2020-09-07)
 
 * [#241](https://github.com/socketry/nio4r/issues/241)
