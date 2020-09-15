@@ -22,6 +22,8 @@ $defs << "-DEV_USE_KQUEUE"       if have_header("sys/event.h") && have_header("s
 $defs << "-DEV_USE_PORT"         if have_type("port_event_t", "port.h")
 $defs << "-DHAVE_SYS_RESOURCE_H" if have_header("sys/resource.h")
 
+$defs << "-DEV_STANDALONE" # prevent libev from assuming "config.h" exists
+
 CONFIG["optflags"] << " -fno-strict-aliasing" unless RUBY_PLATFORM =~ /mswin/
 
 dir_config "nio4r_ext"
