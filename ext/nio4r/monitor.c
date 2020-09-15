@@ -4,6 +4,7 @@
  */
 
 #include "nio4r.h"
+#include <assert.h>
 
 static VALUE mNIO = Qnil;
 static VALUE cNIO_Monitor = Qnil;
@@ -60,18 +61,15 @@ void Init_NIO_Monitor()
 static VALUE NIO_Monitor_allocate(VALUE klass)
 {
     struct NIO_Monitor *monitor = (struct NIO_Monitor *)xmalloc(sizeof(struct NIO_Monitor));
-    
-    if(!monitor)
-        return Qnil;
-    
+    assert(monitor);
     *monitor = (struct NIO_Monitor){.self = Qnil};
     return Data_Wrap_Struct(klass, NIO_Monitor_mark, NIO_Monitor_free, monitor);
 }
 
 static void NIO_Monitor_mark(struct NIO_Monitor *monitor)
 {
-    if(monitor && monitor->self != Qnil)
-        rb_gc_mark(monitor->self);
+    assert(monitor);
+    rb_gc_mark(monitor->self);
 }
 
 static void NIO_Monitor_free(struct NIO_Monitor *monitor)
