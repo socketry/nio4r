@@ -1,7 +1,7 @@
 # ![nio4r](https://raw.github.com/socketry/nio4r/master/logo.png)
 
 [![Gem Version](https://badge.fury.io/rb/nio4r.svg)](http://rubygems.org/gems/nio4r)
-[![Travis CI Status](https://secure.travis-ci.org/socketry/nio4r.svg?branch=master)](http://travis-ci.org/socketry/nio4r)
+[![Build Status](https://github.com/socketry/nio4r/workflows/nio4r/badge.svg?branch=master&event=push)](https://github.com/socketry/nio4r/actions?query=workflow:nio4r)
 [![Code Climate](https://codeclimate.com/github/socketry/nio4r.svg)](https://codeclimate.com/github/socketry/nio4r)
 [![Coverage Status](https://coveralls.io/repos/socketry/nio4r/badge.svg?branch=master)](https://coveralls.io/r/socketry/nio4r)
 [![Yard Docs](https://img.shields.io/badge/yard-docs-blue.svg)](http://www.rubydoc.info/gems/nio4r/2.2.0)
