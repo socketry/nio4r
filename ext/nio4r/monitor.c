@@ -66,7 +66,8 @@ static VALUE NIO_Monitor_allocate(VALUE klass)
 
 static void NIO_Monitor_mark(struct NIO_Monitor *monitor)
 {
-    return rb_gc_mark(monitor->self);
+    if(monitor && monitor->self)
+        rb_gc_mark(monitor->self);
 }
 
 static void NIO_Monitor_free(struct NIO_Monitor *monitor)
