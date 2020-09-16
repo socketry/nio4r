@@ -1,6 +1,7 @@
 package org.nio4r;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.channels.Channel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.ReadableByteChannel;
@@ -25,6 +26,7 @@ import org.jruby.runtime.Block;
 created by Upekshej
  */
 public class ByteBuffer extends RubyObject {
+    private static final long serialVersionUID = -6903439483039149324L;
     private java.nio.ByteBuffer byteBuffer;
 
     public static RaiseException newOverflowError(ThreadContext context, String message) {

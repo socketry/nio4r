@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.channels.Channel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.CancelledKeyException;
 
 import org.jruby.Ruby;
 import org.jruby.RubyArray;
@@ -21,9 +20,8 @@ import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.util.io.OpenFile;
 
-import org.nio4r.Monitor;
-
 public class Selector extends RubyObject {
+    private static final long serialVersionUID = -14562818539414873L;
     private java.nio.channels.Selector selector;
     private HashMap<SelectableChannel,SelectionKey> cancelledKeys;
     private volatile boolean wakeupFired;
@@ -203,15 +201,15 @@ public class Selector extends RubyObject {
             return context.nil;
         }
 
-        RubyArray array = null;
+        RubyArray<?> array = null;
 
         if(!block.isGiven()) {
             array = runtime.newArray(this.selector.selectedKeys().size());
         }
 
-        Iterator selectedKeys = this.selector.selectedKeys().iterator();
+        Iterator<SelectionKey> selectedKeys = this.selector.selectedKeys().iterator();
         while(selectedKeys.hasNext()) {
-            SelectionKey key = (SelectionKey)selectedKeys.next();
+            SelectionKey key = selectedKeys.next();
             processKey(key);
 
             selectedKeys.remove();
@@ -263,10 +261,10 @@ public class Selector extends RubyObject {
 
     /* Flush our internal buffer of cancelled keys */
     private void cancelKeys() {
-        Iterator cancelledKeys = this.cancelledKeys.entrySet().iterator();
+        Iterator<Map.Entry<SelectableChannel, SelectionKey>> cancelledKeys = this.cancelledKeys.entrySet().iterator();
         while(cancelledKeys.hasNext()) {
-            Map.Entry entry = (Map.Entry)cancelledKeys.next();
-            SelectionKey key = (SelectionKey)entry.getValue();
+            Map.Entry<SelectableChannel, SelectionKey> entry = cancelledKeys.next();
+            SelectionKey key = entry.getValue();
             key.cancel();
             cancelledKeys.remove();
         }
