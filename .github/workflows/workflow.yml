@@ -15,13 +15,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-20.04, ubuntu-18.04, macos-10.15, windows-2019 ]
-        ruby: [2.7, 2.6, 2.5, 2.4, jruby, truffleruby-head]
+        ruby: [head, 2.7, 2.6, 2.5, 2.4, jruby, truffleruby-head]
         include:
           - { os: ubuntu-16.04, ruby: 2.7 }
           - { os: ubuntu-16.04, ruby: 2.4 }
           - { os: macos-11.0  , ruby: 2.7 }
           - { os: macos-11.0  , ruby: 2.4 }
         exclude:
+          - { os: windows-2019, ruby: head  }
           - { os: windows-2019, ruby: jruby }
           - { os: windows-2019, ruby: truffleruby-head }
 
