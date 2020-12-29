@@ -37,6 +37,15 @@
  * either the BSD or the GPL.
  */
 
+/* ########## NIO4R PATCHERY HO! ########## */
+#include "ruby.h"
+#include "ruby/thread.h"
+
+#ifdef __APPLE__
+#include <AvailabilityMacros.h>
+#endif
+/* ######################################## */
+
 /* this big block deduces configuration from config.h */
 #ifndef EV_STANDALONE
 # ifdef EV_CONFIG_H
@@ -107,7 +116,7 @@
 #  undef EV_USE_POLL
 #  define EV_USE_POLL 0
 # endif
-   
+
 # if HAVE_EPOLL_CTL && HAVE_SYS_EPOLL_H
 #  ifndef EV_USE_EPOLL
 #   define EV_USE_EPOLL EV_FEATURE_BACKENDS
@@ -116,7 +125,7 @@
 #  undef EV_USE_EPOLL
 #  define EV_USE_EPOLL 0
 # endif
-   
+
 # if HAVE_LINUX_AIO_ABI_H
 #  ifndef EV_USE_LINUXAIO
 #   define EV_USE_LINUXAIO 0 /* was: EV_FEATURE_BACKENDS, always off by default */
@@ -125,7 +134,7 @@
 #  undef EV_USE_LINUXAIO
 #  define EV_USE_LINUXAIO 0
 # endif
-   
+
 # if HAVE_LINUX_FS_H && HAVE_SYS_TIMERFD_H && HAVE_KERNEL_RWF_T
 #  ifndef EV_USE_IOURING
 #   define EV_USE_IOURING EV_FEATURE_BACKENDS
@@ -134,7 +143,7 @@
 #  undef EV_USE_IOURING
 #  define EV_USE_IOURING 0
 # endif
- 
+
 # if HAVE_KQUEUE && HAVE_SYS_EVENT_H
 #  ifndef EV_USE_KQUEUE
 #   define EV_USE_KQUEUE EV_FEATURE_BACKENDS
@@ -143,7 +152,7 @@
 #  undef EV_USE_KQUEUE
 #  define EV_USE_KQUEUE 0
 # endif
-   
+
 # if HAVE_PORT_H && HAVE_PORT_CREATE
 #  ifndef EV_USE_PORT
 #   define EV_USE_PORT EV_FEATURE_BACKENDS
@@ -1373,7 +1382,7 @@ ecb_inline void ecb_poke_u64_u (void *ptr, uint64_t v) { memcpy (ptr, &v, sizeof
 ecb_inline void ecb_poke_be_u16_u (void *ptr, uint_fast16_t v) { ecb_poke_u16_u (ptr, ecb_host_to_be_u16 (v)); }
 ecb_inline void ecb_poke_be_u32_u (void *ptr, uint_fast32_t v) { ecb_poke_u32_u (ptr, ecb_host_to_be_u32 (v)); }
 ecb_inline void ecb_poke_be_u64_u (void *ptr, uint_fast64_t v) { ecb_poke_u64_u (ptr, ecb_host_to_be_u64 (v)); }
-                                                                                                
+
 ecb_inline void ecb_poke_le_u16_u (void *ptr, uint_fast16_t v) { ecb_poke_u16_u (ptr, ecb_host_to_le_u16 (v)); }
 ecb_inline void ecb_poke_le_u32_u (void *ptr, uint_fast32_t v) { ecb_poke_u32_u (ptr, ecb_host_to_le_u32 (v)); }
 ecb_inline void ecb_poke_le_u64_u (void *ptr, uint_fast64_t v) { ecb_poke_u64_u (ptr, ecb_host_to_le_u64 (v)); }
@@ -2022,7 +2031,7 @@ ev_syserr (const char *msg)
 }
 
 static void *
-ev_realloc_emul (void *ptr, long size) EV_NOEXCEPT
+ev_realloc_emul (void *ptr, size_t size) EV_NOEXCEPT
 {
   /* some systems, notably openbsd and darwin, fail to properly
    * implement realloc (x, 0) (as required by both ansi c-89 and
@@ -2038,17 +2047,17 @@ ev_realloc_emul (void *ptr, long size) EV_NOEXCEPT
   return 0;
 }
 
-static void *(*alloc)(void *ptr, long size) EV_NOEXCEPT = ev_realloc_emul;
+static void *(*alloc)(void *ptr, size_t size) EV_NOEXCEPT = ev_realloc_emul;
 
 ecb_cold
 void
-ev_set_allocator (void *(*cb)(void *ptr, long size) EV_NOEXCEPT) EV_NOEXCEPT
+ev_set_allocator (void *(*cb)(void *ptr, size_t size) EV_NOEXCEPT) EV_NOEXCEPT
 {
   alloc = cb;
 }
 
 inline_speed void *
-ev_realloc (void *ptr, long size)
+ev_realloc (void *ptr, size_t size)
 {
   ptr = alloc (ptr, size);
 
@@ -2657,7 +2666,7 @@ downheap (ANHE *heap, int N, int k)
 
       heap [k] = heap [c];
       ev_active (ANHE_w (heap [k])) = k;
-      
+
       k = c;
     }
 
@@ -3149,26 +3158,26 @@ ev_recommended_backends (void) EV_NOEXCEPT
 {
   unsigned int flags = ev_supported_backends ();
 
-#ifndef __NetBSD__
+/* apple has a poor track record but post 10.12.2 it seems to work sufficiently well */
+#if defined(__APPLE__) && (MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_14)
+  /* only select works correctly on that "unix-certified" platform */
+  flags &= ~EVBACKEND_KQUEUE; /* horribly broken, even for sockets */
+  flags &= ~EVBACKEND_POLL;   /* poll is based on kqueue from 10.5 onwards */
+#elif !defined(__NetBSD__)
   /* kqueue is borked on everything but netbsd apparently */
   /* it usually doesn't work correctly on anything but sockets and pipes */
   flags &= ~EVBACKEND_KQUEUE;
 #endif
-#ifdef __APPLE__
-  /* only select works correctly on that "unix-certified" platform */
-  flags &= ~EVBACKEND_KQUEUE; /* horribly broken, even for sockets */
-  flags &= ~EVBACKEND_POLL;   /* poll is based on kqueue from 10.5 onwards */
-#endif
+
 #ifdef __FreeBSD__
   flags &= ~EVBACKEND_POLL;   /* poll return value is unusable (http://forums.freebsd.org/archive/index.php/t-10270.html) */
 #endif
 
-  /* TODO: linuxaio is very experimental */
-#if !EV_RECOMMEND_LINUXAIO
+#ifdef __linux__
+  /* NOTE: linuxaio is very experimental, never recommend */
   flags &= ~EVBACKEND_LINUXAIO;
-#endif
-  /* TODO: linuxaio is super experimental */
-#if !EV_RECOMMEND_IOURING
+
+  /* NOTE: io_uring is super experimental, never recommend */
   flags &= ~EVBACKEND_IOURING;
 #endif
 
@@ -3508,7 +3517,7 @@ loop_fork (EV_P)
       #if EV_USE_SIGNALFD
         /* surprisingly, nothing needs to be done for signalfd, accoridng to docs, it does the right thing on fork */
       #endif
-      
+
       #if EV_USE_TIMERFD
         if (ev_is_active (&timerfd_w))
           {
@@ -3517,24 +3526,24 @@ loop_fork (EV_P)
 
             close (timerfd);
             timerfd = -2;
-      
+
             evtimerfd_init (EV_A);
             /* reschedule periodics, in case we missed something */
             ev_feed_event (EV_A_ &timerfd_w, EV_CUSTOM);
           }
       #endif
-      
+
       #if EV_SIGNAL_ENABLE || EV_ASYNC_ENABLE
         if (ev_is_active (&pipe_w))
           {
             /* pipe_write_wanted must be false now, so modifying fd vars should be safe */
-      
+
             ev_ref (EV_A);
             ev_io_stop (EV_A_ &pipe_w);
-      
+
             if (evpipe [0] >= 0)
               EV_WIN32_CLOSE_FD (evpipe [0]);
-      
+
             evpipe_init (EV_A);
             /* iterate over everything, in case we missed something before */
             ev_feed_event (EV_A_ &pipe_w, EV_CUSTOM);
@@ -4017,9 +4026,30 @@ time_update (EV_P_ ev_tstamp max_block)
     }
 }
 
+/* ########## NIO4R PATCHERY HO! ########## */
+struct ev_poll_args {
+  struct ev_loop *loop;
+  ev_tstamp waittime;
+};
+
+static
+void * ev_backend_poll(void *ptr)
+{
+  struct ev_poll_args *args = (struct ev_poll_args *)ptr;
+  struct ev_loop *loop = args->loop;
+  backend_poll (EV_A_ args->waittime);
+
+  return NULL;
+}
+/* ######################################## */
+
 int
 ev_run (EV_P_ int flags)
 {
+/* ########## NIO4R PATCHERY HO! ########## */
+  struct ev_poll_args poll_args;
+/* ######################################## */
+
 #if EV_FEATURE_API
   ++loop_depth;
 #endif
@@ -4154,7 +4184,54 @@ ev_run (EV_P_ int flags)
         ++loop_count;
 #endif
         assert ((loop_done = EVBREAK_RECURSE, 1)); /* assert for side effect */
-        backend_poll (EV_A_ waittime);
+
+/*
+########################## NIO4R PATCHERY HO! ##########################
+
+According to the grandwizards of Ruby, locking and unlocking of the global
+interpreter lock are apparently too powerful a concept for a mere mortal to
+wield (although redefining what + and - do to numbers is totally cool).
+And so it came to pass that the only acceptable way to release the global
+interpreter lock is through a convoluted callback system that thakes a
+function pointer. While the grandwizard of libev foresaw this sort of scenario,
+he too attempted to place an API with callbacks on it, one that runs before
+the system call, and one that runs immediately after.
+
+And so it came to pass that trying to wrap everything up in callbacks created
+two incompatible APIs, Ruby's which releases the global interpreter lock and
+reacquires it when the callback returns, and libev's, which wants two
+callbacks, one which runs before the polling operation starts, and one which
+runs after it finishes.
+
+These two systems are incompatible as they both want to use callbacks to
+solve the same problem, however libev wants to use before/after callbacks,
+and Ruby wants to use an "around" callback. This presents a significant
+problem as these two patterns of callbacks are diametrical opposites of each
+other and thus cannot be composed.
+
+And thus we are left with no choice but to patch the internals of libev in
+order to release a mutex at just the precise moment.
+
+This is a great example of a situation where granular locking and unlocking
+of the GVL is practically required. The goal is to get as close to the
+system call as possible, and to keep the GVL unlocked for the shortest
+amount of time possible.
+
+Perhaps Ruby could benefit from such an API, e.g:
+
+rb_thread_unsafe_dangerous_crazy_blocking_region_begin(...);
+rb_thread_unsafe_dangerous_crazy_blocking_region_end(...);
+
+#######################################################################
+*/
+
+        poll_args.loop = loop;
+        poll_args.waittime = waittime;
+        rb_thread_call_without_gvl(ev_backend_poll, (void *)&poll_args, RUBY_UBF_IO, 0);
+/*
+############################# END PATCHERY ############################
+*/
+
         assert ((loop_done = EVBREAK_CANCEL, 1)); /* assert for side effect */
 
         pipe_write_wanted = 0; /* just an optimisation, no fence needed */
@@ -5624,4 +5701,3 @@ ev_walk (EV_P_ int types, void (*cb)(EV_P_ int type, void *w)) EV_NOEXCEPT
 #if EV_MULTIPLICITY
   #include "ev_wrap.h"
 #endif
-
