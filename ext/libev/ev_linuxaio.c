@@ -118,57 +118,6 @@ struct aio_ring
   struct io_event io_events[0];
 };
 
-/*
- * define some syscall wrappers for common architectures
- * this is mostly for nice looks during debugging, not performance.
- * our syscalls return < 0, not == -1, on error. which is good
- * enough for linux aio.
- * TODO: arm is also common nowadays, maybe even mips and x86
- * TODO: after implementing this, it suddenly looks like overkill, but its hard to remove...
- */
-#if __GNUC__ && __linux && ECB_AMD64 && !defined __OPTIMIZE_SIZE__
-  /* the costly errno access probably kills this for size optimisation */
-
-  #define ev_syscall(nr,narg,arg1,arg2,arg3,arg4,arg5)                 \
-    ({                                                                 \
-        long res;                                                      \
-        register unsigned long r5 __asm__ ("r8" );                     \
-        register unsigned long r4 __asm__ ("r10");                     \
-        register unsigned long r3 __asm__ ("rdx");                     \
-        register unsigned long r2 __asm__ ("rsi");                     \
-        register unsigned long r1 __asm__ ("rdi");                     \
-        if (narg >= 5) r5 = (unsigned long)(arg5);                     \
-        if (narg >= 4) r4 = (unsigned long)(arg4);                     \
-        if (narg >= 3) r3 = (unsigned long)(arg3);                     \
-        if (narg >= 2) r2 = (unsigned long)(arg2);                     \
-        if (narg >= 1) r1 = (unsigned long)(arg1);                     \
-        __asm__ __volatile__ (                                         \
-          "syscall\n\t"                                                \
-          : "=a" (res)                                                 \
-          : "0" (nr), "r" (r1), "r" (r2), "r" (r3), "r" (r4), "r" (r5) \
-          : "cc", "r11", "cx", "memory");                              \
-        errno = -res;                                                  \
-        res;                                                           \
-    })
-
-#endif
-
-#ifdef ev_syscall
-  #define ev_syscall0(nr)                          ev_syscall (nr, 0,    0,    0,    0,    0,    0
-  #define ev_syscall1(nr,arg1)                     ev_syscall (nr, 1, arg1,    0,    0,    0,    0)
-  #define ev_syscall2(nr,arg1,arg2)                ev_syscall (nr, 2, arg1, arg2,    0,    0,    0)
-  #define ev_syscall3(nr,arg1,arg2,arg3)           ev_syscall (nr, 3, arg1, arg2, arg3,    0,    0)
-  #define ev_syscall4(nr,arg1,arg2,arg3,arg4)      ev_syscall (nr, 3, arg1, arg2, arg3, arg4,    0)
-  #define ev_syscall5(nr,arg1,arg2,arg3,arg4,arg5) ev_syscall (nr, 5, arg1, arg2, arg3, arg4, arg5)
-#else
-  #define ev_syscall0(nr)                          syscall (nr)
-  #define ev_syscall1(nr,arg1)                     syscall (nr, arg1)
-  #define ev_syscall2(nr,arg1,arg2)                syscall (nr, arg1, arg2)
-  #define ev_syscall3(nr,arg1,arg2,arg3)           syscall (nr, arg1, arg2, arg3)
-  #define ev_syscall4(nr,arg1,arg2,arg3,arg4)      syscall (nr, arg1, arg2, arg3, arg4)
-  #define ev_syscall5(nr,arg1,arg2,arg3,arg4,arg5) syscall (nr, arg1, arg2, arg3, arg4, arg5)
-#endif
-
 inline_size
 int
 evsys_io_setup (unsigned nr_events, aio_context_t *ctx_idp)
@@ -265,7 +214,6 @@ linuxaio_array_needsize_iocbp (ANIOCBP *base, int offset, int count)
       memset (iocb, 0, sizeof (*iocb));
 
       iocb->io.aio_lio_opcode = IOCB_CMD_POLL;
-      iocb->io.aio_data       = offset;
       iocb->io.aio_fildes     = offset;
 
       base [offset++] = iocb;
@@ -287,28 +235,47 @@ linuxaio_modify (EV_P_ int fd, int oev, int nev)
 {
   array_needsize (ANIOCBP, linuxaio_iocbps, linuxaio_iocbpmax, fd + 1, linuxaio_array_needsize_iocbp);
   ANIOCBP iocb = linuxaio_iocbps [fd];
+  ANFD *anfd = &anfds [fd];
 
-  if (iocb->io.aio_reqprio < 0)
+  if (ecb_expect_false (iocb->io.aio_reqprio < 0))
     {
       /* we handed this fd over to epoll, so undo this first */
       /* we do it manually because the optimisations on epoll_modify won't do us any good */
       epoll_ctl (backend_fd, EPOLL_CTL_DEL, fd, 0);
-      anfds [fd].emask = 0;
+      anfd->emask = 0;
       iocb->io.aio_reqprio = 0;
     }
-
-  if (iocb->io.aio_buf)
+  else if (ecb_expect_false (iocb->io.aio_buf))
     {
-      evsys_io_cancel (linuxaio_ctx, &iocb->io, (struct io_event *)0);
-      /* on relevant kernels, io_cancel fails with EINPROGRES if everything is fine */
-      assert (("libev: linuxaio unexpected io_cancel failed", errno == EINPROGRESS));
+      /* iocb active, so cancel it first before resubmit */
+      /* this assumes we only ever get one call per fd per loop iteration */
+      for (;;)
+        {
+          /* on all relevant kernels, io_cancel fails with EINPROGRESS on "success" */
+          if (ecb_expect_false (evsys_io_cancel (linuxaio_ctx, &iocb->io, (struct io_event *)0) == 0))
+            break;
+
+          if (ecb_expect_true (errno == EINPROGRESS))
+            break;
+
+          /* the EINPROGRESS test is for nicer error message. clumsy. */
+          if (errno != EINTR)
+            {
+              assert (("libev: linuxaio unexpected io_cancel failed", errno != EINTR && errno != EINPROGRESS));
+              break;
+            }
+       }
+
+      /* increment generation counter to avoid handling old events */
+      ++anfd->egen;
     }
+
+  iocb->io.aio_buf = (nev & EV_READ  ? POLLIN  : 0)
+                   | (nev & EV_WRITE ? POLLOUT : 0);
 
   if (nev)
     {
-      iocb->io.aio_buf =
-          (nev & EV_READ ? POLLIN : 0)
-          | (nev & EV_WRITE ? POLLOUT : 0);
+      iocb->io.aio_data = (uint32_t)fd | ((__u64)(uint32_t)anfd->egen << 32);
 
       /* queue iocb up for io_submit */
       /* this assumes we only ever get one call per fd per loop iteration */
@@ -338,21 +305,26 @@ linuxaio_parse_events (EV_P_ struct io_event *ev, int nr)
 {
   while (nr)
     {
-      int fd  = ev->data;
-      int res = ev->res;
+      int fd       = ev->data & 0xffffffff;
+      uint32_t gen = ev->data >> 32;
+      int res      = ev->res;
 
       assert (("libev: iocb fd must be in-bounds", fd >= 0 && fd < anfdmax));
 
-      /* feed events, we do not expect or handle POLLNVAL */
-      fd_event (
-        EV_A_
-        fd,
-        (res & (POLLOUT | POLLERR | POLLHUP) ? EV_WRITE : 0)
-        | (res & (POLLIN | POLLERR | POLLHUP) ? EV_READ : 0)
-      );
+      /* only accept events if generation counter matches */
+      if (ecb_expect_true (gen == (uint32_t)anfds [fd].egen))
+        {
+          /* feed events, we do not expect or handle POLLNVAL */
+          fd_event (
+            EV_A_
+            fd,
+            (res & (POLLOUT | POLLERR | POLLHUP) ? EV_WRITE : 0)
+            | (res & (POLLIN | POLLERR | POLLHUP) ? EV_READ : 0)
+          );
 
-      /* linux aio is oneshot: rearm fd. TODO: this does more work than strictly needed */
-      linuxaio_fd_rearm (EV_A_ fd);
+          /* linux aio is oneshot: rearm fd. TODO: this does more work than strictly needed */
+          linuxaio_fd_rearm (EV_A_ fd);
+        }
 
       --nr;
       ++ev;
@@ -364,21 +336,20 @@ static int
 linuxaio_get_events_from_ring (EV_P)
 {
   struct aio_ring *ring = (struct aio_ring *)linuxaio_ctx;
+  unsigned head, tail;
 
   /* the kernel reads and writes both of these variables, */
   /* as a C extension, we assume that volatile use here */
   /* both makes reads atomic and once-only */
-  unsigned head = *(volatile unsigned *)&ring->head;
-  unsigned tail = *(volatile unsigned *)&ring->tail;
+  head = *(volatile unsigned *)&ring->head;
+  ECB_MEMORY_FENCE_ACQUIRE;
+  tail = *(volatile unsigned *)&ring->tail;
 
   if (head == tail)
     return 0;
 
-  /* make sure the events up to tail are visible */
-  ECB_MEMORY_FENCE_ACQUIRE;
-
   /* parse all available events, but only once, to avoid starvation */
-  if (tail > head) /* normal case around */
+  if (ecb_expect_true (tail > head)) /* normal case around */
     linuxaio_parse_events (EV_A_ ring->io_events + head, tail - head);
   else /* wrapped around */
     {
@@ -399,7 +370,7 @@ linuxaio_ringbuf_valid (EV_P)
 {
   struct aio_ring *ring = (struct aio_ring *)linuxaio_ctx;
 
-  return expect_true (ring->magic == AIO_RING_MAGIC)
+  return ecb_expect_true (ring->magic == AIO_RING_MAGIC)
                       && ring->incompat_features == EV_AIO_RING_INCOMPAT_FEATURES
                       && ring->header_length == sizeof (struct aio_ring); /* TODO: or use it to find io_event[0]? */
 }
@@ -414,7 +385,7 @@ linuxaio_get_events (EV_P_ ev_tstamp timeout)
   int want = 1; /* how many events to request */
   int ringbuf_valid = linuxaio_ringbuf_valid (EV_A);
 
-  if (expect_true (ringbuf_valid))
+  if (ecb_expect_true (ringbuf_valid))
     {
       /* if the ring buffer has any events, we don't wait or call the kernel at all */
       if (linuxaio_get_events_from_ring (EV_A))
@@ -437,9 +408,7 @@ linuxaio_get_events (EV_P_ ev_tstamp timeout)
 
       EV_RELEASE_CB;
 
-      ts.tv_sec  = (long)timeout;
-      ts.tv_nsec = (long)((timeout - ts.tv_sec) * 1e9);
-
+      EV_TS_SET (ts, timeout);
       res = evsys_io_getevents (linuxaio_ctx, 1, want, ioev, &ts);
 
       EV_ACQUIRE_CB;
@@ -454,7 +423,7 @@ linuxaio_get_events (EV_P_ ev_tstamp timeout)
           /* at least one event available, handle them */
           linuxaio_parse_events (EV_A_ ioev, res);
 
-          if (expect_true (ringbuf_valid))
+          if (ecb_expect_true (ringbuf_valid))
             {
               /* if we have a ring buffer, handle any remaining events in it */
               linuxaio_get_events_from_ring (EV_A);
@@ -469,7 +438,7 @@ linuxaio_get_events (EV_P_ ev_tstamp timeout)
       else
         break; /* no events from the kernel, we are done */
 
-      timeout = 0; /* only wait in the first iteration */
+      timeout = EV_TS_CONST (0.); /* only wait in the first iteration */
     }
 }
 
@@ -495,7 +464,7 @@ linuxaio_poll (EV_P_ ev_tstamp timeout)
     {
       int res = evsys_io_submit (linuxaio_ctx, linuxaio_submitcnt - submitted, linuxaio_submits + submitted);
 
-      if (expect_false (res < 0))
+      if (ecb_expect_false (res < 0))
         if (errno == EINVAL)
           {
             /* This happens for unsupported fds, officially, but in my testing,
@@ -535,16 +504,21 @@ linuxaio_poll (EV_P_ ev_tstamp timeout)
             ++linuxaio_iteration;
             if (linuxaio_io_setup (EV_A) < 0)
               {
+                /* TODO: rearm all and recreate epoll backend from scratch */
+                /* TODO: might be more prudent? */
+
                 /* to bad, we can't get a new aio context, go 100% epoll */
                 linuxaio_free_iocbp (EV_A);
                 ev_io_stop (EV_A_ &linuxaio_epoll_w);
                 ev_ref (EV_A);
                 linuxaio_ctx = 0;
+
+                backend        = EVBACKEND_EPOLL;
                 backend_modify = epoll_modify;
                 backend_poll   = epoll_poll;
               }
 
-            timeout = 0;
+            timeout = EV_TS_CONST (0.);
             /* it's easiest to handle this mess in another iteration */
             return;
           }
@@ -555,8 +529,13 @@ linuxaio_poll (EV_P_ ev_tstamp timeout)
 
             res = 1; /* skip this iocb */
           }
+        else if (errno == EINTR) /* not seen in reality, not documented */
+          res = 0; /* silently ignore and retry */
         else
-          ev_syserr ("(libev) linuxaio io_submit");
+          {
+            ev_syserr ("(libev) linuxaio io_submit");
+            res = 0;
+          }
 
       submitted += res;
     }
@@ -589,13 +568,13 @@ linuxaio_init (EV_P_ int flags)
       return 0;
     }
 
-  ev_io_init  (EV_A_ &linuxaio_epoll_w, linuxaio_epoll_cb, backend_fd, EV_READ);
+  ev_io_init  (&linuxaio_epoll_w, linuxaio_epoll_cb, backend_fd, EV_READ);
   ev_set_priority (&linuxaio_epoll_w, EV_MAXPRI);
   ev_io_start (EV_A_ &linuxaio_epoll_w);
   ev_unref (EV_A); /* watcher should not keep loop alive */
 
-  backend_modify  = linuxaio_modify;
-  backend_poll    = linuxaio_poll;
+  backend_modify = linuxaio_modify;
+  backend_poll   = linuxaio_poll;
 
   linuxaio_iocbpmax = 0;
   linuxaio_iocbps = 0;
@@ -616,13 +595,13 @@ linuxaio_destroy (EV_P)
   evsys_io_destroy (linuxaio_ctx); /* fails in child, aio context is destroyed */
 }
 
-inline_size
-void
+ecb_cold
+static void
 linuxaio_fork (EV_P)
 {
-  /* this frees all iocbs, which is very heavy-handed */
-  linuxaio_destroy (EV_A);
   linuxaio_submitcnt = 0; /* all pointers were invalidated */
+  linuxaio_free_iocbp (EV_A); /* this frees all iocbs, which is very heavy-handed */
+  evsys_io_destroy (linuxaio_ctx); /* fails in child, aio context is destroyed */
 
   linuxaio_iteration = 0; /* we start over in the child */
 
@@ -631,12 +610,11 @@ linuxaio_fork (EV_P)
 
   /* forking epoll should also effectively unregister all fds from the backend */
   epoll_fork (EV_A);
+  /* epoll_fork already did this. hopefully */
+  /*fd_rearm_all (EV_A);*/
 
   ev_io_stop  (EV_A_ &linuxaio_epoll_w);
   ev_io_set   (EV_A_ &linuxaio_epoll_w, backend_fd, EV_READ);
   ev_io_start (EV_A_ &linuxaio_epoll_w);
-
-  /* epoll_fork already did this. hopefully */
-  /*fd_rearm_all (EV_A);*/
 }
 
