@@ -103,7 +103,7 @@ kqueue_poll (EV_P_ ev_tstamp timeout)
   EV_ACQUIRE_CB;
   kqueue_changecnt = 0;
 
-  if (expect_false (res < 0))
+  if (ecb_expect_false (res < 0))
     {
       if (errno != EINTR)
         ev_syserr ("(libev) kqueue kevent");
@@ -115,7 +115,7 @@ kqueue_poll (EV_P_ ev_tstamp timeout)
     {
       int fd = kqueue_events [i].ident;
 
-      if (expect_false (kqueue_events [i].flags & EV_ERROR))
+      if (ecb_expect_false (kqueue_events [i].flags & EV_ERROR))
         {
           int err = kqueue_events [i].data;
 
@@ -151,7 +151,7 @@ kqueue_poll (EV_P_ ev_tstamp timeout)
         );
     }
 
-  if (expect_false (res == kqueue_eventmax))
+  if (ecb_expect_false (res == kqueue_eventmax))
     {
       ev_free (kqueue_events);
       kqueue_eventmax = array_nextsize (sizeof (struct kevent), kqueue_eventmax, kqueue_eventmax + 1);
@@ -170,7 +170,7 @@ kqueue_init (EV_P_ int flags)
 
   fcntl (backend_fd, F_SETFD, FD_CLOEXEC); /* not sure if necessary, hopefully doesn't hurt */
 
-  backend_mintime = 1e-9; /* apparently, they did the right thing in freebsd */
+  backend_mintime = EV_TS_CONST (1e-9); /* apparently, they did the right thing in freebsd */
   backend_modify  = kqueue_modify;
   backend_poll    = kqueue_poll;
 

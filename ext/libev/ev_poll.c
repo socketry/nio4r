@@ -80,7 +80,7 @@ poll_modify (EV_P_ int fd, int oev, int nev)
     {
       pollidxs [fd] = -1;
 
-      if (expect_true (idx < --pollcnt))
+      if (ecb_expect_true (idx < --pollcnt))
         {
           polls [idx] = polls [pollcnt];
           pollidxs [polls [idx].fd] = idx;
@@ -95,10 +95,10 @@ poll_poll (EV_P_ ev_tstamp timeout)
   int res;
   
   EV_RELEASE_CB;
-  res = poll (polls, pollcnt, timeout * 1e3);
+  res = poll (polls, pollcnt, EV_TS_TO_MSEC (timeout));
   EV_ACQUIRE_CB;
 
-  if (expect_false (res < 0))
+  if (ecb_expect_false (res < 0))
     {
       if (errno == EBADF)
         fd_ebadf (EV_A);
@@ -112,11 +112,11 @@ poll_poll (EV_P_ ev_tstamp timeout)
       {
         assert (("libev: poll returned illegal result, broken BSD kernel?", p < polls + pollcnt));
 
-        if (expect_false (p->revents)) /* this expect is debatable */
+        if (ecb_expect_false (p->revents)) /* this expect is debatable */
           {
             --res;
 
-            if (expect_false (p->revents & POLLNVAL))
+            if (ecb_expect_false (p->revents & POLLNVAL))
               {
                 assert (("libev: poll found invalid fd in poll set", 0));
                 fd_kill (EV_A_ p->fd);
@@ -136,7 +136,7 @@ inline_size
 int
 poll_init (EV_P_ int flags)
 {
-  backend_mintime = 1e-3;
+  backend_mintime = EV_TS_CONST (1e-3);
   backend_modify  = poll_modify;
   backend_poll    = poll_poll;
 
