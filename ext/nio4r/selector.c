@@ -183,6 +183,14 @@ static VALUE NIO_Selector_supported_backends(VALUE klass)
         rb_ary_push(result, ID2SYM(rb_intern("port")));
     }
 
+    if (backends & EVBACKEND_LINUXAIO) {
+        rb_ary_push(result, ID2SYM(rb_intern("linuxaio")));
+    }
+
+    if (backends & EVBACKEND_IOURING) {
+        rb_ary_push(result, ID2SYM(rb_intern("io_uring")));
+    }
+
     return result;
 }
 
@@ -218,6 +226,10 @@ static VALUE NIO_Selector_initialize(int argc, VALUE *argv, VALUE self)
             flags = EVBACKEND_SELECT;
         } else if (backend_id == rb_intern("port")) {
             flags = EVBACKEND_PORT;
+        } else if (backend_id == rb_intern("linuxaio")) {
+            flags = EVBACKEND_LINUXAIO;
+        } else if (backend_id == rb_intern("io_uring")) {
+            flags = EVBACKEND_IOURING;
         } else {
             rb_raise(rb_eArgError, "unsupported backend: %s", RSTRING_PTR(rb_funcall(backend, rb_intern("inspect"), 0)));
         }
@@ -263,6 +275,10 @@ static VALUE NIO_Selector_backend(VALUE self)
             return ID2SYM(rb_intern("select"));
         case EVBACKEND_PORT:
             return ID2SYM(rb_intern("port"));
+        case EVBACKEND_LINUXAIO:
+            return ID2SYM(rb_intern("linuxaio"));
+        case EVBACKEND_IOURING:
+            return ID2SYM(rb_intern("io_uring"));
     }
 
     return ID2SYM(rb_intern("unknown"));
