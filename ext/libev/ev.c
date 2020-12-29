@@ -3141,13 +3141,13 @@ ev_supported_backends (void) EV_NOEXCEPT
 {
   unsigned int flags = 0;
 
-  if (EV_USE_PORT                                      ) flags |= EVBACKEND_PORT;
-  if (EV_USE_KQUEUE                                    ) flags |= EVBACKEND_KQUEUE;
-  if (EV_USE_EPOLL                                     ) flags |= EVBACKEND_EPOLL;
-  if (EV_USE_LINUXAIO                                  ) flags |= EVBACKEND_LINUXAIO;
-  if (EV_USE_IOURING && ev_linux_version () >= 0x050601) flags |= EVBACKEND_IOURING; /* 5.6.1+ */
-  if (EV_USE_POLL                                      ) flags |= EVBACKEND_POLL;
-  if (EV_USE_SELECT                                    ) flags |= EVBACKEND_SELECT;
+  if (EV_USE_PORT                                       ) flags |= EVBACKEND_PORT;
+  if (EV_USE_KQUEUE                                     ) flags |= EVBACKEND_KQUEUE;
+  if (EV_USE_EPOLL                                      ) flags |= EVBACKEND_EPOLL;
+  if (EV_USE_LINUXAIO && ev_linux_version () >= 0x041300) flags |= EVBACKEND_LINUXAIO; /* 4.19+ */
+  if (EV_USE_IOURING && ev_linux_version () >= 0x050601 ) flags |= EVBACKEND_IOURING; /* 5.6.1+ */
+  if (EV_USE_POLL                                       ) flags |= EVBACKEND_POLL;
+  if (EV_USE_SELECT                                     ) flags |= EVBACKEND_SELECT;
 
   return flags;
 }
