@@ -26,14 +26,16 @@ module NIO
 
     # Return a symbol representing the backend I/O multiplexing mechanism used.
     # Supported backends are:
-    # * :ruby    - pure Ruby (i.e IO.select)
-    # * :java    - Java NIO on JRuby
-    # * :epoll   - libev w\ Linux epoll
-    # * :poll    - libev w\ POSIX poll
-    # * :kqueue  - libev w\ BSD kqueue
-    # * :select  - libev w\ SysV select
-    # * :port    - libev w\ I/O completion ports
-    # * :unknown - libev w\ unknown backend
+    # * :ruby     - pure Ruby (i.e IO.select)
+    # * :java     - Java NIO on JRuby
+    # * :epoll    - libev w\ Linux epoll
+    # * :poll     - libev w\ POSIX poll
+    # * :kqueue   - libev w\ BSD kqueue
+    # * :select   - libev w\ SysV select
+    # * :port     - libev w\ I/O completion ports
+    # * :linuxaio - libev w\ Linux AIO io_submit (experimental)
+    # * :io_uring - libev w\ Linux io_uring (experimental)
+    # * :unknown  - libev w\ unknown backend
     def backend
       :ruby
     end
