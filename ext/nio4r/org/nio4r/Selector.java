@@ -43,7 +43,7 @@ public class Selector extends RubyObject {
 
     @JRubyMethod
     public IRubyObject initialize(ThreadContext context, IRubyObject backend) {
-        if(backend != context.runtime.newSymbol("java")) {
+        if(backend != context.runtime.newSymbol("java") && !backend.isNil()) {
             throw context.runtime.newArgumentError(":java is the only supported backend");
         }
 

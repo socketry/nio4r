@@ -24,6 +24,10 @@ RSpec.describe NIO::Selector do
       example.reporter.message "Supported backends: #{described_class.backends}"
     end
 
+    it "automatically selects a backend if none or nil is specified" do
+      expect(described_class.new.backend).to eq described_class.new(nil).backend
+    end
+
     it "raises ArgumentError if given an invalid backend" do
       expect { described_class.new(:derp) }.to raise_error ArgumentError
     end
