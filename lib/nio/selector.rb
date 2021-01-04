@@ -14,7 +14,7 @@ module NIO
 
     # Create a new NIO::Selector
     def initialize(backend = :ruby)
-      raise ArgumentError, "unsupported backend: #{backend}" unless backend == :ruby
+      raise ArgumentError, "unsupported backend: #{backend}" unless [:ruby, nil].include?(backend)
 
       @selectables = {}
       @lock = Mutex.new
