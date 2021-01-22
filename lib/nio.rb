@@ -14,7 +14,7 @@ module NIO
   end
 end
 
-if ENV["NIO4R_PURE"] == "true" || (Gem.win_platform? && !defined?(JRUBY_VERSION))
+if ENV["NIO4R_PURE"] == "true" || (Gem.win_platform? && !defined?(JRUBY_VERSION)) || (RUBY_PLATFORM =~ /darwin/ && RUBY_PLATFORM =~ /arm64/)
   require "nio/monitor"
   require "nio/selector"
   require "nio/bytebuffer"
