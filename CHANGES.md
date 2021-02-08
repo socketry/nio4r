@@ -1,3 +1,17 @@
+## 2.5.5 (2021-02-05)
+
+* [#256](https://github.com/socketry/nio4r/pull/256)
+  Use libev 4.33, featuring experimental `io_uring` support.
+  ([@jcmfernandes])
+
+* [#260](https://github.com/socketry/nio4r/pull/260)
+  Workaround for ARM-based macOS Ruby: Use pure Ruby for M1, since the native extension is crashing on M1 (arm64).
+  ([@jasl])
+
+* [#252](https://github.com/socketry/nio4r/pull/252)
+  JRuby: Fix javac -Xlint warnings
+  ([@headius])
+
 ## 2.5.4 (2020-09-16)
 
 * [#251](https://github.com/socketry/nio4r/issues/251)
@@ -265,3 +279,6 @@ Possible bug with Ruby >= 2.7.0 and `GC.compact`
 [@eregon]: https://github.com/eregon
 [@olleolleolle]: https://github.com/olleolleolle
 [@boazsegev]: https://github.com/boazsegev
+[@headius]: https://github.com/headius
+[@jasl]: https://github.com/jasl
+[@jcmfernandes]: https://github.com/jcmfernandes
