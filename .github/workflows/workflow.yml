@@ -19,8 +19,6 @@ jobs:
         include:
           - { os: ubuntu-16.04, ruby: 3.0 }
           - { os: ubuntu-16.04, ruby: 2.4 }
-          - { os: macos-11.0  , ruby: 3.0 }
-          - { os: macos-11.0  , ruby: 2.4 }
         exclude:
           - { os: windows-2019, ruby: head  }
           - { os: windows-2019, ruby: jruby }
