@@ -27,5 +27,9 @@ $defs << "-DEV_STANDALONE" # prevent libev from assuming "config.h" exists
 
 CONFIG["optflags"] << " -fno-strict-aliasing" unless RUBY_PLATFORM =~ /mswin/
 
+if RUBY_PLATFORM =~ /darwin/
+  $DLDFLAGS.gsub!(/\-arch\s+[^\s]+/, "")
+end
+
 dir_config "nio4r_ext"
 create_makefile "nio4r_ext"
