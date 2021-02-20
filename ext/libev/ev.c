@@ -354,19 +354,11 @@
 #endif
 
 #ifndef EV_USE_LINUXAIO
-# if __linux /* libev currently assumes linux/aio_abi.h is always available on linux */
-#  define EV_USE_LINUXAIO 0 /* was: 1, always off by default */
-# else
 #  define EV_USE_LINUXAIO 0
-# endif
 #endif
 
 #ifndef EV_USE_IOURING
-# if __linux /* later checks might disable again */
-#  define EV_USE_IOURING 1
-# else
 #  define EV_USE_IOURING 0
-# endif
 #endif
 
 #ifndef EV_USE_INOTIFY
@@ -473,14 +465,6 @@
 #if !EV_STAT_ENABLE
 # undef EV_USE_INOTIFY
 # define EV_USE_INOTIFY 0
-#endif
-
-#if __linux && EV_USE_IOURING
-# include <linux/version.h>
-# if LINUX_VERSION_CODE < KERNEL_VERSION(4,14,0)
-#  undef EV_USE_IOURING
-#  define EV_USE_IOURING 0
-# endif
 #endif
 
 #if !EV_USE_NANOSLEEP
