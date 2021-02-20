@@ -3147,8 +3147,10 @@ ev_recommended_backends (void) EV_NOEXCEPT
   /* only select works correctly on that "unix-certified" platform */
   flags &= ~EVBACKEND_KQUEUE; /* horribly broken, even for sockets */
   flags &= ~EVBACKEND_POLL;   /* poll is based on kqueue from 10.5 onwards */
-#elif !defined(__NetBSD__)
-  /* kqueue is borked on everything but netbsd apparently */
+#endif
+
+#if !defined(__NetBSD__) && !defined(__APPLE__)
+  /* kqueue is borked on everything but netbsd and osx >= 10.12.2 apparently */
   /* it usually doesn't work correctly on anything but sockets and pipes */
   flags &= ~EVBACKEND_KQUEUE;
 #endif
