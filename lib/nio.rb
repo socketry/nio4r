@@ -25,9 +25,9 @@ module NIO
     end
 
     # M1 native extension is crashing on M1 (arm64):
-    if RUBY_PLATFORM =~ /darwin/ && RUBY_PLATFORM =~ /arm64/
-      return true
-    end
+    # if RUBY_PLATFORM =~ /darwin/ && RUBY_PLATFORM =~ /arm64/
+    #   return true
+    # end
 
     return false
   end
