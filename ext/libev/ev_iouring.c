@@ -287,7 +287,7 @@ iouring_sqe_get (EV_P)
 }
 
 inline_size
-struct io_uring_sqe *
+void
 iouring_sqe_submit (EV_P_ struct io_uring_sqe *sqe)
 {
   unsigned idx = sqe - EV_SQES;
@@ -313,7 +313,7 @@ iouring_tfd_cb (EV_P_ struct ev_io *w, int revents)
 
 /* called for full and partial cleanup */
 ecb_cold
-static int
+static void
 iouring_internal_destroy (EV_P)
 {
   close (iouring_tfd);
