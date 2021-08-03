@@ -7,7 +7,6 @@ gemspec
 gem "jruby-openssl" if defined? JRUBY_VERSION
 
 group :development do
-  gem "guard-rspec", require: false
   gem "pry", require: false
 end
 
