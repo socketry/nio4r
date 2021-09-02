@@ -1,3 +1,22 @@
+## 2.5.8 (2021-08-03)
+
+* [#276](https://github.com/socketry/nio4r/pull/276)
+  Fix missing return statement in function returning non-void (issue [#275](https://github.com/socketry/nio4r/pull/275))
+  ([@ioquatix])
+* Remove `guard-rspec` from development dependencies ([@ioquatix])
+
+## 2.5.7 (2021-03-04)
+
+* [#267](https://github.com/socketry/nio4r/pull/267)
+  Don't try to link universal extension
+  ([@ioquatix])
+
+## 2.5.6 (2021-03-04)
+
+* [#268](https://github.com/socketry/nio4r/pull/268)
+  Prefer kqueue when on OSX >= v10.12.2
+  ([@jcmfernandes])
+
 ## 2.5.5 (2021-02-05)
 
 * [#256](https://github.com/socketry/nio4r/pull/256)
