@@ -35,16 +35,6 @@ jobs:
         with:
           ruby-version: ${{matrix.ruby}}
 
-      - name: RubyGems, Bundler Update
-        if: |
-          !contains('2.4', matrix.ruby)
-        run: gem update --system --no-document --conservative
-
-      - name: RubyGems, Bundler Update for Ruby 2.4
-        if: |
-          contains('2.4', matrix.ruby)
-        run: gem update --system 3.3.14 --no-document --conservative
-
       - name: bundle install
         run: bundle install --path .bundle/gems --without development
 
