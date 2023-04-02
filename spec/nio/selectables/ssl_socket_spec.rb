@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "openssl"
 
 RSpec.describe OpenSSL::SSL::SSLSocket do
-
-  require "openssl"
-
   before(:all) do
     @tls = []
   end
