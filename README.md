@@ -93,6 +93,15 @@ rake release
 You might need to delete `Gemfile.lock` before trying to `bundle install`.
 
 ```
+# Ensure you have the correct JDK:
+pacman -Syu jdk-openjdk
+archlinux-java set java-19-openjdk
+
+# Ensure you are using jruby:
+chruby jruby
+bundle update
+
+# Build the package:
 rake clean
 rake compile
 rake release
