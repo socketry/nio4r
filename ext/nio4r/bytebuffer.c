@@ -335,7 +335,7 @@ static VALUE NIO_ByteBuffer_write_to(VALUE self, VALUE io)
 
     buffer->position += bytes_written;
 
-    return INT2NUM(bytes_written);
+    return INT2NUM((int)bytes_written);
 }
 
 static VALUE NIO_ByteBuffer_flip(VALUE self)
