@@ -305,7 +305,7 @@ static VALUE NIO_ByteBuffer_read_from(VALUE self, VALUE io)
 
     buffer->position += bytes_read;
 
-    return INT2NUM((int)bytes_read);
+    return SIZET2NUM(bytes_read);
 }
 
 static VALUE NIO_ByteBuffer_write_to(VALUE self, VALUE io)
@@ -335,7 +335,7 @@ static VALUE NIO_ByteBuffer_write_to(VALUE self, VALUE io)
 
     buffer->position += bytes_written;
 
-    return INT2NUM((int)bytes_written);
+    return SIZET2NUM(bytes_written);
 }
 
 static VALUE NIO_ByteBuffer_flip(VALUE self)
