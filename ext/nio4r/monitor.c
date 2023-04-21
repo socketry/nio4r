@@ -182,7 +182,7 @@ static VALUE NIO_Monitor_add_interest(VALUE self, VALUE interest)
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
     interest = monitor->interests | NIO_Monitor_symbol2interest(interest);
-    NIO_Monitor_update_interests(self, interest);
+    NIO_Monitor_update_interests(self, (int)interest);
 
     return rb_ivar_get(self, rb_intern("interests"));
 }
@@ -193,7 +193,7 @@ static VALUE NIO_Monitor_remove_interest(VALUE self, VALUE interest)
     Data_Get_Struct(self, struct NIO_Monitor, monitor);
 
     interest = monitor->interests & ~NIO_Monitor_symbol2interest(interest);
-    NIO_Monitor_update_interests(self, interest);
+    NIO_Monitor_update_interests(self, (int)interest);
 
     return rb_ivar_get(self, rb_intern("interests"));
 }
