@@ -1,3 +1,7 @@
+## 2.5.9 (2023-04-02)
+
+https://github.com/socketry/nio4r/compare/v2.5.8..v2.5.9
+
 ## 2.5.8 (2021-08-03)
 
 * [#276](https://github.com/socketry/nio4r/pull/276)
