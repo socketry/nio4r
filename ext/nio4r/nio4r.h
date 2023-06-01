@@ -40,12 +40,6 @@ struct NIO_ByteBuffer {
     int position, limit, capacity, mark;
 };
 
-#ifdef GetReadFile
-#define FPTR_TO_FD(fptr) (fileno(GetReadFile(fptr)))
-#else
-#define FPTR_TO_FD(fptr) fptr->fd
-#endif /* GetReadFile */
-
 /* Thunk between libev callbacks in NIO::Monitors and NIO::Selectors */
 void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
 
