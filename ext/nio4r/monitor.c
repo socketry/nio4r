@@ -34,6 +34,18 @@ static VALUE NIO_Monitor_readiness(VALUE self);
 static int NIO_Monitor_symbol2interest(VALUE interests);
 static void NIO_Monitor_update_interests(VALUE self, int interests);
 
+/* Compatibility for Ruby <= 3.1 */
+#ifndef HAVE_RB_IO_DESCRIPTOR
+static int
+io_descriptor_fallback(VALUE io)
+{
+    rb_io_t *fptr;
+    GetOpenFile(io, fptr);
+    return fptr->fd;
+}
+#define rb_io_descriptor io_descriptor_fallback
+#endif
+
 /* Monitor control how a channel is being waited for by a monitor */
 void Init_NIO_Monitor()
 {
@@ -81,7 +93,6 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
     struct NIO_Monitor *monitor;
     struct NIO_Selector *selector;
     ID interests_id;
-    rb_io_t *fptr;
 
     interests_id = SYM2ID(interests);
 
@@ -97,8 +108,8 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
         rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)", RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0)));
     }
 
-    GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
-    ev_io_init(&monitor->ev_io, NIO_Selector_monitor_callback, FPTR_TO_FD(fptr), monitor->interests);
+    io = rb_convert_type(io, T_FILE, "IO", "to_io");
+    ev_io_init(&monitor->ev_io, NIO_Selector_monitor_callback, rb_io_descriptor(io), monitor->interests);
 
     rb_ivar_set(self, rb_intern("io"), io);
     rb_ivar_set(self, rb_intern("interests"), interests);

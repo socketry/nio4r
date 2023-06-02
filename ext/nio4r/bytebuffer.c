@@ -36,6 +36,26 @@ static VALUE NIO_ByteBuffer_inspect(VALUE self);
 
 #define MARK_UNSET -1
 
+/* Compatibility for Ruby <= 3.1 */
+#ifndef HAVE_RB_IO_DESCRIPTOR
+static int
+io_descriptor_fallback(VALUE io)
+{
+    rb_io_t *fptr;
+    GetOpenFile(io, fptr);
+    return fptr->fd;
+}
+#define rb_io_descriptor io_descriptor_fallback
+#endif
+
+static void
+io_set_nonblock(VALUE io)
+{
+    rb_io_t *fptr;
+    GetOpenFile(io, fptr);
+    rb_io_set_nonblock(fptr);
+}
+
 void Init_NIO_ByteBuffer()
 {
     mNIO = rb_define_module("NIO");
@@ -281,19 +301,19 @@ static VALUE NIO_ByteBuffer_put(VALUE self, VALUE string)
 static VALUE NIO_ByteBuffer_read_from(VALUE self, VALUE io)
 {
     struct NIO_ByteBuffer *buffer;
-    rb_io_t *fptr;
     ssize_t nbytes, bytes_read;
 
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
-    GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
-    rb_io_set_nonblock(fptr);
+
+    io = rb_convert_type(io, T_FILE, "IO", "to_io");
+    io_set_nonblock(io);
 
     nbytes = buffer->limit - buffer->position;
     if (nbytes == 0) {
         rb_raise(cNIO_ByteBuffer_OverflowError, "buffer is full");
     }
 
-    bytes_read = read(FPTR_TO_FD(fptr), buffer->buffer + buffer->position, nbytes);
+    bytes_read = read(rb_io_descriptor(io), buffer->buffer + buffer->position, nbytes);
 
     if (bytes_read < 0) {
         if (errno == EAGAIN) {
@@ -311,19 +331,18 @@ static VALUE NIO_ByteBuffer_read_from(VALUE self, VALUE io)
 static VALUE NIO_ByteBuffer_write_to(VALUE self, VALUE io)
 {
     struct NIO_ByteBuffer *buffer;
-    rb_io_t *fptr;
     ssize_t nbytes, bytes_written;
 
     Data_Get_Struct(self, struct NIO_ByteBuffer, buffer);
-    GetOpenFile(rb_convert_type(io, T_FILE, "IO", "to_io"), fptr);
-    rb_io_set_nonblock(fptr);
+    io = rb_convert_type(io, T_FILE, "IO", "to_io");
+    io_set_nonblock(io);
 
     nbytes = buffer->limit - buffer->position;
     if (nbytes == 0) {
         rb_raise(cNIO_ByteBuffer_UnderflowError, "no data remaining in buffer");
     }
 
-    bytes_written = write(FPTR_TO_FD(fptr), buffer->buffer + buffer->position, nbytes);
+    bytes_written = write(rb_io_descriptor(io), buffer->buffer + buffer->position, nbytes);
 
     if (bytes_written < 0) {
         if (errno == EAGAIN) {

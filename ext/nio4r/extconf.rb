@@ -16,6 +16,7 @@ end
 require "mkmf"
 
 have_header("unistd.h")
+have_func("rb_io_descriptor")
 
 $defs << "-DEV_USE_LINUXAIO"     if have_header("linux/aio_abi.h")
 $defs << "-DEV_USE_IOURING"      if have_header("linux/io_uring.h")
