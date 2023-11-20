@@ -108,8 +108,8 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
         rb_raise(rb_eArgError, "invalid event type %s (must be :r, :w, or :rw)", RSTRING_PTR(rb_funcall(interests, rb_intern("inspect"), 0)));
     }
 
-    io = rb_convert_type(io, T_FILE, "IO", "to_io");
-    ev_io_init(&monitor->ev_io, NIO_Selector_monitor_callback, rb_io_descriptor(io), monitor->interests);
+    int descriptor = rb_io_descriptor(rb_convert_type(io, T_FILE, "IO", "to_io"));
+    ev_io_init(&monitor->ev_io, NIO_Selector_monitor_callback, descriptor, monitor->interests);
 
     rb_ivar_set(self, rb_intern("io"), io);
     rb_ivar_set(self, rb_intern("interests"), interests);
