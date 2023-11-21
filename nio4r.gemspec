@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
 
   spec.metadata = {
     "bug_tracker_uri"   => "https://github.com/socketry/nio4r/issues",
-    "changelog_uri"     => "https://github.com/socketry/nio4r/blob/master/CHANGES.md",
+    "changelog_uri"     => "https://github.com/socketry/nio4r/blob/main/changes.md",
     "documentation_uri" => "https://www.rubydoc.info/gems/nio4r/#{spec.version}",
     "source_code_uri"   => "https://github.com/socketry/nio4r/tree/v#{spec.version}",
     "wiki_uri"          => "https://github.com/socketry/nio4r/wiki",
