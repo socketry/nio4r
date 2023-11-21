@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2016, by Upekshe Jayasekera.
+# Copyright, 2016-2017, by Tony Arcieri.
+# Copyright, 2020, by Thomas Dziedzic.
+# Copyright, 2023, by Samuel Williams.
+
 module NIO
   # Efficient byte buffers for performant I/O operations
   class ByteBuffer

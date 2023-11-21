@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2012-2017, by Tony Arcieri.
+# Copyright, 2019-2023, by Samuel Williams.
+
 require "spec_helper"
 
 RSpec.describe "NIO acceptables" do

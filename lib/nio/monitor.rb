@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2011-2018, by Tony Arcieri.
+# Copyright, 2015, by Upekshe Jayasekera.
+# Copyright, 2015, by Vladimir Kochnev.
+# Copyright, 2018-2023, by Samuel Williams.
+# Copyright, 2019-2020, by Gregory Longtin.
+
 module NIO
   # Monitors watch IO objects for specific events
   class Monitor

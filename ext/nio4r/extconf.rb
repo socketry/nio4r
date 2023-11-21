@@ -1,5 +1,19 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2011-2020, by Tony Arcieri.
+# Copyright, 2014, by Hiroshi Shibata.
+# Copyright, 2014, by Sergey Avseyev.
+# Copyright, 2015, by Daniel Berger.
+# Copyright, 2017, by Jun Aruga.
+# Copyright, 2017, by Usaku Nakamura.
+# Copyright, 2017, by Lars Kanis.
+# Copyright, 2019-2023, by Samuel Williams.
+# Copyright, 2020, by Gregory Longtin.
+# Copyright, 2020, by Boaz Segev.
+# Copyright, 2020, by Joao Fernandes.
+# Copyright, 2021, by Jeffrey Martin.
+
 require "rubygems"
 
 # Write a dummy Makefile on Windows because we use the pure Ruby implementation there

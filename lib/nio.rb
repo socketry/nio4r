@@ -1,5 +1,14 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2011-2017, by Tony Arcieri.
+# Copyright, 2013, by Stephen von Takach.
+# Copyright, 2013, by Per Lundberg.
+# Copyright, 2014, by Marek Kowalcze.
+# Copyright, 2016, by Upekshe Jayasekera.
+# Copyright, 2019-2023, by Samuel Williams.
+# Copyright, 2021, by Jun Jiang.
+
 require "socket"
 require "nio/version"
 

@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2016, by Upekshe Jayasekera.
+# Copyright, 2016-2017, by Tony Arcieri.
+# Copyright, 2019-2023, by Samuel Williams.
+# Copyright, 2020, by Thomas Dziedzic.
+
 require "spec_helper"
 
 RSpec.describe NIO::ByteBuffer do

@@ -1,6 +1,13 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2012-2016, by Tony Arcieri.
+# Copyright, 2016, by Jun Aruga.
+# Copyright, 2019, by Zhang Kang.
+# Copyright, 2020, by Thomas Dziedzic.
+# Copyright, 2023, by Samuel Williams.
+
 $LOAD_PATH.push File.expand_path("../lib", __dir__)
 require "nio"
 require "socket"

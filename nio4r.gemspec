@@ -25,7 +25,8 @@ Gem::Specification.new do |spec|
     "changelog_uri"     => "https://github.com/socketry/nio4r/blob/master/CHANGES.md",
     "documentation_uri" => "https://www.rubydoc.info/gems/nio4r/#{spec.version}",
     "source_code_uri"   => "https://github.com/socketry/nio4r/tree/v#{spec.version}",
-    "wiki_uri"          => "https://github.com/socketry/nio4r/wiki"
+    "wiki_uri"          => "https://github.com/socketry/nio4r/wiki",
+    "funding_uri"       => "https://github.com/sponsors/ioquatix/",
   }
 
   spec.required_ruby_version = ">= 2.4"

@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2011-2017, by Tony Arcieri.
+# Copyright, 2017, by Gregory Longtin.
+# Copyright, 2019-2023, by Samuel Williams.
+# Copyright, 2021, by Joao Fernandes.
+
 require "nio"
 require "support/selectable_examples"
 

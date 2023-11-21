@@ -1,5 +1,20 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2011-2017, by Tony Arcieri.
+# Copyright, 2012, by Logan Bowers.
+# Copyright, 2013, by Sadayuki Furuhashi.
+# Copyright, 2013, by Stephen von Takach.
+# Copyright, 2013, by Tim Carey-Smith.
+# Copyright, 2013, by Ravil Bayramgalin.
+# Copyright, 2014, by Sergey Avseyev.
+# Copyright, 2014, by John Thornton.
+# Copyright, 2015, by Vladimir Kochnev.
+# Copyright, 2015, by Upekshe Jayasekera.
+# Copyright, 2019-2020, by Gregory Longtin.
+# Copyright, 2020-2021, by Joao Fernandes.
+# Copyright, 2023, by Samuel Williams.
+
 require "set"
 
 module NIO

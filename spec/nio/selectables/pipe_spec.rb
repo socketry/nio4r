@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2012-2017, by Tony Arcieri.
+# Copyright, 2012, by Logan Bowers.
+# Copyright, 2017, by Gregory Longtin.
+# Copyright, 2023, by Samuel Williams.
+
 require "spec_helper"
 
 RSpec.describe "IO.pipe" do

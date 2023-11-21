@@ -1,43 +1,53 @@
 # MIT License
 
-Copyright, 2011-2020, by Tony Arcieri.
-Copyright, 2012, by Logan Bowers.
-Copyright, 2013, by FURUHASHI Sadayuki.
-Copyright, 2013, by Stephen von Takach.
-Copyright, 2013, by Tim Carey-Smith.
-Copyright, 2013, by brainopia.
-Copyright, 2013, by Luis Lavena.
-Copyright, 2014, by SHIBATA Hiroshi.
-Copyright, 2014, by Sergey Avseyev.
-Copyright, 2014, by JohnnyT.
-Copyright, 2015-2017, by Tiago Cardoso.
-Copyright, 2015, by Daniel Berger.
-Copyright, 2015, by Upekshe.
-Copyright, 2015-2016, by UpeksheJay.
-Copyright, 2015, by Vladimir Kochnev.
-Copyright, 2016-2018, by Jun Aruga.
-Copyright, 2016, by Omer Katz.
-Copyright, 2016-2021, by Olle Jonsson.
-Copyright, 2017, by usa.
-Copyright, 2017, by HoneyryderChuck.
-Copyright, 2017, by tompng.
-Copyright, 2018-2021, by Samuel Williams.
-Copyright, 2019, by Cédric Boutillier.
-Copyright, 2019-2020, by MSP-Greg.
-Copyright, 2019-2020, by Benoit Daloze.
-Copyright, 2019, by Jesús Burgos Maciá.
-Copyright, 2019, by Thomas Kuntz.
-Copyright, 2019, by Orien Madgwick.
-Copyright, 2019, by Thomas Dziedzic.
-Copyright, 2019, by Zhang Kang.
-Copyright, 2020, by eladeyal-intel.
-Copyright, 2020, by Pedro Paiva.
-Copyright, 2020, by Bo.
-Copyright, 2020, by Charles Oliver Nutter.
-Copyright, 2020-2021, by Joao Fernandes.
-Copyright, 2021, by Jun Jiang.
-Copyright, 2021, by Jeffrey Martin.
-Copyright, 2021, by Pavel Lobashov.
+Copyright, 2011-2020, by Tony Arcieri.  
+Copyright, 2012, by Bernd Ahlers.  
+Copyright, 2012, by Logan Bowers.  
+Copyright, 2012, by Dirkjan Bussink.  
+Copyright, 2013, by Sadayuki Furuhashi.  
+Copyright, 2013, by Shannon Skipper.  
+Copyright, 2013, by Stephen von Takach.  
+Copyright, 2013, by Tim Carey-Smith.  
+Copyright, 2013, by Per Lundberg.  
+Copyright, 2013, by Ravil Bayramgalin.  
+Copyright, 2013, by Luis Lavena.  
+Copyright, 2014, by Anatol Pomozov.  
+Copyright, 2014, by Hiroshi Shibata.  
+Copyright, 2014, by Marek Kowalcze.  
+Copyright, 2014, by Sergey Avseyev.  
+Copyright, 2014, by John Thornton.  
+Copyright, 2015-2017, by Tiago Cardoso.  
+Copyright, 2015, by Daniel Berger.  
+Copyright, 2015-2016, by Upekshe Jayasekera.  
+Copyright, 2015, by Vladimir Kochnev.  
+Copyright, 2016-2018, by Jun Aruga.  
+Copyright, 2016, by Omer Katz.  
+Copyright, 2016, by Denis Washington.  
+Copyright, 2016-2021, by Olle Jonsson.  
+Copyright, 2017, by Tao Luo.  
+Copyright, 2017, by Usaku Nakamura.  
+Copyright, 2017-2022, by Gregory Longtin.  
+Copyright, 2017, by Lars Kanis.  
+Copyright, 2017, by Tomoya Ishida.  
+Copyright, 2018-2023, by Samuel Williams.  
+Copyright, 2019, by Cédric Boutillier.  
+Copyright, 2019-2020, by Benoit Daloze.  
+Copyright, 2019, by Jesús Burgos Maciá.  
+Copyright, 2019, by Thomas Kuntz.  
+Copyright, 2019, by Orien Madgwick.  
+Copyright, 2019, by Zhang Kang.  
+Copyright, 2020, by Thomas Dziedzic.  
+Copyright, 2020, by Elad Eyal.  
+Copyright, 2020, by Pedro Paiva.  
+Copyright, 2020, by Boaz Segev.  
+Copyright, 2020, by Charles Oliver Nutter.  
+Copyright, 2020-2021, by Joao Fernandes.  
+Copyright, 2021, by Jun Jiang.  
+Copyright, 2021, by Pavel Lobashov.  
+Copyright, 2021, by Jeffrey Martin.  
+Copyright, 2023, by Pavel Rosický.  
+Copyright, 2023, by Tsimnuj Hawj.  
+Copyright, 2023, by Phillip Aldridge.  
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

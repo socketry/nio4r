@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2012-2017, by Tony Arcieri.
+# Copyright, 2017, by Gregory Longtin.
+# Copyright, 2017, by Olle Jonsson.
+# Copyright, 2019-2023, by Samuel Williams.
+# Copyright, 2020, by Thomas Dziedzic.
+
 require "spec_helper"
 
 RSpec.describe UDPSocket, if: !defined?(JRUBY_VERSION) do

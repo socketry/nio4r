@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2011-2018, by Tony Arcieri.
+# Copyright, 2012, by Logan Bowers.
+# Copyright, 2015, by Tiago Cardoso.
+# Copyright, 2015, by Upekshe Jayasekera.
+# Copyright, 2018-2023, by Samuel Williams.
+
 require "spec_helper"
 require "socket"
 

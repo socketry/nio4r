@@ -1,5 +1,13 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2012-2017, by Tony Arcieri.
+# Copyright, 2012, by Logan Bowers.
+# Copyright, 2013, by Tim Carey-Smith.
+# Copyright, 2017-2019, by Gregory Longtin.
+# Copyright, 2017, by Tiago Cardoso.
+# Copyright, 2019-2023, by Samuel Williams.
+
 RSpec.shared_context NIO::Selector do
   let(:selector) {@selector = NIO::Selector.new}
 
