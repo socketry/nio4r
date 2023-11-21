@@ -8,7 +8,7 @@ gem "jruby-openssl" if defined? JRUBY_VERSION
 
 group :maintenance, optional: true do
   gem "bake-gem"
-  gem "bake-modernize"
+  # gem "bake-modernize"
 end
 
 group :development, :test do
