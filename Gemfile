@@ -6,8 +6,9 @@ gemspec
 
 gem "jruby-openssl" if defined? JRUBY_VERSION
 
-group :development do
-  gem "pry", require: false
+group :maintenance, optional: true do
+  gem "bake-gem"
+  gem "bake-modernize"
 end
 
 group :development, :test do
