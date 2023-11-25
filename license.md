@@ -69,7 +69,8 @@ SOFTWARE.
 
 ## libev
 
-Released under the BSD license. See [ext/libev/LICENSE] for details.
+Released under the BSD-2-Clause OR GPL-2.0-or-later license.
+See [ext/libev/LICENSE] for details.
 
 Copyright, 2007-2019, by Marc Alexander Lehmann.
 

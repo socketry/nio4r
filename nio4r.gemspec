@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Tony Arcieri"]
   spec.email         = ["bascule@gmail.com"]
   spec.homepage      = "https://github.com/socketry/nio4r"
-  spec.license       = "MIT"
+  spec.license       = "MIT AND (BSD-2-Clause OR GPL-2.0-or-later)"
   spec.summary       = "New IO for Ruby"
   spec.description   = <<-DESCRIPTION.strip.gsub(/\s+/, " ")
      Cross-platform asynchronous I/O primitives for scalable network clients
