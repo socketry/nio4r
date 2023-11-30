@@ -129,7 +129,7 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
     rb_ivar_set(self, rb_intern("interests"), interests);
     rb_ivar_set(self, rb_intern("selector"), selector_obj);
 
-    Data_Get_Struct(selector_obj, struct NIO_Selector, selector);
+    selector = NIO_Selector_unwrap(selector_obj);
 
     RB_OBJ_WRITE(self, &monitor->self, self);
     monitor->ev_io.data = (void *)monitor;
