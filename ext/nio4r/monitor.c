@@ -11,8 +11,8 @@ static VALUE cNIO_Monitor = Qnil;
 
 /* Allocator/deallocator */
 static VALUE NIO_Monitor_allocate(VALUE klass);
-static void NIO_Monitor_mark(struct NIO_Monitor *monitor);
-static void NIO_Monitor_free(struct NIO_Monitor *monitor);
+static void NIO_Monitor_mark(void *data);
+static size_t NIO_Monitor_memsize(const void *data);
 
 /* Methods */
 static VALUE NIO_Monitor_initialize(VALUE self, VALUE selector, VALUE io, VALUE interests);
@@ -70,22 +70,36 @@ void Init_NIO_Monitor()
     rb_define_method(cNIO_Monitor, "writeable?", NIO_Monitor_is_writable, 0);
 }
 
+static const rb_data_type_t NIO_Monitor_type = {
+    "NIO::Monitor",
+    {
+        NIO_Monitor_mark,
+        RUBY_TYPED_DEFAULT_FREE,
+        NIO_Monitor_memsize,
+    },
+    0,
+    0,
+    RUBY_TYPED_FREE_IMMEDIATELY | RUBY_TYPED_WB_PROTECTED
+};
+
 static VALUE NIO_Monitor_allocate(VALUE klass)
 {
     struct NIO_Monitor *monitor = (struct NIO_Monitor *)xmalloc(sizeof(struct NIO_Monitor));
     assert(monitor);
     *monitor = (struct NIO_Monitor){.self = Qnil};
-    return Data_Wrap_Struct(klass, NIO_Monitor_mark, NIO_Monitor_free, monitor);
+    return TypedData_Wrap_Struct(klass, &NIO_Monitor_type, monitor);
 }
 
-static void NIO_Monitor_mark(struct NIO_Monitor *monitor)
+static void NIO_Monitor_mark(void *data)
 {
+    struct NIO_Monitor *monitor = (struct NIO_Monitor *)data;
     rb_gc_mark(monitor->self);
 }
 
-static void NIO_Monitor_free(struct NIO_Monitor *monitor)
+static size_t NIO_Monitor_memsize(const void *data)
 {
-    xfree(monitor);
+    const struct NIO_Monitor *monitor = (const struct NIO_Monitor *)data;
+    return sizeof(*monitor);
 }
 
 static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE selector_obj)
@@ -96,7 +110,7 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
 
     interests_id = SYM2ID(interests);
 
-    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+    TypedData_Get_Struct(self, struct NIO_Monitor, &NIO_Monitor_type, monitor);
 
     if (interests_id == rb_intern("r")) {
         monitor->interests = EV_READ;
@@ -117,7 +131,7 @@ static VALUE NIO_Monitor_initialize(VALUE self, VALUE io, VALUE interests, VALUE
 
     Data_Get_Struct(selector_obj, struct NIO_Selector, selector);
 
-    monitor->self = self;
+    RB_OBJ_WRITE(self, &monitor->self, self);
     monitor->ev_io.data = (void *)monitor;
 
     /* We can safely hang onto this as we also hang onto a reference to the
@@ -135,7 +149,7 @@ static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
 {
     VALUE deregister, selector;
     struct NIO_Monitor *monitor;
-    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+    TypedData_Get_Struct(self, struct NIO_Monitor, &NIO_Monitor_type, monitor);
 
     rb_scan_args(argc, argv, "01", &deregister);
     selector = rb_ivar_get(self, rb_intern("selector"));
@@ -161,7 +175,7 @@ static VALUE NIO_Monitor_close(int argc, VALUE *argv, VALUE self)
 static VALUE NIO_Monitor_is_closed(VALUE self)
 {
     struct NIO_Monitor *monitor;
-    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+    TypedData_Get_Struct(self, struct NIO_Monitor, &NIO_Monitor_type, monitor);
 
     return monitor->selector == 0 ? Qtrue : Qfalse;
 }
@@ -190,7 +204,7 @@ static VALUE NIO_Monitor_set_interests(VALUE self, VALUE interests)
 static VALUE NIO_Monitor_add_interest(VALUE self, VALUE interest)
 {
     struct NIO_Monitor *monitor;
-    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+    TypedData_Get_Struct(self, struct NIO_Monitor, &NIO_Monitor_type, monitor);
 
     interest = monitor->interests | NIO_Monitor_symbol2interest(interest);
     NIO_Monitor_update_interests(self, (int)interest);
@@ -201,7 +215,7 @@ static VALUE NIO_Monitor_add_interest(VALUE self, VALUE interest)
 static VALUE NIO_Monitor_remove_interest(VALUE self, VALUE interest)
 {
     struct NIO_Monitor *monitor;
-    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+    TypedData_Get_Struct(self, struct NIO_Monitor, &NIO_Monitor_type, monitor);
 
     interest = monitor->interests & ~NIO_Monitor_symbol2interest(interest);
     NIO_Monitor_update_interests(self, (int)interest);
@@ -227,7 +241,7 @@ static VALUE NIO_Monitor_set_value(VALUE self, VALUE obj)
 static VALUE NIO_Monitor_readiness(VALUE self)
 {
     struct NIO_Monitor *monitor;
-    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+    TypedData_Get_Struct(self, struct NIO_Monitor, &NIO_Monitor_type, monitor);
 
     if ((monitor->revents & (EV_READ | EV_WRITE)) == (EV_READ | EV_WRITE)) {
         return ID2SYM(rb_intern("rw"));
@@ -243,7 +257,7 @@ static VALUE NIO_Monitor_readiness(VALUE self)
 static VALUE NIO_Monitor_is_readable(VALUE self)
 {
     struct NIO_Monitor *monitor;
-    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+    TypedData_Get_Struct(self, struct NIO_Monitor, &NIO_Monitor_type, monitor);
 
     if (monitor->revents & EV_READ) {
         return Qtrue;
@@ -255,7 +269,7 @@ static VALUE NIO_Monitor_is_readable(VALUE self)
 static VALUE NIO_Monitor_is_writable(VALUE self)
 {
     struct NIO_Monitor *monitor;
-    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+    TypedData_Get_Struct(self, struct NIO_Monitor, &NIO_Monitor_type, monitor);
 
     if (monitor->revents & EV_WRITE) {
         return Qtrue;
@@ -286,7 +300,7 @@ static void NIO_Monitor_update_interests(VALUE self, int interests)
 {
     ID interests_id;
     struct NIO_Monitor *monitor;
-    Data_Get_Struct(self, struct NIO_Monitor, monitor);
+    TypedData_Get_Struct(self, struct NIO_Monitor, &NIO_Monitor_type, monitor);
 
     if (NIO_Monitor_is_closed(self) == Qtrue) {
         rb_raise(rb_eEOFError, "monitor is closed");
