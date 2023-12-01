@@ -40,6 +40,8 @@ struct NIO_ByteBuffer {
     int position, limit, capacity, mark;
 };
 
+struct NIO_Selector *NIO_Selector_unwrap(VALUE selector);
+
 /* Thunk between libev callbacks in NIO::Monitors and NIO::Selectors */
 void NIO_Selector_monitor_callback(struct ev_loop *ev_loop, struct ev_io *io, int revents);
 

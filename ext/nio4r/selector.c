@@ -23,9 +23,10 @@ static VALUE cNIO_Selector = Qnil;
 
 /* Allocator/deallocator */
 static VALUE NIO_Selector_allocate(VALUE klass);
-static void NIO_Selector_mark(struct NIO_Selector *loop);
+static void NIO_Selector_mark(void *data);
 static void NIO_Selector_shutdown(struct NIO_Selector *selector);
-static void NIO_Selector_free(struct NIO_Selector *loop);
+static void NIO_Selector_free(void *data);
+static size_t NIO_Selector_memsize(const void *data);
 
 /* Class methods */
 static VALUE NIO_Selector_supported_backends(VALUE klass);
@@ -83,6 +84,18 @@ void Init_NIO_Selector(void)
     cNIO_Monitor = rb_define_class_under(mNIO, "Monitor", rb_cObject);
 }
 
+static const rb_data_type_t NIO_Selector_type = {
+    "NIO::Selector",
+    {
+        NIO_Selector_mark,
+        NIO_Selector_free,
+        NIO_Selector_memsize,
+    },
+    0,
+    0,
+    RUBY_TYPED_WB_PROTECTED // Don't free immediately because of shutdown
+};
+
 /* Create the libev event loop and incoming event buffer */
 static VALUE NIO_Selector_allocate(VALUE klass)
 {
@@ -104,8 +117,7 @@ static VALUE NIO_Selector_allocate(VALUE klass)
         rb_sys_fail("fcntl");
     }
 
-    selector = (struct NIO_Selector *)xmalloc(sizeof(struct NIO_Selector));
-
+    VALUE obj = TypedData_Make_Struct(klass, struct NIO_Selector, &NIO_Selector_type, selector);
     /* Defer initializing the loop to #initialize */
     selector->ev_loop = 0;
 
@@ -118,14 +130,21 @@ static VALUE NIO_Selector_allocate(VALUE klass)
     selector->wakeup.data = (void *)selector;
 
     selector->closed = selector->selecting = selector->wakeup_fired = selector->ready_count = 0;
-    selector->ready_array = Qnil;
+    RB_OBJ_WRITE(obj, &selector->ready_array, Qnil);
+    return obj;
+}
 
-    return Data_Wrap_Struct(klass, NIO_Selector_mark, NIO_Selector_free, selector);
+struct NIO_Selector *NIO_Selector_unwrap(VALUE self)
+{
+    struct NIO_Selector *selector;
+    TypedData_Get_Struct(self, struct NIO_Selector, &NIO_Selector_type, selector);
+    return selector;
 }
 
 /* NIO selectors store all Ruby objects in instance variables so mark is a stub */
-static void NIO_Selector_mark(struct NIO_Selector *selector)
+static void NIO_Selector_mark(void *data)
 {
+    struct NIO_Selector *selector = (struct NIO_Selector *)data;
     if (selector->ready_array != Qnil) {
         rb_gc_mark(selector->ready_array);
     }
@@ -151,10 +170,16 @@ static void NIO_Selector_shutdown(struct NIO_Selector *selector)
 }
 
 /* Ruby finalizer for selector objects */
-static void NIO_Selector_free(struct NIO_Selector *selector)
+static void NIO_Selector_free(void *data)
 {
+    struct NIO_Selector *selector = (struct NIO_Selector *)data;
     NIO_Selector_shutdown(selector);
     xfree(selector);
+}
+
+static size_t NIO_Selector_memsize(const void *data)
+{
+    return sizeof(struct NIO_Selector);
 }
 
 /* Return an array of symbols for supported backends */
@@ -205,7 +230,7 @@ static VALUE NIO_Selector_initialize(int argc, VALUE *argv, VALUE self)
     struct NIO_Selector *selector;
     unsigned int flags = 0;
 
-    Data_Get_Struct(self, struct NIO_Selector, selector);
+    TypedData_Get_Struct(self, struct NIO_Selector, &NIO_Selector_type, selector);
 
     rb_scan_args(argc, argv, "01", &backend);
 
@@ -259,7 +284,7 @@ static VALUE NIO_Selector_backend(VALUE self)
 {
     struct NIO_Selector *selector;
 
-    Data_Get_Struct(self, struct NIO_Selector, selector);
+    TypedData_Get_Struct(self, struct NIO_Selector, &NIO_Selector_type, selector);
     if (selector->closed) {
         rb_raise(rb_eIOError, "selector is closed");
     }
@@ -337,7 +362,7 @@ static VALUE NIO_Selector_register_synchronized(VALUE _args)
     io = args[1];
     interests = args[2];
 
-    Data_Get_Struct(self, struct NIO_Selector, selector);
+    TypedData_Get_Struct(self, struct NIO_Selector, &NIO_Selector_type, selector);
     if (selector->closed) {
         rb_raise(rb_eIOError, "selector is closed");
     }
@@ -418,14 +443,14 @@ static VALUE NIO_Selector_select_synchronized(VALUE _args)
 
     VALUE *args = (VALUE *)_args;
 
-    Data_Get_Struct(args[0], struct NIO_Selector, selector);
+    TypedData_Get_Struct(args[0], struct NIO_Selector, &NIO_Selector_type, selector);
 
     if (selector->closed) {
         rb_raise(rb_eIOError, "selector is closed");
     }
 
     if (!rb_block_given_p()) {
-        selector->ready_array = rb_ary_new();
+        RB_OBJ_WRITE(args[0], &selector->ready_array, rb_ary_new());
     }
 
     ready = NIO_Selector_run(selector, args[1]);
@@ -433,7 +458,7 @@ static VALUE NIO_Selector_select_synchronized(VALUE _args)
     /* Timeout */
     if (ready < 0) {
         if (!rb_block_given_p()) {
-            selector->ready_array = Qnil;
+            RB_OBJ_WRITE(args[0], &selector->ready_array, Qnil);
         }
 
         return Qnil;
@@ -443,7 +468,7 @@ static VALUE NIO_Selector_select_synchronized(VALUE _args)
         return INT2NUM(ready);
     } else {
         ready_array = selector->ready_array;
-        selector->ready_array = Qnil;
+        RB_OBJ_WRITE(args[0], &selector->ready_array, Qnil);
         return ready_array;
     }
 }
@@ -490,7 +515,7 @@ static int NIO_Selector_run(struct NIO_Selector *selector, VALUE timeout)
 static VALUE NIO_Selector_wakeup(VALUE self)
 {
     struct NIO_Selector *selector;
-    Data_Get_Struct(self, struct NIO_Selector, selector);
+    TypedData_Get_Struct(self, struct NIO_Selector, &NIO_Selector_type, selector);
 
     if (selector->closed) {
         rb_raise(rb_eIOError, "selector is closed");
@@ -512,7 +537,7 @@ static VALUE NIO_Selector_close_synchronized(VALUE self)
 {
     struct NIO_Selector *selector;
 
-    Data_Get_Struct(self, struct NIO_Selector, selector);
+    TypedData_Get_Struct(self, struct NIO_Selector, &NIO_Selector_type, selector);
 
     NIO_Selector_shutdown(selector);
 
@@ -529,7 +554,7 @@ static VALUE NIO_Selector_closed_synchronized(VALUE self)
 {
     struct NIO_Selector *selector;
 
-    Data_Get_Struct(self, struct NIO_Selector, selector);
+    TypedData_Get_Struct(self, struct NIO_Selector, &NIO_Selector_type, selector);
 
     return selector->closed ? Qtrue : Qfalse;
 }
