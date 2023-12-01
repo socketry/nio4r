@@ -1,4 +1,4 @@
-## 2.6.2
+## 2.7.0
 
 * Convert NIO objects to TypedData API.
 
