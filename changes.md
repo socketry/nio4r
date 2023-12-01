@@ -1,3 +1,17 @@
+## 2.6.2
+
+* Convert NIO objects to TypedData API.
+
+## 2.6.1
+
+* Don't update `io` which is subsequently stored. Retain the original.
+
+## 2.6.0
+
+* Fix conversion loses int precision.
+* Avoid direct access to IO internals.
+* Resolve issue loading both nio and nio4r gems.
+
 ## 2.5.9 (2023-04-02)
 
 https://github.com/socketry/nio4r/compare/v2.5.8..v2.5.9
