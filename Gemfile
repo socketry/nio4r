@@ -13,7 +13,7 @@ group :maintenance, optional: true do
 end
 
 group :development, :test do
-  gem "rake-compiler", "~> 1.1.9", require: false
+  gem "rake-compiler", "~> 1.2", require: false
   gem "rspec", "~> 3.7", require: false
   gem "rubocop", "0.82.0", require: false
 end
