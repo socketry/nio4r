@@ -4,7 +4,7 @@ if defined? JRUBY_VERSION
   require "rake/javaextensiontask"
   Rake::JavaExtensionTask.new("nio4r_ext") do |ext|
     ext.ext_dir = "ext/nio4r"
-    ext.release = '8'
+    ext.release = '9'
   end
 else
   require "rake/extensiontask"
