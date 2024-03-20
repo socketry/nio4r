@@ -27,7 +27,7 @@ created by Upekshej
  */
 public class ByteBuffer extends RubyObject {
     private static final long serialVersionUID = -6903439483039149324L;
-    private java.nio.ByteBuffer byteBuffer;
+    private transient java.nio.ByteBuffer byteBuffer;
 
     public static RaiseException newOverflowError(ThreadContext context, String message) {
         RubyClass klass = context.runtime.getModule("NIO").getClass("ByteBuffer").getClass("OverflowError");

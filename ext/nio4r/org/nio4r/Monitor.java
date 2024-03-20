@@ -14,9 +14,9 @@ import org.jruby.runtime.builtin.IRubyObject;
 
 public class Monitor extends RubyObject {
     private static final long serialVersionUID = -3733782997115074794L;
-    private SelectionKey key;
+    private transient SelectionKey key;
     private RubyIO io;
-    private IRubyObject interests, selector, value, closed;
+    private transient IRubyObject interests, selector, value, closed;
 
     public Monitor(final Ruby ruby, RubyClass rubyClass) {
         super(ruby, rubyClass);

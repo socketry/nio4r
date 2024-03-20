@@ -22,7 +22,7 @@ import org.jruby.util.io.OpenFile;
 
 public class Selector extends RubyObject {
     private static final long serialVersionUID = -14562818539414873L;
-    private java.nio.channels.Selector selector;
+    private transient java.nio.channels.Selector selector;
     private HashMap<SelectableChannel,SelectionKey> cancelledKeys;
     private volatile boolean wakeupFired;
 
@@ -234,7 +234,7 @@ public class Selector extends RubyObject {
 
         cancelKeys();
         try {
-            context.getThread().beforeBlockingCall();
+            context.getThread().beforeBlockingCall(context);
             if(timeout.isNil()) {
                 result = this.selector.select();
             } else {
