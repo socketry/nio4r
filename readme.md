@@ -68,6 +68,10 @@ to maintain a large codebase.
 
 ## Releases
 
+Bump the version first:
+
+    bundle exec bake gem:release:version:patch
+
 ### CRuby
 
     rake clean
