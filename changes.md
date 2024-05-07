@@ -1,3 +1,14 @@
+## 2.7.2
+
+* Modernize gem (list all authors, etc).
+* Drop official support for Ruby 2.4.
+* Fix JRuby release version.
+
+## 2.7.1
+
+* Fix license specification.
+* Fix JRuby build warnings.
+
 ## 2.7.0
 
 * Convert NIO objects to TypedData API.
