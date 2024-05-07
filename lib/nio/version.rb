@@ -6,5 +6,5 @@
 # Copyright, 2023, by Tsimnuj Hawj.
 
 module NIO
-  VERSION = "2.7.2"
+  VERSION = "2.7.3"
 end
