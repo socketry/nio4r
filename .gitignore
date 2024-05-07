@@ -1,9 +1,14 @@
+/.bundle/
+/pkg/
+/gems.locked
+/.covered.db
+/external
+
 *.gem
 *.rbc
 .bundle
 .config
 .yardoc
-Gemfile.lock
 InstalledFiles
 _yardoc
 coverage

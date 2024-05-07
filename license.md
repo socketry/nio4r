@@ -29,7 +29,7 @@ Copyright, 2017, by Usaku Nakamura.
 Copyright, 2017-2022, by Gregory Longtin.  
 Copyright, 2017, by Lars Kanis.  
 Copyright, 2017, by Tomoya Ishida.  
-Copyright, 2018-2023, by Samuel Williams.  
+Copyright, 2018-2024, by Samuel Williams.  
 Copyright, 2019, by Cédric Boutillier.  
 Copyright, 2019-2020, by Benoit Daloze.  
 Copyright, 2019, by Jesús Burgos Maciá.  
@@ -45,9 +45,12 @@ Copyright, 2020-2021, by Joao Fernandes.
 Copyright, 2021, by Jun Jiang.  
 Copyright, 2021, by Pavel Lobashov.  
 Copyright, 2021, by Jeffrey Martin.  
-Copyright, 2023, by Pavel Rosický.  
+Copyright, 2023-2024, by Pavel Rosický.  
 Copyright, 2023, by Tsimnuj Hawj.  
 Copyright, 2023, by Phillip Aldridge.  
+Copyright, 2023, by Maxime Demolin.  
+Copyright, 2023-2024, by Vít Ondruch.  
+Copyright, 2023, by Jean Boussier.  
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

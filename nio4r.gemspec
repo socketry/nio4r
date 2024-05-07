@@ -1,33 +1,33 @@
 # frozen_string_literal: true
 
-require File.expand_path("lib/nio/version", __dir__)
+require_relative "lib/nio/version"
 
 Gem::Specification.new do |spec|
-  spec.authors       = ["Tony Arcieri"]
-  spec.email         = ["bascule@gmail.com"]
-  spec.homepage      = "https://github.com/socketry/nio4r"
-  spec.licenses      = ["MIT", "BSD-2-Clause"]
-  spec.summary       = "New IO for Ruby"
-  spec.description   = <<-DESCRIPTION.strip.gsub(/\s+/, " ")
-     Cross-platform asynchronous I/O primitives for scalable network clients
-     and servers. Inspired by the Java NIO API, but simplified for ease-of-use.
-  DESCRIPTION
+  spec.name = "nio4r"
+  spec.version = NIO::VERSION
 
-  spec.executables   = `git ls-files -- bin/*`.split("\n").map { |f| File.basename(f) }
-  spec.files         = `git ls-files`.split("\n")
-  spec.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
-  spec.name          = "nio4r"
-  spec.require_paths = ["lib"]
-  spec.version       = NIO::VERSION
+  spec.summary = "New IO for Ruby"
+  spec.authors = ["Tony Arcieri", "Samuel Williams", "Olle Jonsson", "Gregory Longtin", "Tiago Cardoso", "Joao Fernandes", "Thomas Dziedzic", "Boaz Segev", "Logan Bowers", "Pedro Paiva", "Jun Aruga", "Omer Katz", "Upekshe Jayasekera", "Tim Carey-Smith", "Benoit Daloze", "Sergey Avseyev", "Tomoya Ishida", "Usaku Nakamura", "Cédric Boutillier", "Daniel Berger", "Dirkjan Bussink", "Hiroshi Shibata", "Jesús Burgos Maciá", "Luis Lavena", "Pavel Rosický", "Sadayuki Furuhashi", "Stephen von Takach", "Vladimir Kochnev", "Vít Ondruch", "Anatol Pomozov", "Bernd Ahlers", "Charles Oliver Nutter", "Denis Washington", "Elad Eyal", "Jean byroot Boussier", "Jeffrey Martin", "John Thornton", "Jun Jiang", "Lars Kanis", "Marek Kowalcze", "Maxime Demolin", "Orien Madgwick", "Pavel Lobashov", "Per Lundberg", "Phillip Aldridge", "Ravil Bayramgalin", "Shannon Skipper", "Tao Luo", "Thomas Kuntz", "Tsimnuj Hawj", "Zhang Kang"]
+  spec.licenses = ["MIT", "BSD-2-Clause"]
+
+  spec.cert_chain  = ['release.cert']
+  spec.signing_key = File.expand_path('~/.gem/release.pem')
+
+  spec.homepage = "https://github.com/socketry/nio4r"
 
   spec.metadata = {
-    "bug_tracker_uri"   => "https://github.com/socketry/nio4r/issues",
-    "changelog_uri"     => "https://github.com/socketry/nio4r/blob/main/changes.md",
-    "documentation_uri" => "https://www.rubydoc.info/gems/nio4r/#{spec.version}",
-    "source_code_uri"   => "https://github.com/socketry/nio4r/tree/v#{spec.version}",
-    "wiki_uri"          => "https://github.com/socketry/nio4r/wiki",
-    "funding_uri"       => "https://github.com/sponsors/ioquatix/",
+    "bug_tracker_uri" => "https://github.com/socketry/nio4r/issues",
+    "changelog_uri" => "https://github.com/socketry/nio4r/blob/main/changes.md",
+    "documentation_uri" => "https://www.rubydoc.info/gems/nio4r",
+    "funding_uri" => "https://github.com/sponsors/ioquatix/",
+    "source_code_uri" => "https://github.com/socketry/nio4r.git",
+    "wiki_uri" => "https://github.com/socketry/nio4r/wiki",
   }
+
+  spec.files = Dir.glob(['{ext,lib}/**/*', '*.md'], File::FNM_DOTMATCH, base: __dir__)
+  spec.require_paths = ['lib']
+
+  spec.extensions = ["ext/nio4r/extconf.rb"]
 
   spec.required_ruby_version = ">= 2.4"
 
@@ -37,7 +37,4 @@ Gem::Specification.new do |spec|
   else
     spec.extensions = ["ext/nio4r/extconf.rb"]
   end
-
-  spec.add_development_dependency "bundler"
-  spec.add_development_dependency "rake"
 end

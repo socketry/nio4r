@@ -1,4 +1,4 @@
-name: nio4r
+name: Test
 
 on: [push, pull_request]
 
