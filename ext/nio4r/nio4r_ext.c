@@ -12,6 +12,10 @@ void Init_NIO_ByteBuffer();
 
 void Init_nio4r_ext()
 {
+    #ifdef HAVE_RB_EXT_RACTOR_SAFE
+    rb_ext_ractor_safe(true);
+    #endif
+
     ev_set_allocator(xrealloc);
 
     Init_NIO_Selector();
