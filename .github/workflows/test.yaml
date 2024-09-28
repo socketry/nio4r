@@ -33,6 +33,7 @@ jobs:
         exclude:
           - {os: windows-latest, ruby: head}
           - {os: windows-latest, ruby: jruby}
+          - {os: macos-latest, ruby: jruby}
           - {os: windows-latest, ruby: truffleruby}
 
     steps:
