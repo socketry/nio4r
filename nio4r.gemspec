@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir.glob(['{ext,lib}/**/*', '*.md'], File::FNM_DOTMATCH, base: __dir__)
   spec.require_paths = ['lib']
 
-  spec.required_ruby_version = ">= 2.4"
+  spec.required_ruby_version = ">= 2.6"
 
   if defined? JRUBY_VERSION
     spec.files << "lib/nio4r_ext.jar"
