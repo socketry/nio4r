@@ -19,7 +19,6 @@ jobs:
           - macos-latest
           - windows-latest
         ruby:
-          - "2.5"
           - "2.6"
           - "2.7"
           - "3.0"
