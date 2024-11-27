@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
 
   spec.metadata = {
     "bug_tracker_uri" => "https://github.com/socketry/nio4r/issues",
-    "changelog_uri" => "https://github.com/socketry/nio4r/blob/main/changes.md",
+    "changelog_uri" => "https://github.com/socketry/nio4r/blob/main/releases.md",
     "documentation_uri" => "https://www.rubydoc.info/gems/nio4r",
     "funding_uri" => "https://github.com/sponsors/ioquatix/",
     "source_code_uri" => "https://github.com/socketry/nio4r.git",

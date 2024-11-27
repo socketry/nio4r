@@ -1,3 +1,14 @@
+# Releases
+
+## 2.7.4
+
+* Fix JRuby release.
+* Mark as ractor safe.
+
+## 2.7.3
+
+* Improve release handling.
+
 ## 2.7.2
 
 * Modernize gem (list all authors, etc).
