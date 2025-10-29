@@ -39,7 +39,8 @@ RSpec.describe OpenSSL::SSL::SSLSocket do
       ctx.cert = ssl_cert
       ctx.key = ssl_key
       unless @tls.empty?
-        if ctx.respond_to? :set_minmax_proto_version, true
+        if ctx.respond_to? :max_version=
+          ctx.min_version = @tls[0]
           ctx.max_version = @tls[0]
         else
           ctx.ssl_version = @tls[1]
