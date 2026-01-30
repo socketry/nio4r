@@ -29,7 +29,7 @@ module NIO
     end
 
     # Native Ruby on Windows is not supported:
-    if (Gem.win_platform? && !defined?(JRUBY_VERSION))
+    if Gem.win_platform? && !defined?(JRUBY_VERSION)
       return true
     end
 
@@ -38,7 +38,7 @@ module NIO
     #   return true
     # end
 
-    return false
+    false
   end
 end
 

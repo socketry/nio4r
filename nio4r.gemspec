@@ -7,12 +7,14 @@ Gem::Specification.new do |spec|
   spec.version = NIO::VERSION
 
   spec.summary = "New IO for Ruby"
+  # rubocop:disable Layout/LineLength
   spec.authors = ["Tony Arcieri", "Samuel Williams", "Olle Jonsson", "Gregory Longtin", "Tiago Cardoso", "Joao Fernandes", "Thomas Dziedzic", "Boaz Segev", "Logan Bowers", "Pedro Paiva", "Jun Aruga", "Omer Katz", "Upekshe Jayasekera", "Tim Carey-Smith", "Benoit Daloze", "Sergey Avseyev", "Tomoya Ishida", "Usaku Nakamura", "Cédric Boutillier", "Daniel Berger", "Dirkjan Bussink", "Hiroshi Shibata", "Jesús Burgos Maciá", "Luis Lavena", "Pavel Rosický", "Sadayuki Furuhashi", "Stephen von Takach", "Vladimir Kochnev", "Vít Ondruch", "Anatol Pomozov", "Bernd Ahlers", "Charles Oliver Nutter", "Denis Washington", "Elad Eyal", "Jean byroot Boussier", "Jeffrey Martin", "John Thornton", "Jun Jiang", "Lars Kanis", "Marek Kowalcze", "Maxime Demolin", "Orien Madgwick", "Pavel Lobashov", "Per Lundberg", "Phillip Aldridge", "Ravil Bayramgalin", "Shannon Skipper", "Tao Luo", "Thomas Kuntz", "Tsimnuj Hawj", "Zhang Kang"]
+  # rubocop:enable Layout/LineLength
   spec.licenses = ["MIT", "BSD-2-Clause"]
 
   unless defined? JRUBY_VERSION
-    spec.cert_chain  = ['release.cert']
-    spec.signing_key = File.expand_path('~/.gem/release.pem')
+    spec.cert_chain  = ["release.cert"]
+    spec.signing_key = File.expand_path("~/.gem/release.pem")
   end
 
   spec.homepage = "https://github.com/socketry/nio4r"
@@ -23,11 +25,11 @@ Gem::Specification.new do |spec|
     "documentation_uri" => "https://www.rubydoc.info/gems/nio4r",
     "funding_uri" => "https://github.com/sponsors/ioquatix/",
     "source_code_uri" => "https://github.com/socketry/nio4r.git",
-    "wiki_uri" => "https://github.com/socketry/nio4r/wiki",
+    "wiki_uri" => "https://github.com/socketry/nio4r/wiki"
   }
 
-  spec.files = Dir.glob(['{ext,lib}/**/*', '*.md'], File::FNM_DOTMATCH, base: __dir__)
-  spec.require_paths = ['lib']
+  spec.files = Dir.glob(["{ext,lib}/**/*", "*.md"], File::FNM_DOTMATCH, base: __dir__)
+  spec.require_paths = ["lib"]
 
   spec.required_ruby_version = ">= 2.6"
 

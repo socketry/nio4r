@@ -84,25 +84,23 @@ RSpec.describe TCPSocket do
     include_context NIO::Selector
 
     it "selects writable when connected" do
-      begin
-        server = TCPServer.new(addr, 0)
+      server = TCPServer.new(addr, 0)
 
-        client = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM, 0)
-        monitor = selector.register(client, :w)
+      client = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM, 0)
+      monitor = selector.register(client, :w)
 
-        expect do
-          client.connect_nonblock server.local_address
-        end.to raise_exception Errno::EINPROGRESS
+      expect do
+        client.connect_nonblock server.local_address
+      end.to raise_exception Errno::EINPROGRESS
 
-        ready = selector.select(1)
+      ready = selector.select(1)
 
-        expect(ready).to include monitor
-        result = client.getsockopt(::Socket::SOL_SOCKET, ::Socket::SO_ERROR)
-        expect(result.unpack("i").first).to be_zero
-      ensure
-        server.close rescue nil
-        selector.close rescue nil
-      end
+      expect(ready).to include monitor
+      result = client.getsockopt(::Socket::SOL_SOCKET, ::Socket::SO_ERROR)
+      expect(result.unpack("i").first).to be_zero
+    ensure
+      server.close rescue nil
+      selector.close rescue nil
     end
   end
 end
