@@ -24,9 +24,6 @@ Style/UnpackFirst:
 # Lint
 #
 
-Lint/SuppressedException:
-  Enabled: false
-
 Lint/Loop:
   Enabled: false
 
@@ -35,6 +32,13 @@ Lint/RaiseException:
 
 Lint/StructNewOverride:
   Enabled: false
+
+Lint/SuppressedException:
+  Enabled: false
+
+Lint/UselessAssignment:
+  Enabled: false
+
 #
 # Metrics
 #
@@ -49,12 +53,12 @@ Metrics/BlockLength:
 Metrics/ClassLength:
   Max: 128
 
+Metrics/CyclomaticComplexity:
+  Max: 15
+
 Metrics/MethodLength:
   CountComments: false
   Max: 50
-
-Metrics/CyclomaticComplexity:
-  Max: 15
 
 Metrics/PerceivedComplexity:
   Max: 15
@@ -62,6 +66,9 @@ Metrics/PerceivedComplexity:
 #
 # Style
 #
+
+Style/AsciiComments:
+  Enabled: false
 
 Style/ExponentialNotation:
   Enabled: false
