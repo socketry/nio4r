@@ -130,10 +130,16 @@ static size_t NIO_ByteBuffer_memsize(const void *data)
 
 static VALUE NIO_ByteBuffer_initialize(VALUE self, VALUE capacity)
 {
+    int requested_capacity;
     struct NIO_ByteBuffer *buffer;
     TypedData_Get_Struct(self, struct NIO_ByteBuffer, &NIO_ByteBuffer_type, buffer);
 
-    buffer->capacity = NUM2INT(capacity);
+    requested_capacity = NUM2INT(capacity);
+    if (requested_capacity < 0) {
+        rb_raise(rb_eArgError, "negative capacity given");
+    }
+
+    buffer->capacity = requested_capacity;
     buffer->buffer = xmalloc(buffer->capacity);
 
     NIO_ByteBuffer_clear(self);
