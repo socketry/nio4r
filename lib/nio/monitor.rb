@@ -51,6 +51,8 @@ module NIO
     #
     # @return [self]
     def add_interest(interest)
+      raise EOFError, "monitor is closed" if closed?
+
       case interest
       when :r
         case @interests
@@ -78,6 +80,8 @@ module NIO
     #
     # @return [self]
     def remove_interest(interest)
+      raise EOFError, "monitor is closed" if closed?
+
       case interest
       when :r
         case @interests
