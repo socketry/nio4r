@@ -12,6 +12,7 @@ module NIO
     include Enumerable
 
     attr_reader :position, :limit, :capacity
+    alias size capacity
 
     # Insufficient capacity in buffer
     OverflowError = Class.new(IOError)
@@ -53,7 +54,7 @@ module NIO
     # @raise [ArgumentError] new position was invalid
     def position=(new_position)
       raise ArgumentError, "negative position given" if new_position < 0
-      raise ArgumentError, "specified position exceeds capacity" if new_position > @capacity
+      raise ArgumentError, "specified position exceeds limit" if new_position > @limit
 
       @mark = nil if @mark && @mark > new_position
       @position = new_position
@@ -99,7 +100,7 @@ module NIO
       raise ArgumentError, "negative length given" if length < 0
       raise UnderflowError, "not enough data in buffer" if length > @limit - @position
 
-      result = @buffer[@position...length]
+      result = @buffer[@position, length]
       @position += length
       result
     end
@@ -127,12 +128,13 @@ module NIO
     def put(str)
       raise TypeError, "expected String, got #{str.class}" unless str.respond_to?(:to_str)
 
-      str = str.to_str
+      str = str.to_str.b
 
-      raise OverflowError, "buffer is full" if str.length > @limit - @position
+      length = str.bytesize
+      raise OverflowError, "buffer is full" if length > @limit - @position
 
-      @buffer[@position...str.length] = str
-      @position += str.length
+      @buffer[@position, length] = str
+      @position += length
       self
     end
     alias << put
