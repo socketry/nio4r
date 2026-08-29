@@ -337,7 +337,7 @@ static VALUE NIO_ByteBuffer_read_from(VALUE self, VALUE io)
         if (errno == EAGAIN) {
             return INT2NUM(0);
         } else {
-            rb_sys_fail("write");
+            rb_sys_fail("read");
         }
     }
 
